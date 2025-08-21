@@ -1,4 +1,4 @@
-My personal website, visit by pressing https://jefferyxr.github.io/personal-website/index.html
+My personal website, visit by pressing [here](https://jefferyxr.github.io/personal-website/index.html)
 
 
 Credits:
@@ -14,3 +14,4 @@ Credits:
 		Scrollex (github.com/ajlkn/jquery.scrollex)
 
 		Responsive Tools (github.com/ajlkn/responsive-tools)
+
