@@ -1,17 +1,18 @@
-My personal website, visit by pressing [here](https://jefferyxr.github.io/personal-website/index.html)
+# Personal Website
 
+You can visit my website [here](https://jefferyxr.github.io/personal-website/index.html)
 
-Credits:
-	Template:
-		Massively by HTML5 UP
-		html5up.net | @ajlkn
+---
 
-	Icons:
-		Font Awesome (fontawesome.io)
+## Credits
 
-	Other:
-		jQuery (jquery.com)
-		Scrollex (github.com/ajlkn/jquery.scrollex)
+- **Template:**  
+  [Massively](https://html5up.net/massively) by [HTML5 UP](https://html5up.net) | @ajlkn  
 
-		Responsive Tools (github.com/ajlkn/responsive-tools)
+- **Icons:**  
+  [Font Awesome](https://fontawesome.io)  
 
+- **Other Libraries & Tools:**  
+  - [jQuery](https://jquery.com)  
+  - [Scrollex](https://github.com/ajlkn/jquery.scrollex)  
+  - [Responsive Tools](https://github.com/ajlkn/responsive-tools)  
