@@ -2236,6 +2236,28 @@ input, select, textarea {
 			.button.primary:hover {
 				background-color: #18bfef;
 			}
+			
+			input[type="submit"].skills,
+			input[type="reset"].skills,
+			input[type="button"].skills,
+			button.skills,
+			.button.skills {
+				font-size: 0.7rem;
+				height: 2.5rem;
+				line-height: 2.5rem;
+				padding: 0 1rem;
+				border-radius: 8px;
+				background-color: #254667;
+				box-shadow: none;
+				color: #ffffff !important;
+			}
+				input[type="submit"].skills:hover,
+				input[type="reset"].skills:hover,
+				input[type="button"].skills:hover,
+				button.skills:hover,
+				.button.skills:hover {
+					background-color: #18bfef;
+				}
 
 /* Form */
 
@@ -2634,8 +2656,8 @@ input, select, textarea {
 
 		.image.main {
 			display: block;
-			margin: 4rem 0;
-			width: 100%;
+			margin: 3rem auto;
+			width: 60%;
 		}
 
 			.image.main:first-child {
@@ -2653,7 +2675,7 @@ input, select, textarea {
 			}
 
 			.image.main {
-				margin: 2rem 0;
+				margin: 2rem auto;
 			}
 
 		}
@@ -3228,6 +3250,7 @@ input, select, textarea {
 	}
 
 		#wrapper > .bg {
+			display: none;
 			position: absolute;
 			top: 0;
 			left: 0;
@@ -3270,7 +3293,7 @@ input, select, textarea {
 		}
 
 		body.is-preload #wrapper.fade-in:before {
-			opacity: 1;
+			opacity: 0;
 		}
 
 		@media screen and (orientation: portrait) {
@@ -3290,6 +3313,16 @@ input, select, textarea {
 		object-fit: cover;        /* crop like background-size: cover */
 		z-index: -1;              /* stay behind everything */
 		filter: brightness(0.6);  /* optional: dim video for readability */
+	}
+	
+	#water-canvas {
+	  position: fixed;
+	  inset: 0;
+	  width: 100vw;
+	  height: 100vh;
+	  z-index: -1;
+	  display: block;
+	  background: transparent;
 	}
 /* Intro */
 
@@ -3466,9 +3499,6 @@ input, select, textarea {
 				min-height: 90vh;
 			}
 
-				#intro p br {
-					display: none;
-				}
 
 				#intro + #header {
 					margin-top: -14rem;
@@ -3480,7 +3510,7 @@ input, select, textarea {
 
 			#intro {
 				padding: 3rem 2rem 1rem 2rem ;
-				min-height: 80vh;
+				min-height: 100vh;
 			}
 
 				#intro h1 {
@@ -3492,10 +3522,6 @@ input, select, textarea {
 				#intro p {
 					font-size: 1rem;
 					margin-top: 0rem;
-				}
-
-				#intro .actions {
-					display: none;
 				}
 
 		}
@@ -4696,4 +4722,14 @@ input, select, textarea {
 			visibility: visible;
 		}
 
+	}
+	
+		.skills-box {
+		display: flex;
+		flex-wrap: wrap;
+		flex-direction: row;
+		justify-content: center;
+		align-items: center;
+		gap: 1rem;
+		padding-bottom: 2rem;
 	}
