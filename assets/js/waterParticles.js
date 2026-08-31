@@ -137,7 +137,7 @@ function getGearTeeth(radius) {
 // but the result is capped.
 
 const calculatedTeeth =
-    Math.round(radius * 0.45);
+    Math.round(radius * 0.15);
 
 
 return Math.max(
@@ -203,7 +203,7 @@ particles.push({
 
     angularVelocity:
         (Math.random() - 0.5) *
-        0.005,
+        0.05,
 
 
     // Number of gear teeth
@@ -390,7 +390,7 @@ ctx.strokeStyle =
 ctx.lineWidth =
     Math.max(
         1,
-        p.r * 0.05
+        1
     );
 
 ctx.stroke();
@@ -424,49 +424,6 @@ ctx.fill();
 
 ctx.globalCompositeOperation =
     'source-over';
-
-
-// Hole outline
-ctx.beginPath();
-
-ctx.arc(
-    0,
-    0,
-    holeRadius,
-    0,
-    Math.PI * 2
-);
-
-ctx.strokeStyle =
-    'rgba(105, 100, 150, 0.9)';
-
-ctx.lineWidth =
-    Math.max(
-        1,
-        p.r * 0.04
-    );
-
-ctx.stroke();
-
-
-// ==================================================
-// INNER RING
-// ==================================================
-
-ctx.beginPath();
-
-ctx.arc(
-    0,
-    0,
-    p.r * 0.52,
-    0,
-    Math.PI * 2
-);
-
-ctx.strokeStyle =
-    'rgba(130, 125, 180, 0.5)';
-
-ctx.stroke();
 
 
 ctx.restore();
