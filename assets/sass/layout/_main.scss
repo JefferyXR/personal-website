@@ -156,3 +156,326 @@
 			width: 100%;
 		}
 	}
+
+	// Homepage project grid: reveal the interactive particle background while
+	// retaining enough contrast for the project content.
+	body.home #main {
+		background-color: rgba(255, 255, 255, 0.70);
+		max-width: 64rem;
+
+		> .posts > article {
+			padding: 2.25rem;
+
+			h2 {
+				font-size: 1.35rem;
+				line-height: 1.2;
+				margin-bottom: 1rem;
+			}
+
+			p {
+				font-size: 0.85rem;
+				line-height: 1.8;
+				margin-bottom: 1.25rem;
+				text-align: left;
+			}
+
+			.image.fit {
+				margin: 1.5rem 0;
+				width: 50%;
+				margin-left: auto;
+				margin-right: auto;
+			}
+		}
+
+		.skills-box {
+			gap: 0.5rem;
+			padding-bottom: 1.25rem;
+		}
+
+		.button.skills,
+		.actions .button {
+			font-size: 0.7rem;
+			height: 2.25rem;
+			line-height: 2.25rem;
+			padding: 0 1rem;
+		}
+
+		@include breakpoint('<=medium') {
+			> .posts > article {
+				padding: 2rem;
+			}
+		}
+
+		@include breakpoint('<=small') {
+			> .posts > article {
+				padding: 1.5rem;
+			}
+
+			> .posts > article h2 {
+				font-size: 1.25rem;
+			}
+
+			> .posts > article p {
+				font-size: 0.9rem;
+			}
+		}
+	}
+
+	// CAD gallery: retain the three-column layout within the compact,
+	// translucent frame.
+	body.cad-gallery {
+		#main {
+			background-color: rgba(255, 255, 255, 0.70);
+			max-width: 64rem;
+
+			> .post {
+				padding: 3rem;
+
+				.col-4 > p {
+					font-size: 0.9rem;
+					line-height: 1.5;
+					margin-bottom: 0.75rem;
+				}
+
+				.image.fit {
+					margin: 1rem 0;
+				}
+			}
+		}
+
+		#nav,
+		#footer {
+			max-width: 64rem;
+		}
+
+		@include breakpoint('<=medium') {
+			#main > .post {
+				padding: 2.5rem;
+			}
+		}
+
+		@include breakpoint('<=small') {
+			#main > .post {
+				padding: 1.5rem;
+			}
+		}
+	}
+
+	// Project detail pages: prioritize concise, scannable portfolio case studies.
+	body.project-page #main > .post {
+		padding: 4.5rem 5rem 3.5rem;
+
+		header.major > h1 {
+			font-size: 3.25rem;
+			margin-bottom: 1rem;
+		}
+
+		h2 {
+			font-size: 1.5rem;
+			margin-bottom: 0.75rem;
+		}
+
+		h3 {
+			font-size: 1.1rem;
+			margin-bottom: 0.75rem;
+		}
+
+		p,
+		ul,
+		ol {
+			font-size: 0.9rem;
+			line-height: 1.8;
+			margin-bottom: 1.25rem;
+		}
+
+		.image.main {
+			margin: 1.5rem auto;
+			width: 55%;
+		}
+
+		.image.fit {
+			margin: 1.5rem auto;
+			width: 70%;
+		}
+
+		.button {
+			height: 2.5rem;
+			line-height: 2.5rem;
+			padding: 0 1.5rem;
+		}
+
+		@include breakpoint('<=medium') {
+			padding: 3rem;
+		}
+
+		@include breakpoint('<=small') {
+			padding: 2rem 1.5rem;
+
+			header.major > h1 {
+				font-size: 2.4rem;
+			}
+
+			.image.main,
+			.image.fit {
+				width: 100%;
+			}
+		}
+	}
+
+	// Homepage image cards: title band above a square photo panel.
+	body.home #main {
+		overflow: visible;
+	}
+
+	body.home #main > .posts {
+		overflow: visible;
+		position: relative;
+		z-index: 0;
+
+		> article {
+			background-color: #12263a;
+			border: solid 2px rgba(255, 255, 255, 0.75);
+			color: #ffffff;
+			display: flex;
+			flex-direction: column;
+			isolation: isolate;
+			overflow: visible;
+			padding: 0;
+			position: relative;
+			transition: transform 0.25s ease, box-shadow 0.25s ease;
+			z-index: 0;
+
+			header {
+				background-color: #12263a;
+				flex: 0 0 auto;
+				margin: 0;
+				padding: 0.85rem 1rem;
+				position: relative;
+				text-align: left;
+				z-index: 0;
+			}
+
+			h2 {
+				color: #ffffff;
+				font-family: Merriweather, Georgia, serif;
+				font-size: 1.1rem;
+				font-weight: 700;
+				letter-spacing: 0;
+				line-height: 1.3;
+				margin: 0;
+				text-transform: none;
+
+				a {
+					color: inherit;
+				}
+			}
+
+			.card-body {
+				aspect-ratio: 1 / 1;
+				display: flex;
+				flex-direction: column;
+				isolation: isolate;
+				justify-content: flex-end;
+				overflow: hidden;
+				padding: 1.05rem 0.7rem 1.1rem;
+				position: relative;
+				width: 100%;
+
+				&::before {
+					background-image: var(--project-image);
+					background-position: center;
+					background-size: cover;
+					content: '';
+					filter: brightness(0.72);
+					inset: 0;
+					position: absolute;
+					transition: filter 0.25s ease, transform 0.25s ease;
+					z-index: 0;
+				}
+
+				&::after {
+					background: linear-gradient(to top, rgba(8, 18, 28, 0.78) 0%, rgba(8, 18, 28, 0.28) 48%, rgba(8, 18, 28, 0) 100%);
+					content: '';
+					inset: 0;
+					pointer-events: none;
+					position: absolute;
+					z-index: 1;
+				}
+
+				> * {
+					position: relative;
+					z-index: 2;
+				}
+			}
+
+			.image.fit {
+				display: none;
+			}
+
+			&.is-active {
+				box-shadow: 0 1rem 2rem rgba(8, 21, 34, 0.35);
+				transform: scale(1.03);
+				z-index: 20;
+
+				.card-body::before {
+					filter: brightness(1);
+					transform: scale(1.04);
+				}
+			}
+
+			p {
+				color: #ffffff;
+				font-size: 0.85rem;
+				line-height: 1.55;
+				margin: 0 0 0.7rem;
+				text-align: left;
+				text-shadow: 0 0.1rem 0.5rem rgba(0, 0, 0, 0.65);
+			}
+		}
+
+		> article:nth-child(1) { --project-image: url('../../images/killerbyte_square.jpg'); }
+		> article:nth-child(2) { --project-image: url('../../images/launchtoy.png'); }
+		> article:nth-child(3) { --project-image: url('../../images/arduino_square.png'); }
+		> article:nth-child(4) { --project-image: url('../../images/church_square.png'); }
+		> article:nth-child(5) { --project-image: url('../../images/particles3_square.png'); }
+		> article:nth-child(6) { --project-image: url('../../images/calculator_square.png'); }
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		body.home #main > .posts > article:hover {
+			box-shadow: 0 1rem 2rem rgba(8, 21, 34, 0.35);
+			transform: scale(1.03);
+			z-index: 20;
+
+			.card-body::before {
+				filter: brightness(1);
+				transform: scale(1.04);
+			}
+		}
+	}
+
+	body.home #main .skills-box {
+		align-items: center;
+		flex-wrap: nowrap;
+		gap: 0.1rem;
+		justify-content: flex-start;
+		margin: 0 -0.15rem 0;
+		overflow: visible;
+		padding: 0 0 0.7rem;
+		width: calc(100% + 0.3rem);
+	}
+
+
+	body.home #main .button.skills {
+		background-color: rgba(18, 38, 58, 0.92);
+		border: solid 1px rgba(255, 255, 255, 0.72);
+		border-radius: 999px;
+		color: #ffffff !important;
+		flex: 0 1 auto;
+		font-size: 0.55rem;
+		height: 1.7rem;
+		line-height: 1.55rem;
+		min-width: 0;
+		padding: 0 0.4rem;
+		white-space: nowrap;
+	}
