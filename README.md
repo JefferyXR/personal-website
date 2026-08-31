@@ -6,7 +6,7 @@ You can visit my website [here](https://jefferyxr.github.io/personal-website/ind
 
 ## Credits
 
-- **Template:**  
+- **Inspo:**  
   [Massively](https://html5up.net/massively) by [HTML5 UP](https://html5up.net) | @ajlkn  
 
 - **Icons:**  
