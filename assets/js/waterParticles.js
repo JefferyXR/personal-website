@@ -203,7 +203,7 @@ particles.push({
 
     angularVelocity:
         (Math.random() - 0.5) *
-        0.05,
+        0.01,
 
 
     // Number of gear teeth
