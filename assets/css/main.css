@@ -3996,7 +3996,7 @@ input, select, textarea {
 		margin: 0 auto;
 		width: calc(100% - 4rem);
 		max-width: 72rem;
-		z-index: 2;
+		z-index: 1;
 	}
 
 		#footer input, #footer select, #footer textarea {
@@ -4656,7 +4656,6 @@ input, select, textarea {
 			right: 0;
 			text-align: right;
 			top: 0;
-			vertical-align: middle;
 			width: 7rem;
 		}
 
@@ -4732,4 +4731,408 @@ input, select, textarea {
 		align-items: center;
 		gap: 1rem;
 		padding-bottom: 2rem;
+	}
+
+	/* Homepage project grid: reveal the interactive particle background without
+	   compromising the contrast of the project content. */
+	body.home #main {
+		background-color: rgba(255, 255, 255, 0.70);
+		max-width: 64rem;
+	}
+
+	body.home #nav,
+	body.home #footer {
+		max-width: 64rem;
+	}
+
+	body.home #main > .posts > article {
+		padding: 2.25rem;
+	}
+
+	body.home #main > .posts > article h2 {
+		font-size: 1.35rem;
+		line-height: 1.2;
+		margin-bottom: 1rem;
+	}
+
+	body.home #main > .posts > article p {
+		font-size: 0.85rem;
+		line-height: 1.8;
+		margin-bottom: 1.25rem;
+		text-align: left;
+	}
+
+	body.home #main > .posts > article .image.fit {
+		margin: 1.5rem 0;
+		width: 50%;
+		margin-left: auto;
+		margin-right: auto;
+	}
+
+	body.home #main .skills-box {
+		gap: 0.5rem;
+		padding-bottom: 1.25rem;
+	}
+
+	body.home #main .button.skills,
+	body.home #main .actions .button {
+		font-size: 0.7rem;
+		height: 2.25rem;
+		line-height: 2.25rem;
+		padding: 0 1rem;
+	}
+
+	@media screen and (max-width: 980px) {
+
+		body.home #main > .posts > article {
+			padding: 2rem;
+		}
+
+	}
+
+	@media screen and (max-width: 736px) {
+
+		body.home #main > .posts > article {
+			padding: 1.5rem;
+		}
+
+		body.home #main > .posts > article h2 {
+			font-size: 1.25rem;
+		}
+
+		body.home #main > .posts > article p {
+			font-size: 0.9rem;
+		}
+	}
+
+	/* CAD gallery: retain the three-column layout within the compact, translucent frame. */
+	body.cad-gallery #main {
+		background-color: rgba(255, 255, 255, 0.70);
+		max-width: 64rem;
+	}
+
+	body.cad-gallery #nav,
+	body.cad-gallery #footer {
+		max-width: 64rem;
+	}
+
+	body.cad-gallery #main > .post {
+		padding: 3rem;
+	}
+
+	body.cad-gallery #main > .post .col-4 > p {
+		font-size: 0.9rem;
+		line-height: 1.5;
+		margin-bottom: 0.75rem;
+	}
+
+	body.cad-gallery #main > .post .image.fit {
+		margin: 1rem 0;
+	}
+
+	@media screen and (max-width: 980px) {
+
+		body.cad-gallery #main > .post {
+			padding: 2.5rem;
+		}
+
+	}
+
+	@media screen and (max-width: 736px) {
+
+		body.cad-gallery #main > .post {
+			padding: 1.5rem;
+		}
+
+	}
+
+	/* Project detail pages: prioritize concise, scannable portfolio case studies. */
+	body.project-page #main > .post {
+		padding: 4.5rem 5rem 3.5rem;
+	}
+
+	body.project-page #main > .post header.major > h1 {
+		font-size: 3.25rem;
+		margin-bottom: 1rem;
+	}
+
+	body.project-page #main > .post h2 {
+		font-size: 1.5rem;
+		margin-bottom: 0.75rem;
+	}
+
+	body.project-page #main > .post h3 {
+		font-size: 1.1rem;
+		margin-bottom: 0.75rem;
+	}
+
+	body.project-page #main > .post p,
+	body.project-page #main > .post ul,
+	body.project-page #main > .post ol {
+		font-size: 0.9rem;
+		line-height: 1.8;
+		margin-bottom: 1.25rem;
+	}
+
+	body.project-page #main > .post .image.main {
+		margin: 1.5rem auto;
+		width: 55%;
+	}
+
+	body.project-page #main > .post .image.fit {
+		margin: 1.5rem auto;
+		width: 70%;
+	}
+
+	body.project-page #main > .post .button {
+		height: 2.5rem;
+		line-height: 2.5rem;
+		padding: 0 1.5rem;
+	}
+
+	@media screen and (max-width: 980px) {
+
+		body.project-page #main > .post {
+			padding: 3rem;
+		}
+
+	}
+
+	@media screen and (max-width: 736px) {
+
+		body.project-page #main > .post {
+			padding: 2rem 1.5rem;
+		}
+
+		body.project-page #main > .post header.major > h1 {
+			font-size: 2.4rem;
+		}
+
+		body.project-page #main > .post .image.main,
+		body.project-page #main > .post .image.fit {
+			width: 100%;
+		}
+
+	}
+
+	/* Homepage project cards */
+	body.home #main {
+		overflow: visible;
+	}
+
+	body.home #main > .posts {
+		overflow: visible;
+		position: relative;
+		z-index: 0;
+	}
+
+	body.home #main > .posts > article {
+		background-color: #12263a;
+		border: solid 2px rgba(255, 255, 255, 0.75);
+		color: #ffffff;
+		display: flex;
+		flex-direction: column;
+		isolation: isolate;
+		overflow: visible;
+		padding: 0;
+		position: relative;
+		transition: transform 0.25s ease, box-shadow 0.25s ease;
+		z-index: 0;
+	}
+
+	body.home #main > .posts > article:nth-child(1) {
+		--project-image: url('../../images/killerbyte_square.jpg');
+	}
+
+	body.home #main > .posts > article:nth-child(2) {
+		--project-image: url('../../images/launchtoy.png');
+	}
+
+	body.home #main > .posts > article:nth-child(3) {
+		--project-image: url('../../images/arduino_square.png');
+	}
+
+	body.home #main > .posts > article:nth-child(4) {
+		--project-image: url('../../images/church_square.png');
+	}
+
+	body.home #main > .posts > article:nth-child(5) {
+		--project-image: url('../../images/particles3_square.png');
+	}
+
+	body.home #main > .posts > article:nth-child(6) {
+		--project-image: url('../../images/calculator_square.png');
+	}
+
+	body.home #main > .posts > article header {
+		background-color: #12263a;
+		flex: 0 0 auto;
+		margin: 0;
+		padding: 0.85rem 1rem;
+		position: relative;
+		text-align: left;
+		z-index: 0;
+	}
+
+	body.home #main > .posts > article h2 {
+		color: #ffffff;
+		font-family: Merriweather, Georgia, serif;
+		font-size: 1.1rem;
+		font-weight: 700;
+		letter-spacing: 0;
+		line-height: 1.3;
+		margin: 0;
+		text-transform: none;
+	}
+
+	body.home #main > .posts > article h2 a {
+		color: inherit;
+	}
+
+	body.home #main > .posts > article .card-body {
+		aspect-ratio: 1 / 1;
+		display: flex;
+		flex-direction: column;
+		isolation: isolate;
+		justify-content: flex-end;
+		overflow: hidden;
+		padding: 1.05rem 0.7rem 1.1rem;
+		position: relative;
+		width: 100%;
+	}
+
+	body.home #main > .posts > article .card-body::before {
+		background-image: var(--project-image);
+		background-position: center;
+		background-size: cover;
+		content: '';
+		filter: brightness(0.72);
+		inset: 0;
+		position: absolute;
+		transition: filter 0.25s ease, transform 0.25s ease;
+		z-index: 0;
+	}
+
+	body.home #main > .posts > article .card-body::after {
+		background: linear-gradient(to top, rgba(8, 18, 28, 0.78) 0%, rgba(8, 18, 28, 0.28) 48%, rgba(8, 18, 28, 0) 100%);
+		content: '';
+		inset: 0;
+		pointer-events: none;
+		position: absolute;
+		z-index: 1;
+	}
+
+	body.home #main > .posts > article .card-body > * {
+		position: relative;
+		z-index: 2;
+	}
+
+	body.home #main > .posts > article .image.fit {
+		display: none;
+	}
+
+	body.home #main > .posts > article.is-active {
+		box-shadow: 0 1rem 2rem rgba(8, 21, 34, 0.35);
+		transform: scale(1.03);
+		z-index: 20;
+	}
+
+	body.home #main > .posts > article.is-active .card-body::before {
+		filter: brightness(1);
+		transform: scale(1.04);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+
+		body.home #main > .posts > article:hover {
+			box-shadow: 0 1rem 2rem rgba(8, 21, 34, 0.35);
+			transform: scale(1.03);
+			z-index: 20;
+		}
+
+		body.home #main > .posts > article:hover .card-body::before {
+			filter: brightness(1);
+			transform: scale(1.04);
+		}
+
+	}
+
+	body.home #main > .posts > article p {
+		color: #ffffff;
+		font-size: 0.85rem;
+		line-height: 1.55;
+		margin: 0 0 0.7rem;
+		text-align: left;
+		text-shadow: 0 0.1rem 0.5rem rgba(0, 0, 0, 0.65);
+	}
+
+	body.home #main .skills-box {
+		align-items: center;
+		flex-wrap: nowrap;
+		gap: 0.18rem;
+		justify-content: flex-start;
+		margin: 0 -0.15rem 0;
+		overflow: visible;
+		padding: 0 0 0.7rem;
+		scrollbar-width: none;
+		width: calc(100% + 0.3rem);
+	}
+
+	body.home #main .skills-box::-webkit-scrollbar {
+		display: none;
+	}
+
+	body.home #main .button.skills {
+		background-color: rgba(18, 38, 58, 0.92);
+		border: solid 1px rgba(255, 255, 255, 0.72);
+		border-radius: 999px;
+		color: #ffffff !important;
+		flex: 0 1 auto;
+		font-size: 0.55rem;
+		height: 1.7rem;
+		line-height: 1.55rem;
+		min-width: 0;
+		padding: 0 0.4rem;
+		white-space: nowrap;
+	}
+
+	body.home #main .actions.special {
+		justify-content: flex-start;
+		margin: 0;
+	}
+
+	body.home #main .actions .button {
+		background-color: #f4b860;
+		border: 0;
+		border-radius: 999px;
+		box-shadow: none;
+		color: #12263a !important;
+		font-size: 0.66rem;
+		height: 2rem;
+		line-height: 2rem;
+		padding: 0 1rem;
+	}
+
+	body.home #main .actions .button:hover {
+		background-color: #ffffff;
+	}
+
+	@media screen and (max-width: 736px) {
+
+		body.home #main > .posts > article header {
+			padding: 0.75rem 0.9rem;
+		}
+
+		body.home #main > .posts > article h2 {
+			font-size: 1rem;
+		}
+
+		body.home #main > .posts > article .card-body {
+			padding: 0.95rem 0.55rem 1rem;
+		}
+
+		body.home #main > .posts > article p {
+			font-size: 0.8rem;
+		}
+
 	}
