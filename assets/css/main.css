@@ -5102,7 +5102,7 @@ input, select, textarea {
 	}
 
 	body.home #main .actions .button {
-		background-color: #f4b860;
+		background-color: rgb(178,172,214);
 		border: 0;
 		border-radius: 999px;
 		box-shadow: none;
