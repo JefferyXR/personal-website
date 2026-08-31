@@ -6,371 +6,87 @@
 -->
 <html>
 	<head>
-		<title>Launch & Snatch</title>
+		<title>Launch &amp; Snatch</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 	</head>
-	<body class="is-preload">
+	<body class="is-preload project-page">
+		<div id="wrapper">
+			<canvas id="water-canvas"></canvas>
+			<header id="header"><a href="index.html" class="logo">JR</a></header>
+			<nav id="nav">
+				<ul class="links">
+					<li><a href="index.html">Projects</a></li>
+					<li><a href="cad.html">CAD Gallery</a></li>
+					<li class="active"><a href="launchtoy.html">Details</a></li>
+				</ul>
+				<ul class="icons">
+					<li><a href="https://www.linkedin.com/in/jefferyxross/" class="icon brands fa-linkedin" target="_blank"><span class="label">LinkedIn</span></a></li>
+					<li><a href="https://github.com/JefferyXR" class="icon brands fa-github" target="_blank"><span class="label">GitHub</span></a></li>
+				</ul>
+			</nav>
 
-		<!-- Wrapper -->
-			<div id="wrapper">
-				<!-- Background Canvas -->
-				<canvas id="water-canvas"></canvas>
-
-				<!-- Header -->
-					<header id="header">
-						<a href="index.html" class="logo">JR</a>
-					</header>
-
-				<!-- Nav -->
-					<nav id="nav">
-						<ul class="links">
-							<li><a href="index.html">Projects</a></li>
-							<li><a href="cad.html">CAD Gallery</a></li>
-							<li class="active"><a href="#">Details</a></li>
-						</ul>
-						<ul class="icons">
-							<li><a href="https://www.linkedin.com/in/jefferyxross/" class="icon brands fa-linkedin" target="_blank"><span class="label">LinkedIn</span></a></li>
-							<li><a href="https://github.com/JefferyXR" class="icon brands fa-github" target="_blank"><span class="label">GitHub</span></a></li>
-						</ul>
-					</nav>
-
-				<!-- Main -->
 			<div id="main">
-				<!-- Post -->
 				<section class="post">
 					<header class="major">
-						<h1>Launch & Snatch<br />
-						Mechanical Toy</h1>
-						<p>December 2, 2025 | ME100 Design Project</p>
+						<h1>Launch &amp; Snatch<br />Mechanical Toy</h1>
+						<p>ME100 Design Project · December 2025</p>
 					</header>
-					<div class="image main"><img src="images/launchtoy.png" alt="" /></div>
-					
-					<h2>The Challenge</h2>
-					<p>When our team of five mechanical engineering students was tasked with designing a toy for Spin Master, we knew we wanted to create something unique: a fully mechanical tabletop arcade game with no electronic components. The concept was simple but ambitious—launch a ping pong ball into the air and catch it with a moving basket controlled by a single joystick.</p>
-					<p>We called it "Launch & Snatch," and over the course of two months, we learned that bringing a mechanical system from concept to reality involves far more problem-solving than we initially anticipated.</p>
-					
-					<h2>The Design Process</h2>
-					<h3>Starting with Requirements</h3>
-					<p>Before we could start building, we needed to define what success looked like. Our constraints were clear:</p>
+					<div class="image main"><img src="images/launchtoy.png" alt="Launch &amp; Snatch mechanical tabletop game" /></div>
+
+					<h2>Overview</h2>
+					<p>Launch &amp; Snatch is a fully mechanical tabletop arcade game designed by a five-person team for Spin Master. A foot-pump launcher sends a ping-pong ball into the air; the player uses one joystick to position a two-axis catcher.</p>
 					<ul>
-						<li><strong>Budget:</strong> Maximum $150 CAD</li>
-						<li><strong>Base size:</strong> No larger than 1m × 1m</li>
-						<li><strong>Safety:</strong> Launch speed under 7.7 m/s (meeting toy safety standards)</li>
-						<li><strong>Playability:</strong> Minimum 0.5m launch height to give players reaction time</li>
-						<li><strong>Control:</strong> Single joystick controlling two-axis movement</li>
+						<li><strong>Constraints:</strong> no electronics, under $150 CAD, base under 1 m × 1 m, and launch speed below 7.7 m/s.</li>
+						<li><strong>Prototype:</strong> 905 × 650 × 300 mm plywood frame with laser-cut and 3D-printed components.</li>
+						<li><strong>My work:</strong> laser-cut frame components, frame modifications, and launcher development.</li>
 					</ul>
-					<p>The most interesting constraint? Absolutely no electronics. Everything had to be purely mechanical.</p>
-					
-					<div class="image main"><img src="images/launchtoy_cad.png" alt="Early CAD design from SolidWorks" /></div>
-					
-					<h3>Breaking Down the Problem</h3>
-					<p>We identified five core functions our toy needed to accomplish:</p>
-					<ol>
-						<li><strong>Launch the ball</strong> safely and consistently</li>
-						<li><strong>Move the catcher</strong> in two axes with one control</li>
-						<li><strong>Randomize trajectories</strong> to keep the game interesting</li>
-						<li><strong>Hold the ball</strong> securely when caught</li>
-						<li><strong>Reset quickly</strong> for continuous play</li>
-					</ol>
-					
-					<h2>The Launcher: Finding the Right Power Source</h2>
-					<p>Our first major decision was how to launch the ball. We considered several options:</p>
-					
-					<h3>Option 1: Spring Mechanism</h3>
-					<p><strong>Pros:</strong> Mechanically stable, compact<br>
-					<strong>Cons:</strong> Complex release mechanism, potential safety hazard with high instantaneous forces</p>
-					
-					<h3>Option 2: Air Pressure (Our Choice)</h3>
-					<p><strong>Pros:</strong> Consistent performance, inherently safe, easily adjustable<br>
-					<strong>Cons:</strong> Requires external pump component</p>
-					
-					<div class="image main"><img src="images/launcher.png" alt="PVC launcher with foot pump connected via tube" /></div>
-					
-					<p>We chose a foot-pump system connected to a 1.7-inch diameter PVC pipe. The narrow pipe diameter was crucial—it's only slightly larger than a ping pong ball (40mm), which means almost all the air is forced upward rather than escaping around the ball.</p>
-					
-					<h4>Testing Results:</h4>
+
+					<h2>Mechanical Design</h2>
+					<div class="image main"><img src="images/launchtoy_cad.png" alt="SolidWorks CAD model of the game" /></div>
+					<p>A 1.7 in ID PVC launcher, driven by a foot pump, was selected for its adjustable and repeatable pneumatic launch. The catcher uses a crank-slotted lever: fore-aft joystick motion translates the assembly while lateral input moves the basket across the play area.</p>
+					<div class="image main"><img src="images/crankcad.png" alt="CAD model of the crank-slotted lever mechanism" /></div>
+
+					<h2>Validation</h2>
 					<ul>
-						<li>Average peak height: <strong>0.67 meters</strong> ✓ (exceeded our 0.5m requirement)</li>
-						<li>Initial velocity: <strong>3.8 m/s</strong> ✓ (well below the 7.7 m/s safety limit)</li>
-						<li>Consistency: Excellent across multiple trials</li>
+						<li><strong>Launch:</strong> 0.67 m average peak height and 3.8 m/s initial velocity—above the 0.5 m playability target and below the safety limit.</li>
+						<li><strong>Randomization:</strong> 50 launches produced a 141.41 px standard deviation in landing position, with no repeated landing locations in any 10-launch sequence.</li>
+						<li><strong>Playability:</strong> approximately 13% catch rate across 60 attempts; prototype cost was $127.61.</li>
 					</ul>
-					<p>The launch system also naturally provided randomization. Depending on how hard and fast the player pumps, the ball launches at slightly different angles and heights—no complex mechanisms required.</p>
-					
-					<h2>The Real Challenge: Two-Axis Control</h2>
-					<p>This is where things got interesting. How do you control movement in two directions (left-right AND forward-backward) with a single joystick, using only mechanical components?</p>
-					
-					<h3>The Solution: Crank-Slotted Lever Mechanism</h3>
-					<p>After evaluating motor systems (too expensive, violates our mechanical-only rule) and hydraulics (too slow, potential leakage), we settled on a crank-slotted lever mechanism.</p>
-					
-					<div class="image main"><img src="images/crankcad.png" alt="CAD model of the crank-slotted lever system" /></div>
-					
-					<h4>How it works:</h4>
-					<ul>
-						<li>The joystick connects to a slotted bar that slides along three horizontal aluminum rods</li>
-						<li>Forward/backward joystick movement slides the entire system along the x-axis</li>
-						<li>Left/right joystick movement rotates within the slot, pushing the catcher along the y-axis</li>
-						<li>The catcher holder uses three M8 screws through slots to distribute forces and keep the basket upright</li>
-					</ul>
-					<p>The concept was elegant. The execution? Not so much.</p>
-					
-					<h2>The Friction Problem</h2>
-					<p>During initial testing with wooden dowels, we discovered our system had a major flaw: the lateral (left-right) movement was inconsistent and often got stuck. The forward-backward motion worked beautifully, but side-to-side movement was frustrating.</p>
-					
-					<p><strong>The Root Cause:</strong> When you push the joystick left or right, you're not just translating the catcher—you're creating a rotational force. This causes the slotted bar to bind against the guide rails, similar to how a drawer jams when you pull it at an angle.</p>
-					
-					<h3>Iteration 1: Better Materials</h3>
-					<p>We replaced the wooden dowels with aluminum rods and applied grease to reduce friction.</p>
-					<p><strong>Result:</strong> Improvement, but not enough. The binding issue persisted.</p>
-					
-					<div class="image main"><img src="images/launchtoy_interior.png" alt="Interior view showing greased aluminum rods" /></div>
-					
-					<h2>Building the Prototype</h2>
-					<p>While solving the control problem, we constructed the main frame:</p>
-					
-					<h3>Materials</h3>
-					<div class="row">
-						<div class="col-6 col-12-small">
-							<ul class="alt">
-								<li>1/4'' Plywood</li>
-								<li>3D printed grey PLA catcher holder</li>
-								<li>PVC pipe 1.7'' ID x 2'' OD x 16''</li>
-								<li>Poly tube 1/4'' ID x 3/8'' OD x 11''</li>
-								<li>Machine Screws M4 x 6mm</li>
-								<li>Machine Screws M4 x 60mm</li>
-								<li>2 Wooden dowels 3/8'' x 660mm</li>
-								<li>Wooden dowel 1'' x 390mm</li>
-							</ul>
-						</div>
-						<div class="col-6 col-12-small">
-							<ul class="alt">
-								<li>Machine Screws M8 x 70mm</li>
-								<li>Washers 8mm flat</li>
-								<li>Washers 4mm flat</li>
-								<li>Foot pump</li>
-								<li>Ping pong ball</li>
-								<li>Round aluminum bar 3/8'' x 660mm</li>
-								<li>Plastic bottle</li>
-							</ul>
-						</div>
-					</div>
-					
-					<h4>Specifications:</h4>
-					<ul>
-						<li>Total dimensions: 905mm × 650mm × 300mm</li>
-						<li>Tools: Handsaws, electric jigsaw, drill press</li>
-					</ul>
-					
-					<div class="image main"><img src="images/launchtoy_frame.png" alt="Frame construction progress photos" /></div>
-					
-					<h4>Key Features:</h4>
-					<ul>
-						<li>Stair-stepped front panel for joystick clearance</li>
-						<li>Notched rear panel for launcher mounting</li>
-						<li>Clear plastic windshield to protect players from errant launches</li>
-						<li>Chamfered edges on all openings for safety</li>
-					</ul>
-					<p>The laser-cut components and 3D-printed parts were manufactured at the university's rapid prototyping center, ensuring precision where it mattered most.</p>
-					
-					<h2>Testing: Does It Actually Work?</h2>
-					<p>With the prototype assembled, we conducted three critical tests:</p>
-					
-					<h3>Test 1: Launch Performance</h3>
-					<p>We filmed 5 launches in slow motion with a tape measure for reference.</p>
-					<p><strong>Results:</strong></p>
-					<ul>
-						<li>Peak heights ranged from 64.5 cm to 70.2 cm</li>
-						<li>Average: 67 cm ✓</li>
-						<li>Standard deviation: Low, indicating consistency</li>
-					</ul>
-					
-					<h3>Test 2: Randomization</h3>
-					<p>We positioned the catcher at one side and launched the ball 50 times, marking each landing point with an X.</p>
-					
-					<div class="image main"><img src="images/launchtoy_randomization_img.png" alt="Photo showing 50 X marks scattered across the play area" /></div>
-					
-					<p>Using OpenCV and Python, we converted the marked positions to a scatter plot and analyzed the distribution.</p>
-					
-					<div class="image main"><img src="images/launchtoy_violin.png" alt="Violin plot showing distance distribution" /></div>
-					
-					<p><strong>Results:</strong></p>
-					<ul>
-						<li>Mean distance from center: 324.87 pixels</li>
-						<li>Standard deviation: 141.41 pixels</li>
-						<li><strong>No repeated landing spots within any 10-launch sequence</strong> ✓</li>
-					</ul>
-					<p>The passive randomization from variable pump force worked perfectly.</p>
-					
-					<h3>Test 3: Playability</h3>
-					<p>Over approximately 60 play attempts, we successfully caught the ball 8 times.</p>
-					<p><strong>Catch rate: ~13%</strong></p>
-					<p>While this might sound low, it's actually ideal for a skill-based game. Too easy and it's boring; too hard and it's frustrating. Players had enough reaction time to position the catcher, and successful catches felt rewarding.</p>
-					<p><strong>Total Project Cost: $127.61</strong> (under our $150 budget ✓)</p>
-					
-					<h2>The Pulley System Solution</h2>
-					<p>The lateral movement problem was the one major issue we couldn't fully resolve during the prototyping phase. However, through analysis and simulation, we developed a promising solution: a dual-pulley counter-torque system.</p>
-					
-					<h3>The Concept:</h3>
-					<p>Instead of fighting the rotational forces, work with them. By adding pulleys and cables that pull on the opposite end of the slotted bar, we can create a counter-moment that cancels out the binding torque.</p>
-					
-					<div class="image main"><img src="images/launchtoy_pulley.png" alt="CAD model of proposed pulley system" /></div>
-					
-					<h4>How it works:</h4>
-					<ol>
-						<li>Blue and red cables route through four stationary pulleys mounted to the frame</li>
-						<li>When the joystick pushes left, creating clockwise rotation, the cable system pulls right with equal force</li>
-						<li>The net rotational force becomes zero—pure translation remains</li>
-					</ol>
-					
-					<h3>Finite Element Analysis</h3>
-					<p>We tested this theory using Ansys Discovery to simulate friction forces:</p>
-					
-					<div class="image main"><img src="images/launchtoy_pulley_fea.png" alt="FEA results comparing friction with and without pulley system" /></div>
-					
-					<p><strong>Without pulley system:</strong></p>
-					<ul>
-						<li>Friction increases non-linearly with input force</li>
-						<li>Clear upward curve indicating progressive binding</li>
-					</ul>
-					
-					<p><strong>With pulley system:</strong></p>
-					<ul>
-						<li>Friction remains constant even as input force reaches 50N</li>
-						<li>The pulley system successfully decouples input force from frictional resistance</li>
-					</ul>
-					
-					<p>The analysis suggests this modification could reduce friction by approximately 60% and eliminate the binding issue entirely.</p>
-					
-					<h2>What I Learned</h2>
-					<p>This project taught me far more than any textbook could about mechanical design:</p>
-					
-					<h3>1. Initial designs rarely survive contact with reality</h3>
-					<p>Our CAD model looked perfect. The actual prototype revealed issues we never anticipated. Iteration isn't optional—it's the process.</p>
-					
-					<h3>2. Friction is the enemy of all mechanical systems</h3>
-					<p>We spent more time fighting friction than any other challenge. Material selection, surface finish, lubrication, and alignment all matter immensely.</p>
-					
-					<h3>3. Constraints drive creativity</h3>
-					<p>The "no electronics" requirement forced us to think differently. Sometimes limitations lead to better solutions than unlimited options would.</p>
-					
-					<h3>4. Testing reveals truth</h3>
-					<p>We could theorize all day about whether our randomization would work, but 50 launches with marked positions gave us actual data. Quantitative testing beats assumptions.</p>
-					
-					<h3>5. Simple mechanisms can be complex</h3>
-					<p>A crank-slotted lever is conceptually straightforward, but making it work smoothly in practice involves managing forces, moments, friction, alignment, and material properties simultaneously.</p>
-					
-					<h3>6. Teamwork multiplies capability</h3>
-					<p>Five people with different strengths—CAD modeling, machining, analysis, fabrication, testing—accomplished far more than any individual could. Clear task division was essential.</p>
-					
-					<h2>Next Steps and Recommendations</h2>
-					<p>If we were to continue developing this toy, here's what I'd focus on:</p>
-					
-					<h3>Immediate Priorities:</h3>
-					<ol>
-						<li><strong>Implement the pulley system</strong> and validate the FEA predictions with physical testing</li>
-						<li><strong>Improve guide rail alignment</strong> with precision-machined brackets</li>
-						<li><strong>Add ball bearings</strong> at key friction points for smoother motion</li>
-						<li><strong>Design an automatic ball return</strong> that feeds directly back to the launcher</li>
-					</ol>
-					
-					<h3>Production Considerations:</h3>
-					<ul>
-						<li>Replace plywood with injection-molded plastic for consistency</li>
-						<li>Standardize all components for easier assembly</li>
-						<li>Add visual appeal with colors and graphics</li>
-						<li>Consider a dual-player competitive mode</li>
-					</ul>
-					
-					<h3>Market Potential:</h3>
-					<p>The toy successfully demonstrates that engaging gameplay doesn't require electronics. For parents concerned about screen time, a purely mechanical game has real appeal. The skill-based nature creates a satisfying difficulty curve—easy to understand, challenging to master.</p>
-					
-					
-					<h2>Final Thoughts</h2>
-					<p>The Launch & Snatch project embodied everything I love about mechanical engineering: taking an idea from concept to working prototype, solving unexpected problems, and learning from both successes and failures.</p>
-					<p>Did we build a perfect toy? No. Did we build a functional prototype that proved the concept viable? Absolutely.</p>
-					<p>The lateral movement issue reminds me that engineering is iterative. We identified the problem, understood its root cause, proposed a solution, and validated it through analysis. That's the engineering process working exactly as it should.</p>
-					<p>Would I recommend Spin Master continue development? Yes. The core mechanics work, the gameplay is engaging, and the remaining challenges have clear engineering solutions.</p>
-					<p>Most importantly, this project reinforced why I became an engineer: the satisfaction of making something physical that didn't exist before, using nothing but materials, physics, and creative problem-solving.</p>
-					
-					<h3>Project Statistics</h3>
-					<ul>
-						<li><strong>Total time investment:</strong> 8 weeks</li>
-						<li><strong>Budget used:</strong> $127.61 / $150</li>
-						<li><strong>Team members:</strong> 5</li>
-						<li><strong>Problems solved:</strong> Too many to count</li>
-						<li><strong>Lessons learned:</strong> Countless</li>
-					</ul>
-					
-					<h2>Technical Specifications</h2>
-					<h3>Dimensions:</h3>
-					<ul>
-						<li>Base: 905mm × 650mm</li>
-						<li>Height: 300mm</li>
-						<li>Play area: 650mm × 465mm</li>
-					</ul>
-					
-					<h3>Performance:</h3>
-					<ul>
-						<li>Average launch height: 0.67m</li>
-						<li>Launch velocity: 3.8 m/s</li>
-						<li>Randomization: 141 pixel standard deviation</li>
-						<li>Catch success rate: 13%</li>
-					</ul>
-					
-					<h2>Acknowledgments</h2>
-					<h3>Team Members:</h3>
-					<ul>
-						<li><strong>Shaofu Wang</strong> - CAD modeling, materials sourcing, control system</li>
-						<li><strong>Jeffery Ross</strong> - Laser cutting, frame modifications, launcher</li>
-						<li><strong>Uday Toor</strong> - Frame manufacturing, control stick, modifications</li>
-						<li><strong>Evan Stack-Couture</strong> - Launcher design and testing</li>
-						<li><strong>Jorge Ayala</strong> - Control stick, machine shop fabrication</li>
-					</ul>
-					
-					<h3>Special Thanks:</h3>
-					<ul>
-						<li>Professor Andrew Milne & Professor Abdullah Barakat (ME100)</li>
-						<li>University of Waterloo Machine Shop</li>
-						<li>Rapid Prototyping Center staff</li>
-					</ul>
-					
-					<hr />
-					<p><em>This project was completed as part of ME100: Introduction to Mechanical Engineering Practice I at the University of Waterloo, December 2025.</em></p>
-					
+					<div class="image main"><img src="images/launchtoy_violin.png" alt="Landing-position distribution from launch testing" /></div>
+
+					<h2>Key Engineering Challenge</h2>
+					<p>Lateral joystick input produced a moment that bound the slotted bar against its guide rails. Replacing wooden dowels with aluminum rods and adding grease improved the motion, but did not eliminate the binding.</p>
+					<div class="image main"><img src="images/launchtoy_interior.png" alt="Prototype interior showing the guide rail mechanism" /></div>
+					<p>The proposed next iteration adds a dual-pulley, cable-based counter-torque system. Ansys Discovery analysis predicts roughly a 60% reduction in friction by opposing the rotational load that causes binding.</p>
+					<div class="image main"><img src="images/launchtoy_pulley_fea.png" alt="Finite-element analysis of the pulley-system improvement" /></div>
+
+					<h2>Outcome</h2>
+					<p>The prototype demonstrated a safe, playable, electronics-free game and established a test-backed path to improve the two-axis control mechanism. The project emphasized mechanism design, rapid fabrication, quantitative testing, and iteration from prototype feedback.</p>
 				</section>
 			</div>
 
-				<!-- Footer -->
-					<footer id="footer">
-						<section class="split contact">
-							<section>
-								<h3>Social</h3>
-								<ul class="icons alt">
-									<li><a href="https://www.linkedin.com/in/jefferyxross/" class="icon brands alt fa-linkedin" target="_blank"><span class="label">LinkedIn</span></a></li>
-									<li><a href="https://github.com/JefferyXR" class="icon brands alt fa-github" target="_blank"><span class="label">GitHub</span></a></li>
-								</ul>
-							</section>
-						</section>
-					</footer>
+			<footer id="footer">
+				<section class="split contact"><section>
+					<h3>Social</h3>
+					<ul class="icons alt">
+						<li><a href="https://www.linkedin.com/in/jefferyxross/" class="icon brands alt fa-linkedin" target="_blank"><span class="label">LinkedIn</span></a></li>
+						<li><a href="https://github.com/JefferyXR" class="icon brands alt fa-github" target="_blank"><span class="label">GitHub</span></a></li>
+					</ul>
+				</section></section>
+			</footer>
+			<div id="copyright"><ul><li>Fonts & icons: <a href="https://html5up.net">HTML5 UP</a></li></ul></div>
+		</div>
 
-				<!-- Copyright -->
-					<div id="copyright">
-						<ul><li>Base Design: <a href="https://html5up.net">HTML5 UP</a></li></ul>
-					</div>
-
-			</div>
-
-		<!-- Scripts -->
-			<script src="assets/js/jquery.min.js"></script>
-			<script src="assets/js/jquery.scrollex.min.js"></script>
-			<script src="assets/js/jquery.scrolly.min.js"></script>
-			<script src="assets/js/browser.min.js"></script>
-			<script src="assets/js/breakpoints.min.js"></script>
-			<script src="assets/js/util.js"></script>
-			<script src="assets/js/main.js"></script>
-			<script src="assets/js/waterParticles.js"></script>
-
+		<script src="assets/js/jquery.min.js"></script>
+		<script src="assets/js/jquery.scrollex.min.js"></script>
+		<script src="assets/js/jquery.scrolly.min.js"></script>
+		<script src="assets/js/browser.min.js"></script>
+		<script src="assets/js/breakpoints.min.js"></script>
+		<script src="assets/js/util.js"></script>
+		<script src="assets/js/main.js"></script>
+		<script src="assets/js/waterParticles.js"></script>
 	</body>
 </html>
