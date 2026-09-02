@@ -142,6 +142,22 @@ input, select, textarea {
 
 	html {
 		box-sizing: border-box;
+		/* Easing for the footer Back to top control (Req 13 c2), supplied by CSS rather
+		   than by jquery.scrolly so the control depends on no script at all.
+		   scroll-behavior must sit on the scrolling element, so it is necessarily global;
+		   the `scrolly` anchors call preventDefault(), so no native scroll competes with
+		   jQuery's animation. */
+		scroll-behavior: smooth;
+	}
+
+	/* An unrequested full-page scroll animation is precisely the class of motion this
+	   setting exists to suppress, so the reduced-motion arm restores the instant jump. */
+	@media (prefers-reduced-motion: reduce) {
+
+		html {
+			scroll-behavior: auto;
+		}
+
 	}
 
 	*, *:before, *:after {
@@ -2132,7 +2148,10 @@ input, select, textarea {
 		display: inline-block;
 		font-family: "PP Telegraf", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
 		font-size: 0.8rem;
-		font-weight: 400;
+		/* Req 11 c1, c3: one declaration reaches Read More, the View Model variants and
+		   the skills pills, which inherit it. 800 is the usWeightClass of the already
+		   shipped PPTelegraf-Ultrabold.otf, so nothing is synthesized (c6). */
+		font-weight: 800;
 		letter-spacing: 0.05em;
 		height: 3rem;
 		line-height: 3rem;
@@ -3782,7 +3801,9 @@ input, select, textarea {
 			-ms-flex-shrink: 1;
 			flex-shrink: 1;
 			font-family: "PP Telegraf", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
-			font-weight: 400;
+			/* Req 11 c1: Bold_Chrome_Text. 800 is a shipped usWeightClass, so nothing is
+			   synthesized (c6); the family is unchanged (c5). */
+			font-weight: 800;
 			letter-spacing: 0.05em;
 			list-style: none;
 			margin-bottom: 0;
@@ -4394,11 +4415,12 @@ input, select, textarea {
 		   icon links and #copyright keep their exact pre-change colours by owner
 		   decision (Req 1 c10, c11). */
 		#footer a[href^="mailto:"] {
-			color: #4a5158;
+			color: #3a4148;
 			/* SOLID, not the inherited rgba(113, 121, 129, 0.5): that composites to
-			   #b3b7bb = 1.85:1 and fails Req 1 c7. Even rgba(74, 81, 88, 0.5) reaches
-			   only 2.33:1. Only a solid colour clears the 3:1 bar. 7.38:1 measured. */
-			border-bottom-color: #4a5158;
+			   #b3b7bb = 1.85:1 and fails Req 1 c7. Halving the link colour's own alpha
+			   does not rescue it either -- only a solid colour clears the 3:1 bar.
+			   9.49:1 measured (was 7.38:1 before Change Set 2 §5.1). */
+			border-bottom-color: #3a4148;
 		}
 
 			#footer a[href^="mailto:"]:hover {
@@ -4407,7 +4429,7 @@ input, select, textarea {
 				color: #18bfef !important;
 				/* The generic hover sets transparent; Req 1 c7 wants >=3:1 in the hover
 				   state too, so keep the underline solid and measurable. */
-				border-bottom-color: #4a5158;
+				border-bottom-color: #3a4148;
 			}
 
 			/* outline, not a border: spans the full text box, cannot alter layout, and
@@ -4507,7 +4529,13 @@ input, select, textarea {
 	#copyright {
 		color: #ffffff;
 		position: relative;
-		color: rgba(255, 255, 255, 0.25);
+		/* Req 14 c1-c3. Was rgba(255, 255, 255, 0.25) = 2.27:1. Alpha 0.65 composites to
+		   #b0b3b6 and measures 7.33:1 against #1e252d. Chosen over alpha 0.50 (4.94:1)
+		   for state consistency: hover resolves to #18bfef = 7.17:1, so 0.65 puts default
+		   and hover within 2% of each other instead of 45% apart.
+		   NOTE last-declaration-wins -- the color(alt) mixin above declares color once
+		   already, so a checker reading the FIRST match reports a false failure. */
+		color: rgba(255, 255, 255, 0.65);
 		cursor: default;
 		font-family: "PP Telegraf", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
 		font-size: 0.8rem;
@@ -4560,6 +4588,17 @@ input, select, textarea {
 		#copyright a {
 			color: inherit;
 			border-bottom-color: inherit;
+			/* Req 13 c17: overrides the block's cursor: default on static text. */
+			cursor: pointer;
+		}
+
+		/* Req 13 c9. outline, not a border: spans the full text box, alters no layout.
+		   currentColor, not a literal: the ring tracks the block colour, which composites
+		   to #b0b3b6 = 7.33:1 against #1e252d. :focus-visible keeps it off pointer
+		   clicks. */
+		#copyright a:focus-visible {
+			outline: 2px solid currentColor;
+			outline-offset: 2px;
 		}
 
 		#copyright ul {
@@ -4864,7 +4903,12 @@ input, select, textarea {
 	body.home #main .actions .button {
 		font-size: 0.7rem;
 		height: 2.25rem;
-		line-height: 2.25rem;
+		/* was 2.25rem: a LENGTH set equal to height, so the rendered line box filled the
+		   box exactly -- height ratio 1.000 against a 0.85 ceiling (Req 12 c5), and c4's
+		   vertical gap evaluated to zero, making any horizontal padding an infinite
+		   multiple of it. A ratio fixes both. height and padding are left alone so the
+		   Read More and View Model boxes do not change size. */
+		line-height: 1.4;
 		padding: 0 1rem;
 	}
 
@@ -4928,6 +4972,25 @@ input, select, textarea {
 
 		body.cad-gallery #main > .post {
 			padding: 1.5rem;
+		}
+
+	}
+
+	/* Req 11 c9 / c11 / c12. Measured breach introduced by the Ultrabold weight.
+	   The View Model control is `.button primary small fit`: `.fit` makes it width: 100%
+	   of a `.col-4`, and `.button.small` pads it `0 1.5rem`. At <=360px the root drops to
+	   10pt, so the column is 96.66px, the box 86.66px, and the nowrap label -- which
+	   starts at the content-box left edge rather than centring, being wider than the line
+	   box -- reached 68.67px at weight 800 and painted 2.02px past the button's own border
+	   box. At weight 400 it measured 63.67px with 2.98px of slack, so this is a regression.
+	   The element cannot be enlarged (it already fills its grid column), so the horizontal
+	   padding gives way: 1rem = 13.33px leaves 4.66px of slack. font-size is not reduced,
+	   the weight is not reverted, and no text-overflow truncation is applied. Scoped to
+	   <=360px because every wider viewport already has slack. */
+	@media screen and (max-width: 360px) {
+
+		body.cad-gallery #main > .post .button.small.fit {
+			padding: 0 1rem;
 		}
 
 	}
@@ -5033,7 +5096,12 @@ input, select, textarea {
 		margin: 0;
 		padding: 0.85rem 1rem;
 		position: relative;
-		text-align: left;
+		/* Req 10 c1: was left. Centred on the BAND, not on the h2. text-align applies
+		   per LINE BOX, so the explicit <br /> in the KillerByte title and any 320px
+		   auto-wrap each centre independently (c2, c3). Flex centring would centre the
+		   h2 BOX as one unit and leave its internal lines left-ragged. The card
+		   description paragraph rules keep text-align: left -- Req 10 c7. */
+		text-align: center;
 		z-index: 0;
 	}
 
@@ -5145,18 +5213,27 @@ input, select, textarea {
 		display: none;
 	}
 
+	/* Change Set 2 (§5.4) retunes the box for the heavier Ultrabold label. Each number
+	   answers one measured Requirement 12 breach; appearance is untouched (c9). */
 	body.home #main .button.skills {
 		background-color: rgba(18, 38, 58, 0.92);
 		border: solid 1px rgba(255, 255, 255, 0.72);
 		border-radius: 999px;
 		color: #ffffff !important;
+		/* inline-flex + centring is the belt to min-height's braces: under block layout
+		   all residual slack falls below the line box, which is what produced the ~8.4px
+		   Req 12 c2 asymmetry. Flex centring splits it evenly. Wrapping survives -- the
+		   text is one anonymous flex item that still wraps under white-space: normal. */
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 		flex: 0 1 auto;
 		font-size: 0.55rem;
 		height: auto;
 		line-height: 1.4;
 		min-width: 0;
-		min-height: 1.7rem;
-		padding: 0.15rem 0.4rem;
+		min-height: 1.35rem;
+		padding: 0.2rem 0.55rem;
 		white-space: normal;
 	}
 

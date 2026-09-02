@@ -256,12 +256,127 @@ async function checkFooterLink(browser) {
   if (round2(contrastRatio(states.focusOutlineColor, '#f5f5f5')) < 3.0) note('focus ring below 3:1');
   if (states.footerH3Color !== 'rgb(113, 121, 129)') note(`footer h3 colour changed to ${states.footerH3Color}`);
   if (states.socialColor !== 'rgb(113, 121, 129)') note(`footer social colour changed to ${states.socialColor}`);
-  if (states.copyrightColor !== 'rgba(255, 255, 255, 0.25)') note(`#copyright colour changed to ${states.copyrightColor}`);
+  // Req 14: this is now the INTENDED value. The Req 1 c11 exemption reaches the
+  // Copyright_Block and nothing else, which is why the two lines above are unchanged.
+  if (states.copyrightColor !== 'rgba(255, 255, 255, 0.65)') note(`#copyright colour is ${states.copyrightColor}, expected rgba(255, 255, 255, 0.65)`);
 
   console.log('\n  accepted exceptions, re-measured:');
   console.log(`    C2 #footer h3       ${round2(contrastRatio('#717981', '#f5f5f5'))}:1  (recorded 4.05) — known-and-accepted`);
-  console.log(`    C3 #copyright       ${round2(contrastRatio('rgba(255,255,255,0.25)', '#1e252d'))}:1  (recorded 2.29) — known-and-accepted`);
   console.log(`    C4 hover accent     ${round2(contrastRatio('#18bfef', '#f5f5f5'))}:1  — mandated by Req 1 c4, scoped out, NOT an exception entry`);
+  console.log(
+    `    C3 #copyright       RETIRED by Change Set 2 (Req 14 c7) — now ${round2(contrastRatio('rgba(255,255,255,0.65)', '#1e252d'))}:1, ` +
+      'checked against the ordinary >=4.5:1 threshold like any other tuple',
+  );
+  await context.close();
+}
+
+async function checkCopyrightControl(browser) {
+  console.log('\n=== Requirement 13 / 14: Back to top control and copyright bar, all nine pages ===');
+  for (const file of NINE_PAGES) {
+    const { context, page, errors } = await open(browser, file, 1440);
+    const r = await page.evaluate(() => {
+      const block = document.querySelector('#copyright');
+      const control = document.querySelector('#copyright a[href^="#"]');
+      const credit = document.querySelector('#copyright a[href="https://html5up.net"]');
+      const items = [...document.querySelectorAll('#copyright ul li')];
+      if (!block || !control || !credit) return null;
+      control.focus();
+      const cc = getComputedStyle(control);
+      return {
+        blockColor: getComputedStyle(block).color,
+        controlHref: control.getAttribute('href'),
+        controlText: control.textContent.trim(),
+        controlClass: control.className || '(none)',
+        controlAriaLabel: control.getAttribute('aria-label'),
+        creditText: items.find((li) => li.contains(credit))?.textContent.trim(),
+        items: items.length,
+        separateElements: control !== credit,
+        cursor: cc.cursor,
+        outline: `${cc.outlineWidth} ${cc.outlineStyle} ${cc.outlineColor}`,
+        outlineOffset: cc.outlineOffset,
+        scrollBehavior: getComputedStyle(document.documentElement).scrollBehavior,
+        clipped: block.scrollWidth > block.clientWidth + 1,
+        fontFamily: getComputedStyle(block).fontFamily,
+        fontSize: getComputedStyle(block).fontSize,
+        textTransform: getComputedStyle(block).textTransform,
+        textAlign: getComputedStyle(block).textAlign,
+        lineHeight: getComputedStyle(block).lineHeight,
+      };
+    });
+
+    if (!r) {
+      note(`${file}: Copyright_Block, Back_To_Top_Control or Design_Credit missing`);
+      console.log(`  ${file.padEnd(17)} MISSING`);
+      await context.close();
+      continue;
+    }
+
+    const ratio = round2(contrastRatio(r.blockColor, '#1e252d'));
+    const ok =
+      ratio >= 4.5 &&
+      r.controlHref === '#top' &&
+      r.controlText === 'Back to top' &&
+      r.items === 2 &&
+      r.separateElements &&
+      r.cursor === 'pointer' &&
+      parseFloat(r.outline) >= 2 &&
+      !r.clipped &&
+      !/fonts?|icons?/i.test(r.creditText ?? '');
+
+    console.log(
+      `  ${file.padEnd(17)} ${r.blockColor.padEnd(26)} ${String(ratio).padStart(5)}:1  ` +
+        `href=${r.controlHref} items=${r.items} cursor=${r.cursor} outline="${r.outline}" ` +
+        `credit="${r.creditText}" ${ok ? 'OK' : 'FAIL'}`,
+    );
+
+    if (ratio < 4.5) note(`${file}: Copyright_Block contrast ${ratio}:1 below 4.5:1 (Req 14 c1)`);
+    if (r.controlHref !== '#top') note(`${file}: control href is ${r.controlHref}`);
+    if (r.controlClass !== '(none)') note(`${file}: control carries class "${r.controlClass}" — scrolly makes it script-dependent`);
+    if (r.controlAriaLabel) note(`${file}: control carries a redundant aria-label`);
+    if (r.items !== 2) note(`${file}: ${r.items} <li> in the Copyright_Block, expected 2 (Req 13 c12)`);
+    if (!r.separateElements) note(`${file}: control and credit are the same element`);
+    if (r.cursor !== 'pointer') note(`${file}: control cursor is ${r.cursor} (Req 13 c17)`);
+    if (parseFloat(r.outline) < 2) note(`${file}: focus indicator ${r.outline} thinner than 2px (Req 13 c9)`);
+    if (/fonts?|icons?/i.test(r.creditText ?? '')) note(`${file}: the credit still references fonts or icons (Req 13 c11)`);
+    if (r.clipped) note(`${file}: the Copyright_Block clips its content (Req 13 c16)`);
+    // Req 13 c15: typography preserved.
+    if (!/PP Telegraf/.test(r.fontFamily)) note(`${file}: Copyright_Block family is ${r.fontFamily}`);
+    if (r.textTransform !== 'uppercase') note(`${file}: Copyright_Block text-transform is ${r.textTransform}`);
+    if (r.textAlign !== 'center') note(`${file}: Copyright_Block text-align is ${r.textAlign}`);
+    if (errors.length) note(`${file}: console errors: ${errors.join(' | ')}`);
+    await context.close();
+  }
+}
+
+async function checkScrollBehaviourInterference(browser) {
+  // Check F extension: the design names this as the documented trigger for dropping the
+  // smooth-scroll block, so it is measured rather than assumed.
+  console.log('\n=== Check F extension: scroll-behavior vs the scrolly / scrollex anchors ===');
+  const { context, page, errors } = await open(browser, 'index.html', 1440);
+  const r = await page.evaluate(async () => {
+    const arrow = document.querySelector('a.scrolly[href="#main"]');
+    const main = document.querySelector('#main');
+    if (!arrow || !main) return { arrow: !!arrow, main: !!main };
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    arrow.click();
+    await new Promise((res) => setTimeout(res, 1600));
+    const y = window.scrollY;
+    const target = main.getBoundingClientRect().top + y;
+    return {
+      arrow: true,
+      main: true,
+      scrollBehavior: getComputedStyle(document.documentElement).scrollBehavior,
+      landedNear: Math.abs(y - target) < 80,
+      y: Math.round(y),
+      target: Math.round(target),
+      introVisible: !!document.querySelector('#intro'),
+    };
+  });
+  console.log('  ', JSON.stringify(r), 'errors:', errors.length);
+  if (r.arrow && r.main && !r.landedNear) {
+    note(`scroll-behavior: smooth disturbed the scrolly anchor (landed ${r.y}, target ${r.target}) — the design's documented trigger for dropping the block`);
+  }
+  if (errors.length) note(`Check F: console errors with scroll-behavior: smooth — ${errors.join(' | ')}`);
   await context.close();
 }
 
@@ -333,9 +448,11 @@ async function main() {
   await checkFamiliesAndWeights(browser);
   await checkNoHorizonInChrome(browser);
   await checkFooterLink(browser);
+  await checkCopyrightControl(browser);
   await checkSkillsWrap(browser);
   await checkFontAwesomeAndScripts(browser);
   await checkCanvasAnimates(browser);
+  await checkScrollBehaviourInterference(browser);
   await checkOverflow(browser);
   await closeAll();
 

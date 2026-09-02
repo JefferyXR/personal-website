@@ -194,10 +194,16 @@
 
 		.button.skills,
 		.actions .button {
-			font-size: 0.7rem;
-			height: 2.25rem;
-			line-height: 2.25rem;
-			padding: 0 1rem;
+			font-size: 0.7rem;	// UNCHANGED
+			height: 2.25rem;	// UNCHANGED -- leaving it alone keeps the Read More and
+						// View Model boxes exactly the size they are
+			// was 2.25rem: a LENGTH set equal to height, which made the rendered line box
+			// fill the box exactly. That is the classic fixed-height centring trick, and
+			// it is unsatisfiable under Requirement 12: the height ratio was 1.000 against
+			// a 0.85 ceiling, and c4's vertical gap evaluated to ZERO, making any non-zero
+			// horizontal padding an infinite multiple of it. A ratio fixes both at once.
+			line-height: 1.4;
+			padding: 0 1rem;	// UNCHANGED
 		}
 
 		@include breakpoint('<=medium') {
@@ -257,6 +263,32 @@
 		@include breakpoint('<=small') {
 			#main > .post {
 				padding: 1.5rem;
+			}
+		}
+
+		// Req 11 c9 / c11 / c12. MEASURED breach introduced by the Ultrabold weight, and
+		// the only one Change Set 2 found outside the skills pills.
+		//
+		// The View Model control is `.button primary small fit`: `.fit` makes it
+		// `width: 100%` of a `.col-4`, and `.button.small` pads it `0 1.5rem`. At <=360px
+		// the root drops to 10pt, so the column is 96.66px, the box 86.66px, and the
+		// `nowrap` label -- which starts at the content-box left edge rather than centring,
+		// because it is wider than the line box -- reached 68.67px at weight 800 and
+		// painted **2.02px past the button's own border box**. At weight 400 it measured
+		// 63.67px and had 2.98px of slack, so this is a regression, not pre-existing.
+		//
+		// The remedy Req 11 c12 fixes in advance: adjust the box or its padding. The
+		// element cannot be enlarged (it already fills its grid column, and the column
+		// width is the responsive design's), so the horizontal padding gives way instead.
+		// 1rem = 13.33px leaves 4.66px of slack. font-size is NOT reduced, the weight is
+		// NOT reverted, and no `text-overflow` truncation is applied.
+		//
+		// Scoped to <=xxsmall because 360px and every wider viewport already has slack
+		// (measured: -11.31px at 360, -64.77px at 768, -109.36px at 1440), so no button
+		// box changes anywhere the breach does not occur.
+		@include breakpoint('<=xxsmall') {
+			#main > .post .button.small.fit {
+				padding: 0 1rem;
 			}
 		}
 	}
@@ -355,7 +387,16 @@
 				margin: 0;
 				padding: 0.85rem 1rem;
 				position: relative;
-				text-align: left;
+				// Req 10 c1: was left. Centred on the BAND, not on the h2 -- the band's
+				// only child is the h2, and centring here keeps the h2 rule untouched,
+				// which is the cheapest guarantee of Req 10 c4 and c5.
+				// text-align applies per LINE BOX, so the explicit <br /> in the
+				// KillerByte title and any 320px auto-wrap each centre independently
+				// (c2, c3). Flex/grid centring would centre the h2 BOX as one unit and
+				// leave its internal lines left-ragged: c1 would pass while c2 and c3
+				// failed. The two other alignment declarations in this file (the card
+				// description paragraphs) stay left-aligned -- Req 10 c7.
+				text-align: center;
 				z-index: 0;
 			}
 
@@ -483,17 +524,28 @@
 	}
 
 
+	// Change Set 2 (§5.4) retunes the box for the heavier Ultrabold label. Each number
+	// answers one measured Requirement 12 breach; none of them changes appearance (c9).
 	body.home #main .button.skills {
 		background-color: rgba(18, 38, 58, 0.92);
 		border: solid 1px rgba(255, 255, 255, 0.72);
 		border-radius: 999px;
 		color: #ffffff !important;
+		// inline-flex + centring is the BELT to min-height's braces. Under block layout
+		// every pixel of residual slack falls below the line box, which is exactly what
+		// produced the ~8.4px c2 asymmetry; flex centring splits it evenly, so c2 holds
+		// STRUCTURALLY rather than by arithmetic coincidence. Wrapping survives: the text
+		// becomes one anonymous flex item that still wraps under white-space: normal
+		// (c8, Req 5 c7).
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 		flex: 0 1 auto;
-		font-size: 0.55rem;
-		height: auto;			// was 1.7rem  -- a fixed height clips line 2
-		line-height: 1.4;		// was 1.55rem -- must be a ratio once multi-line
-		min-height: 1.7rem;		// preserves the existing pill silhouette
+		font-size: 0.55rem;		// UNCHANGED -- Req 12 c11 forbids reducing it
+		height: auto;			// UNCHANGED -- a fixed height clips line 2
+		line-height: 1.4;		// UNCHANGED -- a ratio, so it survives wrapping
+		min-height: 1.35rem;		// was 1.7rem -- 1.7 exceeded the content by ~8px (c2)
 		min-width: 0;
-		padding: 0.15rem 0.4rem;	// restores vertical centring without a fixed height
-		white-space: normal;		// was nowrap   -- permits the Req 5 c7 wrap
+		padding: 0.2rem 0.55rem;	// was 0.15rem 0.4rem -- 0.4 breached c5, 0.15 breached c4
+		white-space: normal;		// UNCHANGED -- permits the Req 5 c7 wrap
 	}

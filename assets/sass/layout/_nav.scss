@@ -31,7 +31,11 @@
 				@include vendor('flex-grow', '1');
 				@include vendor('flex-shrink', '1');
 				font-family: _font(family);
-				font-weight: _font(weight);
+				// Req 11 c1: Bold_Chrome_Text. weight-bold is 800, the usWeightClass of
+				// the already-shipped PPTelegraf-Ultrabold.otf, so nothing is synthesized
+				// (c6) and no font file is added (c4). Family stays _font(family) (c5)
+				// and the tracking below is now a FLOOR, not a lever (c8).
+				font-weight: _font(weight-bold);
 				letter-spacing: _font(letter-spacing-heading);
 				list-style: none;
 				margin-bottom: 0;
