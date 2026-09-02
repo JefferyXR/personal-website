@@ -6,7 +6,54 @@
 @import 'libs/html-grid';
 @import 'libs/fixed-grid';
 @import 'fontawesome-all.min.css';
-@import url('https://fonts.googleapis.com/css?family=Merriweather:300,700,300italic,700italic|Source+Sans+Pro:900');
+
+/*
+	Self-hosted webfonts. These MUST stay below the @import above: CSS requires every
+	@import to precede all other rules, so an @font-face placed higher silently
+	invalidates the Font Awesome import and every icon on all nine pages disappears.
+
+	See assets/webfonts/FONT-PROVENANCE.md for source, licence tier, SHA-256 and stored
+	size of each file, and for the measurements the weights below come from. Each
+	font-weight equals the referenced file's real OS/2.usWeightClass, so no browser ever
+	synthesizes a weight.
+
+	unicode-range is a voluntary correctness guard, not a mandated declaration: no rule
+	references a subset file. Every codepoint listed was verified present in all three
+	faces.
+*/
+
+	// Horizon - Alberto Fontense, free personal-use tier. WOFF2 (Req 2 c2).
+	@font-face {
+		font-family: 'Horizon';
+		src: url('../webfonts/Horizon.woff2') format('woff2');
+		font-weight: _font(weight-heading);
+		font-style: normal;
+		font-display: swap;
+		unicode-range: U+0000-00FF, U+0100-017F, U+2013-2014, U+2018-201A, U+201C-201E, U+2020-2022, U+2026, U+2039-203A, U+2212;
+	}
+
+	// PP Telegraf - Pangram Pangram Foundry, free personal-use tier. Vendor-supplied OTF,
+	// shipped unconverted (Req 2 c3, Req 9 c6), hence format('opentype').
+	@font-face {
+		font-family: 'PP Telegraf';
+		src: url('../webfonts/PPTelegraf-Regular.otf') format('opentype');
+		font-weight: _font(weight);
+		font-style: normal;
+		font-display: swap;
+		unicode-range: U+0000-00FF, U+0100-017F, U+2013-2014, U+2018-201A, U+201C-201E, U+2020-2022, U+2026, U+2039-203A, U+2212;
+	}
+
+	// Branch A - a true bold face ships, at weight 800 rather than 700. The free download
+	// contains no 700 face and Req 4 c3 requires every declared weight to match a face
+	// that actually ships.
+	@font-face {
+		font-family: 'PP Telegraf';
+		src: url('../webfonts/PPTelegraf-Ultrabold.otf') format('opentype');
+		font-weight: _font(weight-bold);
+		font-style: normal;
+		font-display: swap;
+		unicode-range: U+0000-00FF, U+0100-017F, U+2013-2014, U+2018-201A, U+201C-201E, U+2020-2022, U+2026, U+2039-203A, U+2212;
+	}
 
 /*
 	Massively by HTML5 UP

@@ -24,9 +24,21 @@
 		z-index: 1;
 		min-height: 100vh;
 
+		// Derived, not chosen (Req 3 c6): the largest value at or below 4rem that keeps
+		// "JEFFERY ROSS" on one line at 768/1024/1440. 768px is the binding viewport
+		// (650.7px of content width at an 11pt root). Horizon's measured effective width
+		// for the string is 10.999em, so the arithmetic cap is 4.033rem -- but that is
+		// only ~0.8% of margin and excludes Horizon's GPOS kerning, so 4rem was rejected
+		// and 3.75rem confirmed in a real browser. See FONT-PROVENANCE.md intake findings.
 		h1 {
-			font-size: 5rem;
-			line-height: 1;
+			font-size: 3.75rem;
+			line-height: 1.1;
+			// Opt back out of the heading-wide break-word from base/_typography.scss.
+			// That rule is required for Req 3 c11 generally, but this heading is a
+			// person's name and must never be split mid-word. Sizing (above, and the
+			// <=small step) is what keeps it inside the box instead.
+			overflow-wrap: normal;
+			hyphens: none;
 		}
 
 		p {
@@ -97,8 +109,11 @@
 			@include padding(_size(padding) * 1.5, _size(padding) * 1);
 			min-height: 80vh;
 
+			// At 320px the widest unbreakable token is "JEFFERY" (2.935em effective),
+			// capping the size at 2.935rem against 266.7px of content width. Rounded down
+			// to 2.75rem. Req 3 c13 permits two lines here, which this delivers.
 			h1 {
-				font-size: 3.25rem;
+				font-size: 2.75rem;
 				line-height: 1.1;
 				margin-bottom: _size(element-margin) * 0.5;
 			}

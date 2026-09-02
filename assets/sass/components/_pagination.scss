@@ -23,11 +23,10 @@
 			));
 			border: solid 2px;
 			display: inline-block;
-			font-family: _font(family-heading);
+			font-family: _font(family);
 			font-size: 0.8rem;
-			font-weight: _font(weight-heading);
+			font-weight: _font(weight);
 			height: _size(element-height);
-			letter-spacing: 0.075em;
 			letter-spacing: _font(letter-spacing-heading);
 			line-height: calc(#{_size(element-height)} - 4px);
 			margin-left: -2px;

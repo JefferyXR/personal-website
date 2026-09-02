@@ -30,9 +30,9 @@
 				@include vendor('display', 'flex');
 				@include vendor('flex-grow', '1');
 				@include vendor('flex-shrink', '1');
-				font-family: _font(family-heading);
-				font-weight: _font(weight-heading);
-				letter-spacing: 0.075em;
+				font-family: _font(family);
+				font-weight: _font(weight);
+				letter-spacing: _font(letter-spacing-heading);
 				list-style: none;
 				margin-bottom: 0;
 				padding-left: 0;

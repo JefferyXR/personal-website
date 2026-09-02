@@ -265,8 +265,12 @@
 	body.project-page #main > .post {
 		padding: 4.5rem 5rem 3.5rem;
 
+		// Project titles run to 38 characters and wrap by design, so the constraint is
+		// the widest single WORD, not the string. "KILLERBYTE" is 9.508em effective,
+		// permitting 4.666rem at 768px -- but only 2.104rem at 320px, hence the <=small
+		// step below. Without it a project title would break mid-word at 320px.
 		header.major > h1 {
-			font-size: 3.25rem;
+			font-size: 2.5rem;
 			margin-bottom: 1rem;
 		}
 
@@ -312,7 +316,7 @@
 			padding: 2rem 1.5rem;
 
 			header.major > h1 {
-				font-size: 2.4rem;
+				font-size: 2rem;
 			}
 
 			.image.main,
@@ -355,12 +359,21 @@
 				z-index: 0;
 			}
 
+			// Three hardcoded values routed through the $font map. This was the only
+			// literal typeface name outside the map and the @font-face rules, so
+			// removing it is what satisfies Req 7 c4.
+			// font-weight matters as much as the family: a literal 700 against a
+			// single-weight Horizon is exactly the browser-synthesized bold Req 3 c4
+			// forbids. It happens to equal Horizon's measured 700 today -- routing it
+			// through the token is what stops it drifting if the face ever changes.
+			// font-size: 1.1rem and text-transform: none are deliberate card-design
+			// choices and are retained (conflict C5).
 			h2 {
 				color: #ffffff;
-				font-family: Merriweather, Georgia, serif;
+				font-family: _font(family-heading);
 				font-size: 1.1rem;
-				font-weight: 700;
-				letter-spacing: 0;
+				font-weight: _font(weight-heading);
+				letter-spacing: _font(letter-spacing-heading);
 				line-height: 1.3;
 				margin: 0;
 				text-transform: none;
@@ -454,9 +467,13 @@
 		}
 	}
 
+	// Req 5 c7 requires an over-wide skills label to wrap INSIDE the card with every
+	// character visible. That was impossible as built: nowrap on the container, nowrap
+	// on the pill, and a fixed 1.7rem height that would clip a second line even if it
+	// did wrap. The pill therefore becomes vertically elastic.
 	body.home #main .skills-box {
 		align-items: center;
-		flex-wrap: nowrap;
+		flex-wrap: wrap;
 		gap: 0.1rem;
 		justify-content: flex-start;
 		margin: 0 -0.15rem 0;
@@ -473,9 +490,10 @@
 		color: #ffffff !important;
 		flex: 0 1 auto;
 		font-size: 0.55rem;
-		height: 1.7rem;
-		line-height: 1.55rem;
+		height: auto;			// was 1.7rem  -- a fixed height clips line 2
+		line-height: 1.4;		// was 1.55rem -- must be a ratio once multi-line
+		min-height: 1.7rem;		// preserves the existing pill silhouette
 		min-width: 0;
-		padding: 0 0.4rem;
-		white-space: nowrap;
+		padding: 0.15rem 0.4rem;	// restores vertical centring without a fixed height
+		white-space: normal;		// was nowrap   -- permits the Req 5 c7 wrap
 	}

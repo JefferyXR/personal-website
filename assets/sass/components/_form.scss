@@ -70,10 +70,10 @@
 
 	label {
 		display: block;
-		font-family: _font(family-heading);
-		font-weight: _font(weight-heading);
+		font-family: _font(family);
+		font-weight: _font(weight);
 		line-height: 1.5;
-		letter-spacing: 0.075em;
+		letter-spacing: _font(letter-spacing-heading);
 		font-size: 0.8rem;
 		text-transform: uppercase;
 		margin: 0 0 (_size(element-margin) * 0.375) 0;
