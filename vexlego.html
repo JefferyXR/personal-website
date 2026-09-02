@@ -1,0 +1,98 @@
+<!DOCTYPE HTML>
+<!--
+	Massively by HTML5 UP
+	http://html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+
+<html>
+	<head>
+		<title>VEX LEGO Sorter</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload project-page">
+		<div id="wrapper">
+			<header id="header"><a href="index.html" class="logo">JR</a></header>
+			<nav id="nav">
+				<ul class="links">
+					<li><a href="index.html">Projects</a></li>
+					<li><a href="cad.html">CAD Gallery</a></li>
+					<li class="active"><a href="vexlego.html">Details</a></li>
+				</ul>
+				<ul class="icons">
+					<li><a href="https://www.linkedin.com/in/jefferyxross/" class="icon brands fa-linkedin" target="_blank"><span class="label">LinkedIn</span></a></li>
+					<li><a href="https://github.com/JefferyXR" class="icon brands fa-github" target="_blank"><span class="label">GitHub</span></a></li>
+				</ul>
+			</nav>
+
+			<div id="main">
+				<section class="post">
+					<header class="major">
+						<h1>VEX <br />Autonomous LEGO Sorter</h1>
+						<p>ME101 Design Project · August 2026</p>
+					</header>
+					<div class="image main"><img src="images/vexlego.jpg" alt="Completed VEX LEGO block identifier and sorter" /></div>
+
+					<h2>Overview</h2>
+					<p>VEX LEGO Sorter is an autonomous block identifier and sorting system developed by a four-person team for ME101. The machine automatically feeds rectangular LEGO blocks, identifies them by colour or dimensions, and drops them into one of three sorting compartments.</p>
+					<ul>
+						<li><strong>System:</strong> conveyor-fed VEX IQ robot with optical and distance sensors, two rack-and-pinion mechanisms, and a motorized trapdoor.</li>
+						<li><strong>Fabrication:</strong> SOLIDWORKS-designed parts combining 3D-printed PLA, laser-cut acrylic/HDF, wooden dowels, and a plywood base.</li>
+						<li><strong>My work:</strong> mechanical design, fabrication, and assembly of the measuring and sorting systems.</li>
+					</ul>
+
+					<h2>Mechanical Design</h2>
+					<div class="image main"><img src="images/vexlego_assembly.png" alt="SOLIDWORKS CAD assembly of the complete VEX LEGO sorter" /></div>
+					<p>The final design uses a conveyor belt to move each block into a measuring platform. A distance sensor detects the incoming block, while two motor-driven rack-and-pinion arms push it into a corner and measure its dimensions from motor-encoder movement. An optical sensor identifies red, green, or blue blocks, and a motorized trapdoor directs each block into the appropriate bin.</p>
+
+					<h2>Software &amp; Control</h2>
+					<p>The software was organized into 16 functions covering calibration, block detection, dimension measurement, colour identification, sorting, data storage, and safe shutdown. At startup, the system calibrates the racks and trapdoor, then lets the user choose between sorting by colour or by block area. Each cycle is completed automatically, with counters tracking the number of blocks in each category.</p>
+
+					<h2>Validation</h2>
+					<ul>
+						<li><strong>Accuracy:</strong> 20/20 blocks were correctly identified by colour and delivered to the correct bin (100%).</li>
+						<li><strong>Measurement:</strong> encoder-based dimensions differed from calliper measurements by a maximum of 1.70 mm, below the 5 mm requirement.</li>
+						<li><strong>Performance:</strong> the completed device measured 54 × 30 × 27 cm and averaged 12.3 seconds per sort, meeting the 60 × 60 × 30 cm and 15-second limits.</li>
+					</ul>
+
+					<h2>Engineering Challenges</h2>
+					<p>Early testing exposed problems with rack calibration, sensor interference, and consecutive motor movements. Backstops created a repeatable calibration reference, a 15-second conveyor timeout prevented jams from stalling the system indefinitely, and short delays between rack movements resolved a current-sensing issue.</p>
+
+					<h2>Team &amp; Outcome</h2>
+					<div class="image main"><img src="images/vexlego_group.jpg" alt="VEX LEGO Sorter team holding the completed device" /></div>
+					<p>VEX LEGO Sorter was built with Livia Welch, Abdurrahim Baradia, and Aditya Madaria. The project combined mechanical design, manufacturing, programming, and system integration, and the final prototype met every requirement in the engineering specification.</p>
+				</section>
+			</div>
+
+			<footer id="footer">
+				<section class="split contact">
+					<section>
+						<h3>Sites</h3>
+						<ul class="icons alt">
+							<li><a href="https://www.linkedin.com/in/jefferyxross/" class="icon brands alt fa-linkedin" target="_blank"><span class="label">LinkedIn</span></a></li>
+							<li><a href="https://github.com/JefferyXR" class="icon brands alt fa-github" target="_blank"><span class="label">GitHub</span></a></li>
+						</ul>
+					</section>
+				</section>
+				<section class="split contact">
+					<section>
+						<h3>Email</h3>
+						<p><a href="mailto:jefferyxross@gmail.com">jefferyxross@gmail.com</a></p>
+					</section>
+				</section>
+			</footer>
+			<div id="copyright"><ul><li>Fonts &amp; icons: <a href="https://html5up.net">HTML5 UP</a></li></ul></div>
+		</div>
+
+		<script src="assets/js/jquery.min.js"></script>
+		<script src="assets/js/jquery.scrollex.min.js"></script>
+		<script src="assets/js/jquery.scrolly.min.js"></script>
+		<script src="assets/js/browser.min.js"></script>
+		<script src="assets/js/breakpoints.min.js"></script>
+		<script src="assets/js/util.js"></script>
+		<script src="assets/js/main.js"></script>
+	</body>
+</html>
