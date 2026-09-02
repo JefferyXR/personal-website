@@ -894,8 +894,9 @@ test('Check I: the Back to top control works with scripting disabled and with sc
       try {
         const pathnameBefore = await page.evaluate(() => location.pathname);
 
-        // Scroll away from the top so the assertion has something to prove. Instant, so
-        // scroll-behavior: smooth cannot leave the page mid-animation.
+        // Scroll away from the top so the assertion has something to prove. Explicitly
+        // instant, so the setup cannot leave the page mid-animation if a future edit ever
+        // reintroduces CSS smooth scrolling (see the html rule in base/_page.scss).
         await page.evaluate(() => window.scrollTo({ top: 100000, behavior: 'instant' }));
         const scrolledTo = await page.evaluate(() => window.scrollY);
         assert.ok(scrolledTo > 0, `${contentPage}: the page does not scroll, so the control cannot be exercised`);
