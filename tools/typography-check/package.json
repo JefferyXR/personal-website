@@ -1,0 +1,15 @@
+{
+  "name": "typography-check",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Verification harness for the portfolio-typography-refresh spec. Not part of the deployed site — .github/workflows/static.yml prunes tools/ before upload.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "measure-h1": "node measure-h1.mjs"
+  },
+  "devDependencies": {
+    "fast-check": "^3.23.2",
+    "playwright": "^1.49.1"
+  }
+}

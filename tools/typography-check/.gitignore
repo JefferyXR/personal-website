@@ -1,0 +1,6 @@
+# Installed by `npm ci`, not committed. Restore with:
+#   cd tools/typography-check && npm ci && npx playwright install chromium
+node_modules/
+
+# Playwright browser binaries, if the install root is redirected here.
+.playwright/

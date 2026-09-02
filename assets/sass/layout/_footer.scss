@@ -95,6 +95,47 @@
 			font-size: 0.8rem;
 		}
 
+		// Footer email link (Requirement 1).
+		//
+		// An ATTRIBUTE selector, not a class or a structural path: the nine pages carry
+		// two different footer nesting depths (index/arduino/cad/calculator/church/
+		// fluid_sim nest one level deeper than killerbyte/launchtoy/vexlego), so this is
+		// what matches all nine identically with zero markup edits (Req 1 c3, c9; Req 8 c5).
+		//
+		// Scope is deliberately this link and nothing else. The <h3>Email</h3> label, the
+		// social icon links and #copyright keep their exact pre-change colours by owner
+		// decision (Req 1 c10, c11) -- which is also why fg-link was ADDED to the alt
+		// palette rather than fg/fg-bold being edited.
+		a[href^="mailto:"] {
+			color: _palette(alt, fg-link);
+			// SOLID, not the inherited rgba(113,121,129,0.5): that composites to #b3b7bb
+			// = 1.85:1 and fails Req 1 c7. Even rgba(74,81,88,0.5) reaches only 2.33:1.
+			// Only a solid colour clears the 3:1 bar.
+			border-bottom-color: _palette(alt, fg-link);
+
+			&:hover {
+				// The accent Req 1 c4 mandates. !important is required to beat the
+				// generic `#footer a:hover` from the color-typography mixin, which also
+				// carries !important.
+				color: _palette(alt, accent) !important;
+				// The generic hover sets border-bottom-color: transparent. Req 1 c7 wants
+				// >=3:1 in the hover state too, so keep the underline solid and measurable.
+				border-bottom-color: _palette(alt, fg-link);
+			}
+
+			// outline, not a border: it spans the full text box and cannot alter layout.
+			// Because outline and color are independent properties, the ring survives
+			// simultaneous hover, which is what Req 1 c6 demands.
+			&:focus-visible {
+				outline: 2px solid _palette(fg-bold);
+				outline-offset: 2px;
+			}
+		}
+
+		// No new transition: the inherited `a` transition is already 0.2s on color and
+		// border-color, inside the Req 1 c4/c5 200ms bound. The existing 0.8rem sizing
+		// above satisfies Req 1 c8 unchanged.
+
 		@include breakpoint('<=medium') {
 			display: block;
 
@@ -185,10 +226,10 @@
 		position: relative;
 		color: transparentize(_palette(invert, fg), 0.75);
 		cursor: default;
-		font-family: _font(family-heading);
+		font-family: _font(family);
 		font-size: 0.8rem;
-		font-weight: _font(weight-heading);
-		letter-spacing: 0.075em;
+		font-weight: _font(weight);
+		letter-spacing: _font(letter-spacing-heading);
 		line-height: 1.5;
 		text-align: center;
 		text-transform: uppercase;

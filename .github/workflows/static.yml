@@ -31,6 +31,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      # The upload step below takes path: '.', so anything in the repository is published.
+      # Prune the verification tooling and the spec documents from the ephemeral CI
+      # checkout — neither is part of the site. This never touches the repository itself.
+      - name: Prune non-site files
+        run: rm -rf tools .kiro
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

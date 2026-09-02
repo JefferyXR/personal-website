@@ -21,10 +21,10 @@
 		border-radius: 0;
 		cursor: pointer;
 		display: inline-block;
-		font-family: _font(family-heading);
+		font-family: _font(family);
 		font-size: 0.8rem;
-		font-weight: _font(weight-heading);
-		letter-spacing: 0.075em;
+		font-weight: _font(weight);
+		letter-spacing: _font(letter-spacing-heading);
 		height: 3rem;
 		line-height: 3rem;
 		padding: 0 2rem;
