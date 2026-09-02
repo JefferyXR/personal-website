@@ -476,7 +476,7 @@ The total source delta is small and worth stating up front, because it bounds th
 | §5.2 centred titles | 1 (`left` → `center`) | 1 | 0 |
 | §5.3 bold weight | 2 (`weight` → `weight-bold`) | 2 | 0 |
 | §5.4 pill geometry | 2 rules retuned | 2 | 0 |
-| §5.5 Back to top | 3 added (cursor, focus, smooth scroll) | 3 | **9** |
+| §5.5 Back to top | 2 added (cursor, focus) | 2 | **9** |
 | §5.6 copyright contrast | 1 (`transparentize` amount) | 1 | 0 |
 | §5.7 Horizon licence note | 0 | 0 | 0 (one Markdown file) |
 
@@ -740,21 +740,32 @@ Req 13 c6 is satisfied by construction: the `href` is a real same-document fragm
 
 Req 13 c5 requires the control to work with scripting disabled, or `jquery.scrolly.min.js` failing to load, or any other script failing. A native `<a href="#top">` satisfies this because fragment navigation is a **browser** behaviour, not a scripted one.
 
-**`class="scrolly"` is deliberately not used**, even though the site already loads `jquery.scrolly.min.js` and the intro down-arrow (`href="#main"`) uses it. Scrolly binds a click handler that calls `preventDefault()` and animates via jQuery. That would *technically* still degrade correctly — with no JS the handler never binds and the native jump happens — but it would make the control's *intended* behaviour depend on jQuery, three script files and a plugin, for nothing but easing. Requirement 13's whole thrust is a control that does not depend on scripting, so the easing comes from CSS instead:
+**`class="scrolly"` is deliberately not used**, even though the site already loads `jquery.scrolly.min.js` and the intro down-arrow (`href="#main"`) uses it. Scrolly binds a click handler that calls `preventDefault()` and animates via jQuery. That would *technically* still degrade correctly — with no JS the handler never binds and the native jump happens — but it would make the control's *intended* behaviour depend on jQuery, three script files and a plugin, for nothing but easing. Requirement 13's whole thrust is a control that does not depend on scripting.
 
-```css
-html { scroll-behavior: smooth; }
+#### Easing: the CSS smooth-scroll block was tried, and is removed
 
-@media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
-}
-```
+**Decision: no easing. The control performs an instant fragment jump, and that is what ships.**
 
-Three notes on this:
+Change Set 2 first shipped `html { scroll-behavior: smooth }` with a `@media (prefers-reduced-motion: reduce)` arm restoring `auto`, on the reasoning that the easing could come from CSS rather than from jQuery. **Both declarations are removed.** This section already named that outcome as the sanctioned fallback — the block is *optional* to Requirement 13, whose c2 asks only that the top of the document be brought into the viewport — and **the fallback has been taken**: the instant jump satisfies c2, c3 and c5 in full. With no CSS smooth scroll there is no unrequested motion left to suppress, so the reduced-motion arm went with it rather than staying behind as a guard over nothing.
 
-- **`prefers-reduced-motion` is honoured**, because an unrequested full-page scroll animation is precisely the class of motion that setting exists to suppress. The reduced-motion arm restores an instant jump.
-- **`scroll-behavior` must sit on the scrolling element**, so it is necessarily global rather than scoped to the link. Its only other same-document consumers are the `scrolly` anchors, and scrolly calls `preventDefault()` — no native scroll occurs, so no double-animation. When scripting is off, those anchors get CSS smoothing too, which is an improvement rather than a regression. The interaction with `jquery.scrollex` (which observes scroll position for the intro fade) is the one thing worth watching, and it is covered by Check F's console-error and animation run.
-- **It is optional to the requirement.** Req 13 c2 asks only that the top of the document be brought into the viewport. If Check F shows any interference, dropping the `scroll-behavior` block leaves an instant jump that still satisfies c2, c3 and c5 in full.
+**The justification that put the block here was wrong, and it shipped a regression.** It read: *`scrolly` calls `preventDefault()`, so no native scroll competes with jQuery's animation in the first place.* `preventDefault()` suppresses the native **fragment navigation**. It does nothing about `scroll-behavior` being applied to jQuery's own **programmatic** `scrollTop` writes — which is the mechanism that actually decides this:
+
+`assets/js/jquery.scrolly.min.js` animates with `parent.stop().animate({scrollTop: t}, 1000, 'swing')`, where `parent` is `$("body,html")`. jQuery writes `scrollTop` once per frame, and with `scroll-behavior: smooth` in force on the scrolling element **each of those ~60 writes starts its own smooth scroll**. So nothing visibly moves until the 1000 ms animation's final write sticks.
+
+Measured at 1440 px in headless Chromium, sampling `window.scrollY` every 16 ms after activating each control:
+
+| Control | first movement | half-way | on target | final y |
+|---|---|---|---|---|
+| intro down-arrow, with `scroll-behavior: smooth` | **1056 ms** (1042 ms on a second run) | 1172 ms | 1331 ms | 900 ✓ |
+| intro down-arrow, with `scroll-behavior: auto` | **32–50 ms** | ≈520 ms | 834 ms | 900 ✓ |
+| footer Back to top, with smooth | 50 ms | — | reached 0 at 882 ms | 0 ✓ |
+| footer Back to top, after removal | **18–23 ms** | — | reached 0 at 18–23 ms | 0 ✓ |
+
+Two things the numbers settle. **The footer control was never the broken one** — it is native fragment navigation, so smooth easing applied to it exactly as intended, reaching 0 at 882 ms. The casualty was the **intro down-arrow**, an element this change set was not otherwise touching, reached only because `scroll-behavior` has to sit on the scrolling element and is therefore global. And **every row lands on its target**, which is precisely why final-position verification passed the defect through; see Check J in the Testing Strategy.
+
+**The `preventDefault()` reasoning is deleted rather than reworded**, deliberately: a future reader who reconstructs it will re-add the declaration. The comments that survive in `assets/sass/base/_page.scss` and `assets/css/main.css` therefore state the real mechanism and carry the measured figures instead of merely recording that the block was dropped. Two guards back that up — a static assertion of **zero** `scroll-behavior` and **zero** `prefers-reduced-motion` occurrences in both artifacts (scanned with comments stripped, since the surviving comment names the property on purpose), and Check J, which measures what the declaration actually broke.
+
+**Nothing else about the control changes.** It is still `<a href="#top">`, still carries no `class="scrolly"`, still works with scripting disabled (Req 13 c5), and is still keyboard reachable with the focus ring described below. Only the easing is gone.
 
 #### Accessibility
 
@@ -1059,8 +1070,8 @@ Nothing here executes logic, so "error handling" means **degradation paths**: wh
 | No bold face in Telegraf | Download inspection | **Did not occur** — Branch A selected at intake, `PPTelegraf-Ultrabold.otf` at weight 800 ships, so §3.4's Branch B alternative emphasis is not implemented and no synthesized bold arises. This is also the face Requirement 11 reuses (§5.3) | Req 4 c4 |
 | Font Awesome `@import` displaced | Icon rendering | Must not happen: `@font-face` is inserted *after* line 1, since a rule before an `@import` invalidates it | Req 7 c6 |
 | **Scripting disabled, or `jquery.scrolly.min.js` 404s, or any page script throws** | Property 16's script-blocked arm | Back_To_Top_Control still works: the `href="#top"` fragment jump is browser behaviour, not scripted. No `class="scrolly"`, no click handler, no `javascript:` URL | Req 13 c5, c6 |
-| **Visitor prefers reduced motion** | `prefers-reduced-motion: reduce` | `scroll-behavior` reverts from `smooth` to `auto`, giving an instant jump. Requirement 13 c2 asks only that the top be brought into view, so the reduced-motion path is fully conforming rather than degraded | Req 13 c2 |
-| **`scroll-behavior: smooth` interferes with the template's scroll plugins** | Check F console/animation run | Drop the `scroll-behavior` block; the instant jump still satisfies Req 13 c2, c3, c5. The `scrolly` anchors call `preventDefault()`, so no native scroll competes with jQuery's animation in the first place | Req 13 c2; Req 8 c6 |
+| **Visitor prefers reduced motion** | — | Nothing to degrade: the Back_To_Top_Control is an instant fragment jump for everyone, so the reduced-motion path and the default path are the same one. No CSS scroll animation exists to suppress, and no `prefers-reduced-motion` block is declared | Req 13 c2 |
+| **`scroll-behavior: smooth` interferes with the template's scroll plugins** | **Occurred.** Caught by Check J (scroll latency), *not* by Check F | The declaration is **removed** (§5.5). It applied to jQuery's own per-frame `scrollTop` writes in `jquery.scrolly.min.js`, each write restarting a smooth scroll, so the intro down-arrow did not move for 1056 ms. The instant jump still satisfies Req 13 c2, c3, c5. A re-added declaration now fails Check J and the static zero-occurrence assertion | Req 13 c2; Req 8 c6 |
 | **A Bold_Chrome_Text label will not fit its box at 800** | Property 5 containment arm; Property 15 ratios | Enlarge the element or its padding (§5.4). Never reduce `font-size` below the Req 5 c3 floor, never revert to weight 400, never apply `text-overflow` truncation | Req 11 c12; Req 12 c11 |
 
 Two failures are silent and therefore the dangerous ones. A **missing glyph** looks like a slightly-off letter, not an error, so it is caught by the up-front glyph audit rather than by inspection. An **over-narrow `unicode-range`** diverts characters to the fallback with no console warning; §3.2 pins the range against measured page content for exactly this reason. Neither may surface an error message, empty run, or placeholder glyph to the visitor (Req 6 c10).
@@ -1119,6 +1130,8 @@ So C3 below is marked **RESOLVED BY FIXING IT** rather than "leave unchanged", w
 
 **R8 — The template attribution is a standing licence condition, not a one-off edit.** Change Set 2 reworded the HTML5 UP credit and, in doing so, invited the question of removing it. The recorded answer is no (§5.5): CC BY 3.0 attaches attribution to adaptations, HTML5 UP sells attribution-free usage separately through Pixelarity, and the repository is still substantially template-derived — 24 SASS files carry the Massively header, six template JS files ship, and template structures appear on all nine pages. The risk is that a future edit removes the credit on the intuition that the site "looks nothing like Massively", which is not the test the licence applies. Mitigation: Property 16 asserts the Design_Credit's presence, wording and link target on **all nine pages**, so its removal fails a check rather than passing quietly — the same shape of guard that Property 12 provides for the fonts' non-commercial condition. The one supported route to removing it is a Pixelarity licence, recorded in §5.5 as a purchase decision outside this spec.
 
+**R9 — A global `scroll-behavior: smooth` is re-added, and a final-position check passes it again. REALISED once; now guarded.** The declaration is cheap to type, reads as an improvement, and its damage is invisible to any assertion about where a scroll *ends up*: it defeats `jquery.scrolly`'s per-frame `scrollTop` writes, and the intro down-arrow sat motionless for 1056 ms while the Change Set 2 Check F extension reported a clean pass (§5.5). Mitigation is layered, because the faulty *reasoning* is the part that recurs: the block is deleted rather than reworded; the surviving comments in `_page.scss` and `main.css` name the real mechanism and carry the measured figures at the exact line where someone would re-add it; a static assertion requires zero `scroll-behavior` and zero `prefers-reduced-motion` occurrences in both artifacts; and **Check J** puts a 150 ms first-movement budget on both scroll controls, so the behaviour is guarded and not merely the wording. The general form of the risk is wider than one declaration: an interaction whose value depends on *when* it happens needs a timing clause, or a latency defect passes verification unseen.
+
 ---
 
 ## Compiled Stylesheet Sync Procedure
@@ -1139,6 +1152,8 @@ Note for step 3: the compiled CSS already contains duplicate declarations for th
 **Change Set 2 adds a step 7, because it is the first change set to touch HTML.** Steps 1–6 above cover the stylesheet pair; Change Set 2's §5.5 replaces markup inside `div#copyright` on all nine pages:
 
 7. **Apply the Copyright_Block markup to all nine pages**, then verify the inner `<ul>…</ul>` is **byte-identical** across them. Three pages (`killerbyte.html`, `launchtoy.html`, `vexlego.html`) write the div on a single source line and six write it multi-line, so the surrounding whitespace legitimately differs while the inner markup must not. The new wording contains no ampersand, which retires the pre-existing `&` / `&amp;` divergence in `vexlego.html` — do not reintroduce an entity. Property 16 is the authority for this step.
+
+Step 6's zero-occurrence confirmation also covers **`scroll-behavior` and `prefers-reduced-motion`**, in both artifacts, with comments stripped before the scan — §5.5 removed that block and the surviving comment names the property deliberately, so the check must read declarations rather than text.
 
 Two further notes for Change Set 2. The §5.1 colour change is **one literal in `_vars.scss` and three resolved mirrors** in `main.css`; step 6's zero-occurrence confirmation extends to `#4a5158`, which Req 1 c13 requires to appear nowhere in either artifact as a link or underline colour — including in comments that document a value the source no longer sets. And the §5.4 pill geometry must be **measured in a browser before it is mirrored**, not after: the values in §5.4 are derived from font metrics and declared CSS, and Req 12 c13 is discharged only by the rendered numbers.
 
@@ -1206,12 +1221,22 @@ Webfont blocking for Properties 5 and 13 uses Playwright request interception, a
 | **C** | Font-binary properties: 7, 9 (weights), **and the §5.3 advance-width table** | Property (fontTools + fast-check) | pre-push |
 | **D** | Rendered properties: 1, 3, 4, 5, 10, 13, **14, 15** | Property (Playwright + fast-check) | pre-push |
 | **E** | Font Awesome icons render; no missing-glyph substitution | Integration, 1 run | pre-push |
-| **F** | Water canvas animates; card interactions respond; no console errors; **`scroll-behavior` does not disturb the `scrolly` / `scrollex` anchors** | Integration, 1 run | pre-push |
+| **F** | Water canvas animates; card interactions respond; no console errors | Integration, 1 run | pre-push |
 | **G** | **Font intake gate** — see below | Manual + smoke | **before any CSS work** (passed in Change Set 1) |
 | **H** | Same-origin 200s; `Content-Encoding`; transfer bytes | Integration, 1 run | **post-deploy** |
 | **I** | **Back_To_Top_Control with scripting disabled** — Property 16's no-JS arm | Property (Playwright, `javaScriptEnabled: false`) | pre-push |
+| **J** | **Scroll latency** — each same-document scroll control begins moving within 150 ms, and still lands correctly | Integration, 1 run per control | pre-push |
 
-**Change Set 2 adds one check and extends three.** Check I is separated from D because it needs a *differently configured browser context* rather than a different generator — scripting off for the whole context, which cannot be mixed into a run that also exercises the card-interaction paths. Check C gains the `fontTools` advance-width comparison that discharges Req 11 c16, which is deterministic and needs no browser. Check D gains the two geometric properties, and its Playwright helper needs one addition that is easy to get wrong: label boxes must be read from a `Range` over the text node via `getClientRects()`, not from the element rect, or Properties 14 and 15 measure the container against itself and report a vacuous pass.
+**Change Set 2 adds two checks and extends two.** Check I is separated from D because it needs a *differently configured browser context* rather than a different generator — scripting off for the whole context, which cannot be mixed into a run that also exercises the card-interaction paths. Check J is described below; it replaces the Check F extension that Change Set 2 originally added. Check C gains the `fontTools` advance-width comparison that discharges Req 11 c16, which is deterministic and needs no browser. Check D gains the two geometric properties, and its Playwright helper needs one addition that is easy to get wrong: label boxes must be read from a `Range` over the text node via `getClientRects()`, not from the element rect, or Properties 14 and 15 measure the container against itself and report a vacuous pass.
+
+**Check J exists because of a verification gap that let a plainly broken interaction pass.** Change Set 2's Check F extension exercised the intro down-arrow and asserted its **final position** (`landedNear: true`, y 900) plus a clean console. A scroll that did not begin for a full second satisfied both, so `scroll-behavior: smooth` shipped (§5.5) with a green check. The lesson generalises in one sentence: **an assertion about a final state cannot detect a latency defect, so any interaction whose value depends on *when* it happens needs a timing clause.**
+
+Check J is implemented at `tools/typography-check/scroll-latency.test.mjs`, and mirrored in the `verify.mjs` runner where the Check F extension used to sit. It clicks each of the two same-document scroll controls — `#intro .actions a.scrolly` (jQuery-animated) and the `#copyright` Back_To_Top_Control (native) — samples `window.scrollY` on a 16 ms timer, and asserts **first observable movement within a 150 ms budget** as well as the correct final position. Both controls are measured because they reach the same outcome by different mechanisms: the declaration broke only the jQuery one, so measuring the footer control alone would have missed it too. Two implementation notes:
+
+- **It is an integration check, not a property.** The oracle is a wall-clock bound, so extra iterations would add runtime and jitter without widening the input space — the input does not vary, only the clock does. This is the same reasoning that puts Checks E, F and H outside the property set.
+- **Sampling must run Node-side.** `page.waitForFunction` polls on `requestAnimationFrame`, which is throttled in these headless contexts, so an in-page poller reports late or never — and here the quantity under test *is* the timing, so a throttled sampler would manufacture the very defect it is meant to detect.
+
+Against the tree as Change Set 2 first shipped it, Check J fails at 1056 ms on the down-arrow; after the §5.5 removal both controls report 18–50 ms.
 
 **Check G is a prerequisite, not a test.** Neither font can be fetched by automation — both require a manual download from the designer's own channel (Req 9 c1 forbids aggregator mirrors), so implementation cannot start until it passes. It establishes four facts that the rest of the work depends on:
 
@@ -1233,6 +1258,7 @@ Change Set 2 adds four literal assertions in the same spirit: the Card_Header_Ba
 - **GitHub Pages behaviour** (Req 2 c10, c17, c18) — external service; behaviour does not vary with input; each check costs a network round trip. Integration, 1 run.
 - **Font Awesome icon rendering** (Req 7 c6) — third-party font behaviour, already tested by its authors. Integration, 1–2 examples. The one genuinely fragile part, that `@font-face` must not precede the `@import`, is a static assertion in Check B.
 - **Water canvas and card interactions** (Req 8 c6) — unrelated to typography; a regression guard, not a property. Integration, 1 run.
+- **Scroll latency of the two same-document controls** (Check J, Req 13 c2) — the oracle is a wall-clock bound on a fixed interaction, so 100 iterations would add jitter and runtime without widening the input space. Integration, 1 run per control. What makes it worth having is not quantification but the *timing clause* itself, which the final-position assertion it replaces lacked.
 - **Documentation obligations** (Req 7 c5, Req 9 c3, c5) — presence is checkable, adequacy is not. Smoke plus human review.
 - **Future-conditional obligations** (Req 9 c5, c7) — antecedents are false today. Recorded as standing conditions; Property 11's `converted` flag makes c7 detectable if the delivery path ever changes.
 
@@ -1241,14 +1267,14 @@ Change Set 2 adds four literal assertions in the same spirit: the Card_Header_Ba
 There is no staging environment: a push to `main` deploys straight to production. "Verify before it goes live" therefore has to mean *verify before push*.
 
 ```bash
-cd tools/typography-check && npm ci && npm test    # Checks A–F
+cd tools/typography-check && npm ci && npm test    # Checks A–F, plus I and J
 ```
 
 The full sequence:
 
 1. **Check G** passes — fonts in hand, weights and styles known, branch selected.
 2. SASS edited, then mirrored into `assets/css/main.css` by the procedure in the Compiled Stylesheet Sync Procedure section.
-3. **Checks A–F** pass locally against the working tree via `file://`, or a local static server.
+3. **Checks A–F, I and J** pass locally against the working tree via `file://`, or a local static server.
 4. Visual review of `index.html` and one project page at 320 and 1440, in both font states — the properties bound overflow and containment, but not whether the result looks right. **For Change Set 2 this step also carries Req 11 c7**, the only criterion in the amendment that no property covers: at 0.55rem and weight 800, no two adjacent glyph outlines may overlap or touch and every enclosed counter must stay open. That is a rendering judgement, not a bounding-box computation, so it is reviewed at all four viewports rather than asserted.
 5. Push to `main`; the workflow deploys.
 6. **Check H** against the live origin; record `Content-Encoding` and transfer bytes in the provenance record.

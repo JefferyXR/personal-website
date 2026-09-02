@@ -501,6 +501,162 @@ export async function openScriptless(contentPage, viewport = 1440, scriptState =
 /** Matches the page scripts, for the 'aborted' variant above. */
 export const PAGE_SCRIPT_REQUEST_PATTERN = /assets\/js\/[^/]+$/i;
 
+/**
+ * Return an UNCACHED page plus its console-error sink — Check J.
+ *
+ * Deliberately not `getRenderedPage`: Check J scrolls the document, and handing a scrolled
+ * page back to a cached triple corrupts the `window.scrollY` oracle of whatever asserts
+ * next, exactly as the `openScriptless` note describes. The caller closes the context.
+ */
+export async function openUncachedPage(contentPage, viewport = 1440) {
+  const browser = await getBrowser();
+  const context = await browser.newContext({
+    viewport: { width: viewport, height: 900 },
+    deviceScaleFactor: 1,
+  });
+  const page = await context.newPage();
+  const consoleErrors = [];
+  page.on('console', (msg) => msg.type() === 'error' && consoleErrors.push(msg.text()));
+  page.on('pageerror', (err) => consoleErrors.push(String(err)));
+  await page.goto(pageUrl(contentPage), { waitUntil: 'load' });
+  await page
+    .waitForFunction(() => !document.body.classList.contains('is-preload'), { timeout: 5000 })
+    .catch(() => {});
+  await page.evaluate(() => document.fonts.ready);
+  return { context, page, consoleErrors };
+}
+
+// ---------------------------------------------------------------------------
+// Scroll-latency plumbing — Check J
+// ---------------------------------------------------------------------------
+
+/**
+ * The two same-document scroll controls the site ships.
+ *
+ * They reach the same outcome by DIFFERENT mechanisms, which is why both are measured:
+ * the arrow is animated by jQuery (`jquery.scrolly.min.js` -> `.animate({scrollTop}, 1000)`)
+ * and the footer control is a native fragment jump. A global CSS `scroll-behavior` breaks
+ * only the first, so a check that exercised one of them would miss the regression.
+ */
+export const INTRO_DOWN_ARROW = '#intro .actions a.scrolly';
+export const INTRO_DOWN_ARROW_TARGET = '#main';
+
+/** Node-side sampling interval, in ms. See the rAF note on `measureScrollLatency`. */
+export const SCROLL_SAMPLE_INTERVAL_MS = 16;
+
+/**
+ * How long a scroll control may take to produce its FIRST observable movement.
+ *
+ * This is the bound the Change Set 2 Check F extension was missing: it asserted the
+ * arrow's final position (`landedNear`, y 900) and the console, both of which a
+ * one-second-late scroll satisfies. Measured on this repository at 1440px:
+ *
+ *   html { scroll-behavior: smooth }  ->  first movement 1056ms, y>400 at 1152ms
+ *   html { scroll-behavior: auto }    ->  first movement   48ms, y>400 at  480ms
+ *
+ * 150ms sits an order of magnitude below the broken figure and roughly 3x above the
+ * healthy one, so it discriminates the fault without tracking harness jitter.
+ */
+export const FIRST_MOVEMENT_BUDGET_MS = 150;
+
+/** Scroll deltas smaller than this are treated as no movement (sub-pixel/rounding noise). */
+export const SCROLL_MOVEMENT_EPSILON_PX = 1;
+
+/**
+ * Sample `window.scrollY` from the NODE side while a scroll control runs.
+ *
+ * TWO THINGS HERE ARE LOAD-BEARING:
+ *
+ *  1. **The clock and the sampler both live in Node.** `page.waitForFunction` polls on
+ *     requestAnimationFrame, which is throttled in these headless contexts, so an in-page
+ *     poller reports late or not at all — the same trap documented at the Check I call
+ *     site. Every sample is therefore a `page.evaluate` round trip timed by `Date.now()`.
+ *  2. **Activation is dispatched in-page rather than through `locator.click()`.** A
+ *     Playwright click first scrolls the target into view, which would move the very
+ *     quantity being measured before the clock is read. `element.click()` still runs the
+ *     jQuery handler and still performs an anchor's default fragment navigation.
+ *
+ * The poller starts BEFORE activation and both are awaited together, so `t` is measured
+ * from just before the click rather than from after its round trip.
+ *
+ * Returns `{ startY, finalY, samples, firstMovementMs, firstMovementY, maxY, minY }`,
+ * where `samples` is `[{ t, y }]` and `firstMovementMs` is null if nothing ever moved.
+ */
+export async function measureScrollLatency(page, selector, options = {}) {
+  const {
+    durationMs = 2000,
+    intervalMs = SCROLL_SAMPLE_INTERVAL_MS,
+    movementEpsilonPx = SCROLL_MOVEMENT_EPSILON_PX,
+  } = options;
+
+  const startY = await page.evaluate(() => window.scrollY);
+  const samples = [];
+  const t0 = Date.now();
+
+  const poll = (async () => {
+    while (Date.now() - t0 < durationMs) {
+      const y = await page.evaluate(() => window.scrollY);
+      samples.push({ t: Date.now() - t0, y });
+      const wait = t0 + samples.length * intervalMs - Date.now();
+      if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+    }
+  })();
+
+  const activate = page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    if (!el) throw new Error(`measureScrollLatency: no element matches ${sel}`);
+    el.click();
+  }, selector);
+
+  await Promise.all([activate, poll]);
+
+  const moved = samples.find((s) => Math.abs(s.y - startY) >= movementEpsilonPx);
+  const ys = samples.map((s) => s.y);
+  return {
+    startY,
+    finalY: samples.length ? samples[samples.length - 1].y : startY,
+    samples,
+    firstMovementMs: moved ? moved.t : null,
+    firstMovementY: moved ? moved.y : null,
+    maxY: ys.length ? Math.max(...ys) : startY,
+    minY: ys.length ? Math.min(...ys) : startY,
+  };
+}
+
+/** Elapsed ms of the first sample satisfying `predicate(y)`, or null. */
+export function timeToReach(samples, predicate) {
+  const hit = samples.find((s) => predicate(s.y));
+  return hit ? hit.t : null;
+}
+
+/**
+ * Failure text for a missed latency bound.
+ *
+ * The diagnosis is spelled out because it is genuinely non-obvious: the control ends up in
+ * the RIGHT PLACE, no error is logged, and only the timing is wrong, so the natural
+ * reading of a bare "too slow" is a slow machine rather than a CSS declaration.
+ */
+export function scrollLatencyDiagnosis(label, measurement, scrollBehavior, budgetMs = FIRST_MOVEMENT_BUDGET_MS) {
+  const observed =
+    measurement.firstMovementMs === null
+      ? `never moved within ${measurement.samples.length} samples`
+      : `first movement at ${measurement.firstMovementMs}ms`;
+  return (
+    `${label}: ${observed}, budget ${budgetMs}ms ` +
+    `(start y=${measurement.startY}, final y=${measurement.finalY}, computed scroll-behavior=${scrollBehavior}).\n` +
+    '    LIKELY CAUSE: a global `scroll-behavior: smooth` on the scrolling element fighting ' +
+    "jquery.scrolly's `.animate({scrollTop}, 1000)`.\n" +
+    '    jQuery writes scrollTop once per frame; with smooth scrolling in force EVERY one of ' +
+    'those ~60 writes starts a new smooth scroll, so the page does not visibly move until the ' +
+    "1000ms animation ends and the last write sticks. The control still LANDS correctly, which is why " +
+    'a final-position assertion passes while the interaction feels broken.\n' +
+    '    Check the `html` rule in assets/sass/base/_page.scss and its mirror in assets/css/main.css. ' +
+    'Measured here: smooth 1056ms vs auto 48ms to first movement. `preventDefault()` in scrolly does ' +
+    'NOT help — it suppresses native fragment navigation, not scroll-behavior applied to programmatic ' +
+    'scrollTop writes.'
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Label-box helper — Properties 14 and 15
 // ---------------------------------------------------------------------------

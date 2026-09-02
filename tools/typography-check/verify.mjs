@@ -16,6 +16,13 @@ import {
   contrastRatio,
   round2,
   WEBFONT_REQUEST_PATTERN,
+  INTRO_DOWN_ARROW,
+  INTRO_DOWN_ARROW_TARGET,
+  BACK_TO_TOP_CONTROL,
+  FIRST_MOVEMENT_BUDGET_MS,
+  measureScrollLatency,
+  timeToReach,
+  scrollLatencyDiagnosis,
 } from './fixtures.mjs';
 
 const HEADING_STACK = '"Horizon", "Arial Black", Verdana, "Trebuchet MS", sans-serif';
@@ -348,35 +355,63 @@ async function checkCopyrightControl(browser) {
   }
 }
 
-async function checkScrollBehaviourInterference(browser) {
-  // Check F extension: the design names this as the documented trigger for dropping the
-  // smooth-scroll block, so it is measured rather than assumed.
-  console.log('\n=== Check F extension: scroll-behavior vs the scrolly / scrollex anchors ===');
+async function checkScrollLatency(browser) {
+  /**
+   * Check J — LATENCY, not landing position.
+   *
+   * This function used to assert only that the arrow ended up near `#main` and that the
+   * console was clean. Both were true while the arrow sat motionless for a full second: a
+   * global `scroll-behavior: smooth` made each of jQuery's per-frame `scrollTop` writes
+   * start its own smooth scroll, so nothing moved until the 1000ms animation's last write
+   * stuck. Final position is preserved as a second clause; the first clause is the clock.
+   *
+   * Sampled from the NODE side — `page.waitForFunction` polls on rAF, which is throttled
+   * here, so an in-page poller reports late or never.
+   */
+  console.log('\n=== Check J: scroll latency of the down-arrow and the Back to top control ===');
   const { context, page, errors } = await open(browser, 'index.html', 1440);
-  const r = await page.evaluate(async () => {
-    const arrow = document.querySelector('a.scrolly[href="#main"]');
-    const main = document.querySelector('#main');
-    if (!arrow || !main) return { arrow: !!arrow, main: !!main };
-    window.scrollTo({ top: 0, behavior: 'instant' });
-    arrow.click();
-    await new Promise((res) => setTimeout(res, 1600));
-    const y = window.scrollY;
-    const target = main.getBoundingClientRect().top + y;
-    return {
-      arrow: true,
-      main: true,
-      scrollBehavior: getComputedStyle(document.documentElement).scrollBehavior,
-      landedNear: Math.abs(y - target) < 80,
-      y: Math.round(y),
-      target: Math.round(target),
-      introVisible: !!document.querySelector('#intro'),
-    };
-  });
-  console.log('  ', JSON.stringify(r), 'errors:', errors.length);
-  if (r.arrow && r.main && !r.landedNear) {
-    note(`scroll-behavior: smooth disturbed the scrolly anchor (landed ${r.y}, target ${r.target}) — the design's documented trigger for dropping the block`);
+
+  const behaviour = await page.evaluate(
+    () => getComputedStyle(document.scrollingElement ?? document.documentElement).scrollBehavior,
+  );
+
+  // Intro down-arrow — jQuery-animated (jquery.scrolly).
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  const target = await page.evaluate((sel) => {
+    const el = document.querySelector(sel);
+    return el ? Math.round(el.getBoundingClientRect().top + window.scrollY) : null;
+  }, INTRO_DOWN_ARROW_TARGET);
+  const arrow = await measureScrollLatency(page, INTRO_DOWN_ARROW, { durationMs: 2000 });
+  console.log(
+    `   down-arrow  first-movement ${String(arrow.firstMovementMs).padStart(5)}ms  ` +
+      `half-way ${String(timeToReach(arrow.samples, (y) => y >= target / 2)).padStart(5)}ms  ` +
+      `on-target ${String(timeToReach(arrow.samples, (y) => Math.abs(y - target) < 80)).padStart(5)}ms  ` +
+      `final ${Math.round(arrow.finalY)} (target ${target})  scroll-behavior: ${behaviour}`,
+  );
+  if (arrow.firstMovementMs === null || arrow.firstMovementMs > FIRST_MOVEMENT_BUDGET_MS) {
+    note(scrollLatencyDiagnosis('intro down-arrow', arrow, behaviour));
   }
-  if (errors.length) note(`Check F: console errors with scroll-behavior: smooth — ${errors.join(' | ')}`);
+  if (Math.abs(arrow.finalY - target) >= 80) {
+    note(`the intro down-arrow landed at ${Math.round(arrow.finalY)}, not within 80px of ${target}`);
+  }
+
+  // Footer Back to top — native fragment navigation, no script (Req 13 c2, c5).
+  await page.evaluate(() => window.scrollTo({ top: 1e6, behavior: 'instant' }));
+  const startY = await page.evaluate(() => window.scrollY);
+  const backToTop = await measureScrollLatency(page, BACK_TO_TOP_CONTROL, { durationMs: 2000 });
+  console.log(
+    `   back-to-top first-movement ${String(backToTop.firstMovementMs).padStart(5)}ms  ` +
+      `reached-0 ${String(timeToReach(backToTop.samples, (y) => y === 0)).padStart(5)}ms  ` +
+      `final ${Math.round(backToTop.finalY)} (start ${Math.round(startY)})`,
+  );
+  if (backToTop.firstMovementMs === null || backToTop.firstMovementMs > FIRST_MOVEMENT_BUDGET_MS) {
+    note(scrollLatencyDiagnosis('footer Back to top', backToTop, behaviour));
+  }
+  if (Math.round(backToTop.finalY) !== 0) {
+    note(`the Back to top control settled at ${Math.round(backToTop.finalY)}, expected 0 (Req 13 c2)`);
+  }
+
+  if (errors.length) note(`Check J: console errors during the scroll runs — ${errors.join(' | ')}`);
   await context.close();
 }
 
@@ -452,7 +487,7 @@ async function main() {
   await checkSkillsWrap(browser);
   await checkFontAwesomeAndScripts(browser);
   await checkCanvasAnimates(browser);
-  await checkScrollBehaviourInterference(browser);
+  await checkScrollLatency(browser);
   await checkOverflow(browser);
   await closeAll();
 

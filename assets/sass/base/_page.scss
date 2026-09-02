@@ -28,23 +28,19 @@
 		html {
 			box-sizing: border-box;
 
-			// Easing for the footer Back to top control (Req 13 c2), supplied by CSS
-			// rather than by jquery.scrolly so the control depends on no script at all.
-			// scroll-behavior must sit on the SCROLLING element, so it is necessarily
-			// global; its only other same-document consumers are the `scrolly` anchors,
-			// which call preventDefault(), so no native scroll competes with jQuery's
-			// animation. This block is OPTIONAL to the requirement -- c2 asks only that
-			// the top be brought into the viewport, and the instant jump satisfies c2,
-			// c3 and c5 in full if Check F ever shows interference.
-			scroll-behavior: smooth;
-		}
-
-		// An unrequested full-page scroll animation is precisely the class of motion this
-		// setting exists to suppress, so the reduced-motion arm restores the instant jump.
-		@media (prefers-reduced-motion: reduce) {
-			html {
-				scroll-behavior: auto;
-			}
+			// DO NOT REINTRODUCE `scroll-behavior: smooth` HERE. It was declared to ease
+			// the footer Back to top control (Req 13 c2), and it defeats jquery.scrolly:
+			// the plugin animates with `.animate({scrollTop: t}, 1000, 'swing')`, jQuery
+			// writes scrollTop once per frame, and with smooth scrolling on the scrolling
+			// element EVERY one of those ~60 writes starts its OWN smooth scroll -- so the
+			// intro down-arrow did not visibly move until jQuery's 1000ms animation ended
+			// and the final write stuck. Measured at 1440px: 1056ms to first movement with
+			// smooth, 48ms with auto. Removed per design 5.5, where the smooth-scroll block
+			// is OPTIONAL to the requirement: c2 asks only that the top of the document be
+			// brought into the viewport, and the instant jump satisfies c2, c3 and c5 in
+			// full. With no CSS smooth scroll there is no unrequested motion to suppress,
+			// so the `prefers-reduced-motion` arm went with it. Check J measures the
+			// latency of both scroll controls, so a re-added declaration fails a check.
 		}
 
 		*, *:before, *:after {

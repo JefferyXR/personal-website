@@ -295,13 +295,41 @@ test('Req 13/14: the Copyright_Block declarations', () => {
     'the #copyright focus indicator is missing or not 2px currentColor',
   );
 
-  // Req 13 c2 with its reduced-motion arm.
-  assert.match(css, /html \{[^}]*scroll-behavior:\s*smooth/, 'scroll-behavior: smooth is missing');
-  assert.match(
-    css,
-    /@media \(prefers-reduced-motion: reduce\) \{\s*html \{\s*scroll-behavior:\s*auto/,
-    'the prefers-reduced-motion arm is missing',
-  );
+  // Req 13 c2 is satisfied by the native fragment jump, NOT by CSS easing.
+  //
+  // The global `scroll-behavior: smooth` Change Set 2 added is REMOVED and must stay
+  // removed: jquery.scrolly animates the intro down-arrow with
+  // `.animate({scrollTop}, 1000)`, jQuery writes scrollTop once per frame, and with smooth
+  // scrolling in force every one of those writes restarts a smooth scroll — measured 1056ms
+  // to first movement, against 48ms with `auto`. Design §5.5 makes the block optional to
+  // the requirement, so dropping it is conforming rather than a regression.
+  //
+  // A ZERO-OCCURRENCE rule on the DECLARATIONS, in the same spirit as Req 1 c13 — but
+  // scanned with comments stripped, because the surviving comment names the property on
+  // purpose. Check J measures the behaviour; this is the cheap static guard that fails
+  // first and points at the right line.
+  const stripComments = (t) => t.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|\s)\/\/[^\n]*/g, '');
+  const pageScss = readSassFile('base/_page.scss');
+  for (const [name, text] of [['assets/css/main.css', css], ['assets/sass/base/_page.scss', pageScss]]) {
+    const code = stripComments(text);
+    assert.ok(
+      !/scroll-behavior/.test(code),
+      `${name} declares scroll-behavior again — it defeats jquery.scrolly's .animate({scrollTop})`,
+    );
+    // No empty media query left behind: with no CSS smooth scroll there is no unrequested
+    // motion to suppress, so the arm is not merely emptied, it is gone.
+    assert.ok(
+      !/prefers-reduced-motion/.test(code),
+      `${name} still carries a prefers-reduced-motion block, which now guards nothing`,
+    );
+    // The `html` rule keeps its original job.
+    assert.match(code, /html \{[^}]*box-sizing:\s*border-box/, `${name} lost html { box-sizing: border-box }`);
+    // The measured figures stay recorded where someone would re-add the declaration.
+    assert.ok(
+      /1056ms/.test(text) && /48ms/.test(text),
+      `${name} no longer records why the smooth-scroll block was removed — keep the measured figures`,
+    );
+  }
 });
 
 test('Req 13 c13/c14: the Copyright_Block <ul> is byte-identical on all nine pages', () => {
