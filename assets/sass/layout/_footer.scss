@@ -107,10 +107,11 @@
 		// decision (Req 1 c10, c11) -- which is also why fg-link was ADDED to the alt
 		// palette rather than fg/fg-bold being edited.
 		a[href^="mailto:"] {
+			// alt.fg-link resolves to #3a4148 (§5.1), measured 9.49:1 on #f5f5f5.
 			color: _palette(alt, fg-link);
 			// SOLID, not the inherited rgba(113,121,129,0.5): that composites to #b3b7bb
-			// = 1.85:1 and fails Req 1 c7. Even rgba(74,81,88,0.5) reaches only 2.33:1.
-			// Only a solid colour clears the 3:1 bar.
+			// = 1.85:1 and fails Req 1 c7. Halving the link colour's own alpha does not
+			// rescue it either -- only a solid colour clears the 3:1 bar.
 			border-bottom-color: _palette(alt, fg-link);
 
 			&:hover {
@@ -224,7 +225,18 @@
 	#copyright {
 		@include color-typography(invert);
 		position: relative;
-		color: transparentize(_palette(invert, fg), 0.75);
+		// Req 14 c1-c3 (§5.6). transparentize SUBTRACTS its amount, so the target alpha
+		// 0.65 is written as 0.35 (was 0.75, i.e. alpha 0.25 = 2.27:1). Alpha 0.65
+		// composites to #b0b3b6 and measures 7.33:1 against #1e252d.
+		//
+		// 0.65 rather than 0.50, even though c1 only asks for 4.5:1: the deciding factor
+		// is the HOVER state. The block now hosts an interactive control, and hover
+		// resolves to the invert accent #18bfef = 7.17:1. At alpha 0.50 the default
+		// measures 4.94:1 -- 45% weaker than its own hover, an odd signal for a control
+		// that should be discoverable BEFORE being hovered. At 0.65 the two sit within
+		// 2% of each other. Only the transparentize amount changes: invert.fg stays
+		// #ffffff and the block background stays #1e252d (Req 14 c4, c5).
+		color: transparentize(_palette(invert, fg), 0.35);
 		cursor: default;
 		font-family: _font(family);
 		font-size: 0.8rem;
@@ -241,6 +253,18 @@
 		a {
 			color: inherit;
 			border-bottom-color: inherit;
+			// Req 13 c17: the block sets `cursor: default` for its static text, which
+			// the Back to top control and the design credit both need overridden.
+			cursor: pointer;
+		}
+
+		// Req 13 c9. `outline`, not a border: it spans the full text box and alters no
+		// layout. `currentColor`, not a literal: the ring tracks the block colour §5.6
+		// sets (composited #b0b3b6, 7.33:1 against #1e252d), so the two rules cannot
+		// drift apart. `:focus-visible` keeps the ring off pointer clicks.
+		a:focus-visible {
+			outline: 2px solid currentColor;
+			outline-offset: 2px;
 		}
 
 		ul {

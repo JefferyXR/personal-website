@@ -56,7 +56,12 @@
 			// Deliberately NOT an edit to fg / fg-bold: #717981 resolves at 15 sites in
 			// the compiled CSS, so editing it would recolour the footer h3, the social
 			// icons, table th and pagination links, violating Req 1 c10 and c11.
-			fg-link:		#4a5158,
+			// Change Set 2 (§5.1) darkened this to #3a4148: 9.49:1 on #f5f5f5, up from
+			// 7.38:1. The Req 1 c1 threshold did NOT move -- it is still >=7.0:1 and the
+			// superseded value already cleared it, so this buys margin against a stricter
+			// future target rather than fixing a failure. Req 1 c13 makes the superseded
+			// value a ZERO-OCCURRENCE rule, which is why it is not named here.
+			fg-link:		#3a4148,
 			fg-light:		mix(#717981, #f5f5f5, 50%),
 			border:			mix(#dcdcdc, #f5f5f5, 75%),
 			border-bg:		rgba(#dcdcdc, 0.5),

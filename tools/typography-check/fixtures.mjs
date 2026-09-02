@@ -91,6 +91,76 @@ export const ROLE_SELECTORS = {
   'chrome-copyright': '#copyright',
 };
 
+/**
+ * Change Set 2 element groups.
+ *
+ * Bold_Chrome_Text (Req 11 c1) is the set that must compute to 800. Everything else in
+ * CHROME_ROLES must stay at 400 (Req 11 c15). Property 4 reads these as a PARTITION, so
+ * the two halves catch each other's mistakes: bolding too much trips the 400 clause,
+ * bolding too little trips the 800 clause.
+ */
+export const BOLD_CHROME_SELECTORS = {
+  'bold-nav-link': '#nav ul.links a',
+  'bold-button': '.button',
+  'bold-button-primary': '.button.primary',
+  'bold-button-primary-small-fit': '.button.primary.small.fit',
+  'bold-skills-pill': 'a.button.skills',
+};
+
+/**
+ * Chrome_Text that Req 11 c15 pins at 400. Deliberately excludes `.button.skills`, which
+ * is Bold_Chrome_Text, and excludes `#copyright a` for the same reason it excludes
+ * `#copyright` itself: the Copyright_Block is named in c15 as staying at 400.
+ */
+export const REGULAR_CHROME_SELECTORS = {
+  'regular-form-label': 'form label',
+  'regular-pagination': '.pagination a, .pagination span',
+  'regular-table-header': 'table th',
+  'regular-navpanel-link': '#navPanel .links li a',
+  'regular-copyright': '#copyright',
+  'regular-copyright-link': '#copyright a',
+};
+
+/**
+ * The two Skills_Pill geometries (Req 12 c10). They are a GENERATOR DIMENSION for
+ * Property 15, not two properties: the oracle is identical and only the declared
+ * font-size and the effective-vertical-gap definition differ.
+ *
+ *   - homepage:  body.home #main .button.skills — 0.55rem, height auto + min-height,
+ *                so the effective vertical gap is the declared vertical padding.
+ *   - wider:     .button.skills outside the homepage card grid — 0.7rem with a fixed
+ *                height, so the effective vertical gap is half the difference between
+ *                the declared height and the rendered line box.
+ */
+export const SKILLS_PILL_GEOMETRIES = {
+  homepage: {
+    selector: 'body.home #main .button.skills',
+    declaredFontSizeRem: 0.55,
+    verticalGapSource: 'padding',
+  },
+  wider: {
+    selector: 'body:not(.home) .button.skills, body.home #main .actions .button.skills',
+    declaredFontSizeRem: 0.7,
+    verticalGapSource: 'height-minus-linebox',
+  },
+};
+
+/** Card_Header_Band and Card_Heading — Requirement 10. */
+export const CARD_HEADER_BAND = 'body.home #main > .posts > article > header';
+export const CARD_HEADING = 'body.home #main > .posts > article > header h2';
+
+/**
+ * The card whose heading carries an explicit <br /> (Req 10 c3). Pinned as a REQUIRED
+ * case in Property 14 rather than left to the sampler: it is the only heading that
+ * breaks at every viewport, so a uniform generator could miss it entirely.
+ */
+export const FORCED_BREAK_CARD_HEADING_TEXT = 'KillerByte';
+
+/** Copyright_Block and its two child links — Requirement 13. */
+export const COPYRIGHT_BLOCK = '#copyright';
+export const BACK_TO_TOP_CONTROL = '#copyright a[href^="#"]';
+export const DESIGN_CREDIT_LINK = '#copyright a[href="https://html5up.net"]';
+
 export const HEADING_ROLES = Object.keys(ROLE_SELECTORS).filter((r) => r.startsWith('heading-'));
 export const BODY_ROLES = Object.keys(ROLE_SELECTORS).filter((r) => r.startsWith('body-'));
 export const CHROME_ROLES = Object.keys(ROLE_SELECTORS).filter((r) => r.startsWith('chrome-'));
@@ -142,6 +212,66 @@ export const isFontAwesomeFile = (name) => /^fa-/.test(name);
 
 /** Forbidden family names — Req 7 c9. */
 export const FORBIDDEN_FAMILY_NAMES = ['Merriweather', 'Source Sans Pro'];
+
+/**
+ * Forbidden colour literals — Property 6.
+ *
+ * Req 1 c13 is a ZERO-OCCURRENCE rule, not a replacement rule: after §5.1 the superseded
+ * link colour must appear nowhere in either artifact as a link or underline colour,
+ * including inside explanatory comments that would otherwise document a value the source
+ * no longer sets. Scanning the raw file text (comments included) is therefore deliberate.
+ */
+export const FORBIDDEN_COLOUR_LITERALS = ['#4a5158'];
+
+/** The Change Set 2 link colour — §5.1, 9.49:1 on #f5f5f5. */
+export const FG_LINK = '#3a4148';
+
+/**
+ * Inline-style oracle — Property 6, widened by Req 10 c8 and Req 14 c9.
+ *
+ * Change Set 1 banned the five typography properties inline. Change Set 2 adds
+ * `text-align` (Req 10 c8 forbids achieving the centring with an inline style) and
+ * `color` (Req 14 c9 requires the colour change to live in the stylesheet pair).
+ */
+export const BANNED_INLINE_PROPERTIES = [
+  'font-family',
+  'font-size',
+  'font-weight',
+  'line-height',
+  'letter-spacing',
+  'text-align',
+  'color',
+];
+
+/**
+ * Custom-property carve-out for the inline-style oracle.
+ *
+ * `index.html` legitimately carries `style="--project-image: url(...)"` on every project
+ * card. A blanket ban produces seven false failures, so declarations whose property name
+ * begins with `--` are skipped. This is safe against the widened list because a custom
+ * property is neither `text-align` nor `color` — it is a distinct name that only becomes
+ * one of them through an explicit `var()` substitution in the stylesheet, which the
+ * stylesheet does not do.
+ */
+export const isCustomPropertyDeclaration = (declaration) => /^\s*--/.test(declaration);
+
+/**
+ * Split an inline `style` attribute into `{ property, value }` pairs, skipping custom
+ * properties. Returns the banned declarations only.
+ */
+export function bannedInlineDeclarations(styleAttr) {
+  const out = [];
+  for (const decl of String(styleAttr).split(';')) {
+    if (!decl.trim()) continue;
+    if (isCustomPropertyDeclaration(decl)) continue;
+    const [rawProp, ...rest] = decl.split(':');
+    const prop = rawProp.trim().toLowerCase();
+    if (BANNED_INLINE_PROPERTIES.includes(prop)) {
+      out.push({ property: prop, value: rest.join(':').trim() });
+    }
+  }
+  return out;
+}
 
 /** Req 9 c1 — aggregator/mirror download sources that must never appear as a source_url. */
 export const FORBIDDEN_SOURCE_HOSTS = ['fontdownloader.net'];
@@ -230,13 +360,21 @@ export function contrastRatio(foreground, backdrop) {
 export const round2 = (n) => Math.round(n * 100) / 100;
 
 /**
- * Accepted contrast shortfalls — Property 1. EXACTLY TWO ENTRIES.
+ * Accepted contrast shortfalls — Property 1. EXACTLY ONE ENTRY after Change Set 2.
  *
- * Both are settled by explicit owner decision ("email link only"), which makes Req 1 c11
- * win over Req 3 c14 and Req 5 c6. They are reported as known-and-accepted with their
- * conflict IDs, NOT as failures, and they must NOT be "fixed" under this spec.
+ * The surviving entry is settled by explicit owner decision, which makes Req 1 c11 win
+ * over Req 3 c14. It is reported as known-and-accepted with its conflict ID, NOT as a
+ * failure, and it must NOT be "fixed" under this spec (Req 14 c8 keeps C2 as decided).
  *
- * Adding a third entry is an owner scope decision, not a test fix.
+ * THE #copyright ENTRY WAS REMOVED BY CHANGE SET 2 (Req 14 c7) AND MUST NOT REAPPEAR.
+ * It previously recorded rgba(255,255,255,0.25) over #1e252d -> #565c62 at 2.27:1 as an
+ * accepted shortfall under conflict C3. §5.6 now FIXES that shortfall — alpha 0.65,
+ * composited #b0b3b6, 7.33:1 — so the pairing is checked against the ordinary >=4.5:1
+ * Chrome_Text threshold like any other tuple. Removal is mandatory, not tidy-up: this set
+ * pins each member to a MEASURED ratio and fails when that ratio drifts in EITHER
+ * direction, so a stale 2.27:1 entry would make the successful fix read as a red check.
+ *
+ * Adding an entry is an owner scope decision, not a test fix.
  */
 export const ACCEPTED_CONTRAST_EXCEPTIONS = [
   {
@@ -246,16 +384,7 @@ export const ACCEPTED_CONTRAST_EXCEPTIONS = [
     backdrop: '#f5f5f5',
     measured: 4.05,
     threshold: 4.5,
-    ruling: 'Req 1 c11 wins over Req 3 c14 — leave unchanged.',
-  },
-  {
-    conflict: 'C3',
-    what: '#copyright (Chrome_Text)',
-    foreground: 'rgba(255, 255, 255, 0.25)',
-    backdrop: '#1e252d',
-    measured: 2.29,
-    threshold: 4.5,
-    ruling: 'Req 1 c11 wins over Req 5 c6 — leave unchanged.',
+    ruling: 'Req 1 c11 wins over Req 3 c14 — leave unchanged (Req 14 c8).',
   },
 ];
 
@@ -330,6 +459,176 @@ export async function getRenderedPage(contentPage, viewport, fontState = 'loaded
 
   contextCache.set(key, page);
   return page;
+}
+
+/**
+ * Return a page in a context with SCRIPTING DISABLED — Check I, Property 16's no-JS arm
+ * (Req 13 c5).
+ *
+ * This needs a separately configured context rather than a different generator, which is
+ * exactly why Check I cannot be folded into Check D: `javaScriptEnabled` is a
+ * context-level flag, and a context with scripting off cannot also exercise the card
+ * interaction paths Check F needs.
+ *
+ * `scriptState`:
+ *   - 'disabled'  — javaScriptEnabled: false for the whole context.
+ *   - 'aborted'   — scripting on, but every assets/js/* request is aborted. This is the
+ *                   PARTIAL-failure case Req 13 c5 also names (jquery.scrolly.min.js
+ *                   failing to load), which behaves differently from scripting-off:
+ *                   inline handlers still run, so a control that depended on one would
+ *                   pass the 'disabled' arm and fail here, or vice versa.
+ *
+ * Not cached: these contexts are used once per page by Check I, and caching a scrolled
+ * page would corrupt the `window.scrollY === 0` oracle for the next assertion.
+ */
+export async function openScriptless(contentPage, viewport = 1440, scriptState = 'disabled') {
+  const browser = await getBrowser();
+  const context = await browser.newContext({
+    viewport: { width: viewport, height: 900 },
+    deviceScaleFactor: 1,
+    javaScriptEnabled: scriptState !== 'aborted',
+  });
+
+  if (scriptState === 'aborted') {
+    await context.route(/assets\/js\/[^/]+$/i, (route) => route.abort());
+  }
+
+  const page = await context.newPage();
+  await page.goto(pageUrl(contentPage), { waitUntil: 'load' });
+  return { context, page };
+}
+
+/** Matches the page scripts, for the 'aborted' variant above. */
+export const PAGE_SCRIPT_REQUEST_PATTERN = /assets\/js\/[^/]+$/i;
+
+// ---------------------------------------------------------------------------
+// Label-box helper — Properties 14 and 15
+// ---------------------------------------------------------------------------
+
+/**
+ * Read the rendered LINE BOXES of an element's text content, one rect per line, from a
+ * `Range` over its text nodes via `getClientRects()`.
+ *
+ * THIS IS THE SINGLE EASIEST THING IN THE HARNESS TO GET WRONG, and getting it wrong
+ * produces a vacuous PASS rather than a failure:
+ *
+ *   - For Property 15 the anchor IS the pill. Measuring `el.getBoundingClientRect()`
+ *     compares the pill to itself, so every width and height ratio comes back as 1.000
+ *     and the checker reports all-pass while measuring nothing.
+ *   - For Property 14 the heading's own box spans the full band width, so a bounding-box
+ *     check passes for a flex-centred h2 whose internal lines are still left-ragged —
+ *     the exact mistake design §5.2 rejects.
+ *
+ * A Range's `getClientRects()` returns one rect per rendered line, which is what makes
+ * the forced-<br /> case and the auto-wrap case fall out of the same code.
+ *
+ * Returns `{ lines: [{x, y, width, height, top, right, bottom, left}], text }`, with
+ * zero-area rects dropped (Chromium emits them for collapsed whitespace between nodes).
+ */
+export const LABEL_LINE_RECTS_FN = `(el) => {
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  const rects = [...range.getClientRects()]
+    .filter((r) => r.width > 0.01 && r.height > 0.01)
+    .map((r) => ({
+      x: r.x, y: r.y, width: r.width, height: r.height,
+      top: r.top, right: r.right, bottom: r.bottom, left: r.left,
+    }))
+    .sort((a, b) => a.top - b.top || a.left - b.left);
+
+  // Merge rects that share a line: a heading containing an <a> yields one rect per inline
+  // box, and two rects on the same baseline are one rendered LINE, not two.
+  const lines = [];
+  for (const r of rects) {
+    const same = lines.find((l) => Math.abs(l.top - r.top) < 0.75 && Math.abs(l.height - r.height) < 0.75);
+    if (same) {
+      same.left = Math.min(same.left, r.left);
+      same.right = Math.max(same.right, r.right);
+      same.width = same.right - same.left;
+      same.bottom = Math.max(same.bottom, r.bottom);
+    } else {
+      lines.push({ ...r });
+    }
+  }
+  return { lines, text: (el.textContent || '').replace(/\\s+/g, ' ').trim() };
+}`;
+
+/**
+ * Evaluate LABEL_LINE_RECTS_FN against every match of `selector` on `page`, alongside the
+ * element's own border box and its resolved box metrics. One round trip per selector.
+ */
+export async function measureLabelBoxes(page, selector) {
+  return page.evaluate(
+    ({ sel, fnSource }) => {
+      const lineRects = eval(fnSource);
+      const out = [];
+      for (const el of document.querySelectorAll(sel)) {
+        const rect = el.getBoundingClientRect();
+        if (rect.width === 0 && rect.height === 0) continue;
+        const cs = getComputedStyle(el);
+        out.push({
+          ...lineRects(el),
+          box: {
+            x: rect.x, y: rect.y, width: rect.width, height: rect.height,
+            top: rect.top, right: rect.right, bottom: rect.bottom, left: rect.left,
+          },
+          style: {
+            fontSize: parseFloat(cs.fontSize),
+            fontWeight: cs.fontWeight,
+            fontFamily: cs.fontFamily,
+            lineHeight: cs.lineHeight,
+            letterSpacing: cs.letterSpacing,
+            whiteSpace: cs.whiteSpace,
+            display: cs.display,
+            alignItems: cs.alignItems,
+            justifyContent: cs.justifyContent,
+            heightDeclared: cs.height,
+            minHeight: cs.minHeight,
+            paddingTop: parseFloat(cs.paddingTop),
+            paddingRight: parseFloat(cs.paddingRight),
+            paddingBottom: parseFloat(cs.paddingBottom),
+            paddingLeft: parseFloat(cs.paddingLeft),
+            borderTopWidth: parseFloat(cs.borderTopWidth),
+            borderRightWidth: parseFloat(cs.borderRightWidth),
+            borderBottomWidth: parseFloat(cs.borderBottomWidth),
+            borderLeftWidth: parseFloat(cs.borderLeftWidth),
+            borderRadius: cs.borderRadius,
+            backgroundColor: cs.backgroundColor,
+            borderTopColor: cs.borderTopColor,
+            color: cs.color,
+            textOverflow: cs.textOverflow,
+            textAlign: cs.textAlign,
+          },
+        });
+      }
+      return out;
+    },
+    { sel: selector, fnSource: LABEL_LINE_RECTS_FN },
+  );
+}
+
+/**
+ * Content-box edges of an element, derived from its border box minus border and padding.
+ * Req 12 c2/c3 and Req 10 c1 are both stated against the CONTENT box, not the border box.
+ */
+export function contentBox({ box, style }) {
+  return {
+    left: box.left + style.borderLeftWidth + style.paddingLeft,
+    right: box.right - style.borderRightWidth - style.paddingRight,
+    top: box.top + style.borderTopWidth + style.paddingTop,
+    bottom: box.bottom - style.borderBottomWidth - style.paddingBottom,
+  };
+}
+
+/** Confirm the real webfonts are loaded before measuring — a swap-window measurement
+ *  measures Helvetica, not Telegraf (design §5.4 Layer 2). */
+export async function assertFontsLoaded(page, spec = '0.55rem "PP Telegraf"') {
+  const ok = await page.evaluate(async (s) => {
+    await document.fonts.ready;
+    return document.fonts.check(s);
+  }, spec);
+  if (!ok) throw new Error(`webfont not loaded for ${spec} — measurement would be of the fallback face`);
+  return ok;
 }
 
 /** Tear down every cached context and the shared browser. Call from a test teardown. */

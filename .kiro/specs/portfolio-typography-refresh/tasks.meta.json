@@ -1,0 +1,50 @@
+{
+  "pbtResults": {
+    "16.3 Run Property 15 against the **unmodified** tree and record the baseline breaches": {
+      "status": "failed",
+      "failingExample": "Property 15 baseline against the UNMODIFIED tree — three breach classes, exactly as design §5.4 predicts.\n\nRENDERED ARM (index.html, 24 pills x 4 viewports; homepage geometry is the only one with rendered instances):\n  c5w  label width / border-box width — 0.877 @320 (pass), 0.883 @768, 0.883 @1024, 0.884 @1440\n       vs the 0.88 ceiling. BREACH at 768/1024/1440. \"Waterjet fabrication\".\n       (design predicted 0.891-0.893; measured 0.884 worst case)\n  c2   vertical symmetry — 6.66px @320, 7.55px @768/1024, 8.41px @1440 vs the 1px tolerance.\n       BREACH at all four viewports, all 24 pills. gapTop ~2.4px / gapBottom ~10.8px @1440:\n       min-height 1.7rem (27.2px) exceeds the 19.12px content height and block layout drops\n       all the slack below the line box. (design predicted ~8.1px; measured 8.41px)\n\nDECLARED ARM (body.home #main .button.skills, body.home #main .actions .button — the\nwider-context geometry, which has ZERO rendered instances, see the finding recorded in\npill-geometry.mjs):\n  c5h  line box height / border-box height = 1.000 vs the 0.85 ceiling. BREACH.\n  c4   horizontal padding / effective vertical gap = Infinity (gap = 0) vs 1.5-3.5. BREACH.\n       Cause: line-height: 2.25rem is a LENGTH set equal to height: 2.25rem.\n  c5w  0.831 (widest) / 0.424 (narrowest) — pass, and identical to §5.4's table.\n\nLabel box is read from a text-node Range via getClientRects(), expanded to the resolved\nline-height about its centre. A pass here would mean the label box was being read from the\nanchor rect instead — the anchor IS the pill, so every ratio would be 1.000.",
+      "lastRunTimestamp": 1788382209209
+    },
+    "17.2 Extend the zero-occurrence and literal checks for the new value": {
+      "status": "passed",
+      "lastRunTimestamp": 1788384200531
+    },
+    "18.2 Write property test for per-line card title centring": {
+      "status": "passed",
+      "lastRunTimestamp": 1788384203200
+    },
+    "18.3 Extend Property 8's baseline set for the centring scope": {
+      "status": "passed",
+      "lastRunTimestamp": 1788384205923
+    },
+    "19.2 Extend Property 4's weight clause into a 400/800 partition": {
+      "status": "passed",
+      "lastRunTimestamp": 1788384208723
+    },
+    "19.3 Extend Property 5's containment clause to the bold groups": {
+      "status": "passed",
+      "lastRunTimestamp": 1788384211405
+    },
+    "20.3 Write property test for pill box fit": {
+      "status": "passed",
+      "lastRunTimestamp": 1788384214049
+    },
+    "22.3 Write property test for the control, including the no-JavaScript arm (Check I)": {
+      "status": "passed",
+      "lastRunTimestamp": 1788384216892
+    },
+    "22.4 Extend Property 10 and Check F for the two new links": {
+      "status": "passed",
+      "lastRunTimestamp": 1788384219713
+    },
+    "23.2 Re-run Property 1 with the reduced exceptions set": {
+      "status": "passed",
+      "lastRunTimestamp": 1788384222543
+    },
+    "24.2 Split Property 11's licence-text clause per family": {
+      "status": "passed",
+      "lastRunTimestamp": 1788384225208
+    }
+  },
+  "executionHistory": {}
+}

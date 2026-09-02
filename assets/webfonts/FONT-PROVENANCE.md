@@ -24,7 +24,7 @@ HTML5 UP Massively template under its own licence and are untouched by this chan
 | `source_url` | `https://edocs.creativemarket.com/fontense/2189003-Horizon-Wide-Sans-Serif` |
 | `download_date` | 2026-09-02 |
 | `licence_tier` | Free for personal use (commercial licence required for any monetised use) |
-| `licence_text_file` | *none — see TODO below* |
+| `licence_text_file` | *none — accepted, see note* |
 | `format` | WOFF2 |
 | `converted` | no |
 | `sha256` | `aaa66743b480d7ca8b33a44ccd95ef44852ec637386d5967a054f524e34d6305` |
@@ -32,12 +32,23 @@ HTML5 UP Massively template under its own licence and are untouched by this chan
 | `content_encoding` | `TBD — Check H` |
 | `transfer_bytes` | `TBD — Check H` |
 
-**TODO (owner):** Requirement 9 c2 requires the designer-supplied licence or EULA text to be
-stored in the repository alongside the font file. **No licence text file for Horizon exists in
-this repository.** The designer's free tier terms are summarised in the spec's requirements
-document from the designer's own channels, but the supplied text itself has not been added.
-Save it as `assets/webfonts/Horizon-LICENSE.txt` to close Req 9 c2 for Horizon. This record
-deliberately does **not** invent or paraphrase a licence file in its place.
+**Accepted position — no vendor licence text is available for Horizon.** No licence or EULA
+text for Horizon could be located from the designer's own channels. Requirement 9 criterion 2
+no longer requires a stored licence text file for the heading font; criterion 9 substitutes a
+recorded-fields obligation, and that obligation is met by the four fields already present in
+the record above: licence tier *free for personal use*, designer *Alberto Fontense*, source
+URL, and download date. **This is a closed decision, not an outstanding action.**
+
+**The obligation itself is unchanged.** Horizon's free-personal-use terms bind this site
+whether or not a copy of those terms is stored here. The absence of a stored file narrows the
+*record*, not the *obligation*: Horizon stays usable only while the site remains
+non-commercial, so Requirement 9 criteria 4 and 5 apply to Horizon exactly as they did before.
+No substitute licence file is invented, and the designer's terms are paraphrased rather than
+reproduced. A `Horizon-LICENSE.txt` appearing alongside this sentinel would be a defect rather
+than an improvement, because its provenance would not be the designer.
+
+The `licence_text_file` field carries the sentinel *none — accepted, see note* rather than an
+empty cell, so "recorded as absent" stays distinguishable from "forgotten" (Req 9 c11).
 
 ---
 

@@ -27,6 +27,24 @@
 	// Based on css-tricks.com/inheriting-box-sizing-probably-slightly-better-best-practice
 		html {
 			box-sizing: border-box;
+
+			// Easing for the footer Back to top control (Req 13 c2), supplied by CSS
+			// rather than by jquery.scrolly so the control depends on no script at all.
+			// scroll-behavior must sit on the SCROLLING element, so it is necessarily
+			// global; its only other same-document consumers are the `scrolly` anchors,
+			// which call preventDefault(), so no native scroll competes with jQuery's
+			// animation. This block is OPTIONAL to the requirement -- c2 asks only that
+			// the top be brought into the viewport, and the instant jump satisfies c2,
+			// c3 and c5 in full if Check F ever shows interference.
+			scroll-behavior: smooth;
+		}
+
+		// An unrequested full-page scroll animation is precisely the class of motion this
+		// setting exists to suppress, so the reduced-motion arm restores the instant jump.
+		@media (prefers-reduced-motion: reduce) {
+			html {
+				scroll-behavior: auto;
+			}
 		}
 
 		*, *:before, *:after {

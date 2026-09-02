@@ -6,8 +6,16 @@ You can visit my website [here](https://jefferyxr.github.io/personal-website/ind
 
 ## Credits
 
-- **Inspo:**  
-  [Massively](https://html5up.net/massively) by [HTML5 UP](https://html5up.net) | @ajlkn  
+- **Site design:**  
+  Built on the [Massively](https://html5up.net/massively) template by
+  [HTML5 UP](https://html5up.net) | @ajlkn, used under
+  [Creative Commons Attribution 3.0](https://html5up.net/license).  
+  **This credit is a licence condition, not an acknowledgement of inspiration.** CC BY 3.0
+  attaches attribution to *adaptations* as well as to verbatim copies, so the extent to
+  which this site has diverged from the published demo does not discharge it. HTML5 UP
+  sells attribution-free usage separately through Pixelarity, which is the only supported
+  route to removing this credit. The same credit appears in the footer of all nine pages.
+  *Licence terms are summarised, not quoted; the linked licence page is authoritative.*  
 
 - **Icons:**  
   [Font Awesome](https://fontawesome.io)  
@@ -70,7 +78,7 @@ behaviour. Nothing in the stylesheet sets `font-synthesis: none`, and nothing sh
 **There is no SASS compiler in this repository.** `assets/sass/**` and
 `assets/css/main.css` are *both* shipped artifacts, and `main.css` is the one browsers
 execute. A correct SASS edit with a forgotten CSS mirror is invisible until a visitor
-notices, so every typography change follows these six steps in order:
+notices, so every typography change follows these seven steps in order:
 
 1. **Edit the SASS source.** `libs/_vars.scss` first — the `$font` map and the `$palette`
    maps — then the rule-level files: `base/_typography.scss`, `layout/_intro.scss`,
@@ -97,8 +105,25 @@ notices, so every typography change follows these six steps in order:
    **When comparing, apply last-declaration-wins within each rule.** The compiled CSS
    legitimately carries duplicate declarations for one property in one rule — `#footer`
    and `#copyright` each carry `color` twice, an artifact of the `color(alt)` mixin — so a
-   checker that reads the *first* match reports a false failure.
-6. **Confirm zero occurrences** of `Merriweather` and `Source Sans Pro` in both artifacts.
+   checker that reads the *first* match reports a false failure. This is load-bearing for
+   the `#copyright` colour specifically: the first `color` in that rule is the mixin's
+   opaque `#ffffff` and the second is the value the block actually renders.
+
+   **Skills pill geometry is measured in a browser *before* it is mirrored, not after.**
+   The pill box depends on layout — the card's content width, the `skills-box` flex gap,
+   how many pills share a row — none of which font metrics can predict. Run
+   `node pill-geometry.mjs`, read the ratios, *then* write the values.
+6. **Confirm zero occurrences** of `Merriweather`, `Source Sans Pro`, and the superseded
+   footer link colour `#4a5158` in both artifacts.
+7. **Apply any Copyright_Block markup change to all nine pages, then verify the inner
+   `<ul>…</ul>` is byte-identical across them.** Steps 1–6 cover the stylesheet pair only;
+   this step exists because `div#copyright` is hand-written per page. Three pages
+   (`killerbyte.html`, `launchtoy.html`, `vexlego.html`) write the whole div on one source
+   line and six write it multi-line, so the *surrounding* whitespace legitimately differs
+   while the inner markup must not — edit in place rather than reformatting. The current
+   wording contains **no ampersand**; do not reintroduce an entity. `vexlego.html` used to
+   write `&amp;` where the others wrote a bare `&`, which is exactly the divergence
+   per-page hand editing produces.
 
 `tools/` and `.kiro/` are pruned from the CI checkout by
 `.github/workflows/static.yml` before the Pages artifact is uploaded, so neither is
