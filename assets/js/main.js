@@ -120,6 +120,22 @@
 	// Scrolly.
 		$('.scrolly').scrolly();
 
+	// Intro down-arrow target.
+		// Desktop lands on the nav bar; mobile goes straight to the projects grid,
+		// because at <=medium main.js moves the nav links into the slide-out panel and
+		// #nav is left with nothing to land on. scrolly captures the href when it binds,
+		// so changing the attribute alone would do nothing -- it has to rebind.
+			var $introScrolly = $('#intro .actions a.scrolly');
+
+			if ($introScrolly.length) {
+				var retargetIntro = function(href) {
+					$introScrolly.attr('href', href).scrolly();
+				};
+
+				breakpoints.on('>medium', function() { retargetIntro('#nav'); });
+				breakpoints.on('<=medium', function() { retargetIntro('#main'); });
+			}
+
 	// Background.
 		$wrapper._parallax(0.925);
 
