@@ -132,7 +132,9 @@
 				.appendTo($wrapper);
 
 			// Change toggle styling once we've scrolled past the header.
-				$header.scrollex({
+				// index.html has no #header -- it uses #intro -- so this scrollex never bound
+				// there and the toggle never got its .alt background. Fall back to #intro.
+				($header.length ? $header : $('#intro')).scrollex({
 					bottom: '5vh',
 					enter: function() {
 						$navPanelToggle.removeClass('alt');
