@@ -4689,6 +4689,9 @@ input, select, textarea {
 /* Nav Panel */
 
 	#navPanelToggle {
+		/* Doubled in size, anchored at its top-right corner so that corner stays put. */
+		transform: scale(2);
+		transform-origin: top right;
 		text-decoration: none;
 		-moz-transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 		-webkit-transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;

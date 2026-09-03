@@ -7,6 +7,11 @@
 /* Nav Panel */
 
 	#navPanelToggle {
+		// Doubled in size, anchored at its top-right corner so that corner stays put.
+		// A single scale() keeps every part in proportion -- label, icon, padding,
+		// border-radius and the .alt box-shadow -- which editing each value could not.
+		transform: scale(2);
+		transform-origin: top right;
 		@include icon(false, solid);
 		@include vendor('transition', (
 			'color #{_duration(transition)} ease-in-out',
