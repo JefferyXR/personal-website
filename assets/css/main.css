@@ -3310,11 +3310,11 @@ input, select, textarea {
 			width: 100%;
 			height: 100%;
 			background-color: #212931;
-			background-image: url("../../images/overlay.png"), linear-gradient(0deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url("../../images/bg.jpg");
-			background-size: auto,								auto,														100% auto;
-			background-position: center,								center,														top center;
-			background-repeat: repeat,								no-repeat,													no-repeat;
-			background-attachment: scroll,								scroll,														scroll;
+			background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1));
+			background-size: auto;
+			background-position: center;
+			background-repeat: no-repeat;
+			background-attachment: scroll;
 			z-index: -1;
 		}
 
@@ -4904,18 +4904,6 @@ input, select, textarea {
 	body.home #main .skills-box {
 		gap: 0.5rem;
 		padding-bottom: 1.25rem;
-	}
-
-	/* Every declaration in this rule is overridden by the later, equally specific
-	   body.home #main .button.skills and body.home #main .actions .button rules, so it
-	   renders nowhere. It is kept because the verification harness reads its declared
-	   values. */
-	body.home #main .button.skills,
-	body.home #main .actions .button {
-		font-size: 0.7rem;
-		height: 2.25rem;
-		line-height: 1.4;
-		padding: 0 1rem;
 	}
 
 	@media screen and (max-width: 980px) {

@@ -55,7 +55,6 @@ import {
   closeAll,
   repoPath,
   readCompiledStylesheet,
-  readSassFile,
   readContentPage,
   lastDeclaration,
   // Property 18's own oracles live in docs-clauses.mjs; only the prune-step reader is used
@@ -422,7 +421,7 @@ test('Property 1 (Req 16 c16): both nav panel sites clear 4.5:1 in every state',
   assert.equal(ACCEPTED_CONTRAST_EXCEPTIONS[0].conflict, 'C2');
 
   // And the rendered colours must be the ones the tuples assume. Reading them from the page
-  // is what makes the table above a measurement rather than a restatement of the SASS.
+  // is what makes the table above a measurement rather than a restatement of the stylesheet.
   const page = await getRenderedPage('killerbyte.html', 320, 'loaded');
   await openNavPanel(page);
   const rendered = await page.evaluate(async (settle) => {
@@ -459,38 +458,38 @@ const gitShow = (ref, relPath) =>
 /**
  * The change set's own scope, as a file allowlist.
  *
- * Change Set 3 edits two SASS files, the compiled stylesheet, the README, the new
- * Sync_Document and the workflow's prune step — and nothing else. Stating that as a set and
- * comparing it against `git status` is the cheapest form of Req 15 c12 and Req 17 c13 there
- * is: a README rewrite that also "tidied" a stylesheet, or a divider fix that touched a page,
- * fails here by name rather than by a downstream symptom.
+ * Stating the scope as a set and comparing it against `git status` is the cheapest form of
+ * Req 15 c12 and Req 17 c13 there is: a README rewrite that also "tidied" a stylesheet, or
+ * a divider fix that touched a page, fails here by name rather than by a downstream symptom.
+ *
+ * The per-file `assets/sass/**` entries are GONE, along with the tree they named. The
+ * compiled stylesheet is the only stylesheet artifact left, so an edit that would once have
+ * been "SASS first, then its mirror" is now a single entry below.
  */
 const ALLOWED_CHANGED_PATHS = [
-  'assets/sass/layout/_footer.scss',
-  'assets/sass/layout/_navPanel.scss',
-  'assets/sass/layout/_nav.scss',
   'assets/css/main.css',
+  // `noscript.css` is in scope because the two dangling background layers were declared in
+  // BOTH stylesheets, and removing them from only one would leave the defect live on exactly
+  // the path where it actually costs something: with JS enabled `#wrapper > .bg` is
+  // display:none and the layers are never fetched, so the 404s only materialise in the
+  // noscript path, where this file is the one that applies. The same edit also removed a
+  // broken `@import url(font-awesome.min.css)` from its first line — that file does not exist
+  // and main.css already imports the real `fontawesome-all.min.css`.
+  'assets/css/noscript.css',
   'README.md',
   'docs/stylesheet-sync.md',
   '.github/workflows/static.yml',
-  // The code-quality cleanup pass touches these too. It changes no declaration that
-  // renders — the comment volume, the dead `--project-image` block and one duplicated
-  // declaration go, and the SASS gains the `body.home #main .actions .button` rule the
-  // compiled sheet already shipped. Rendering equivalence is checked separately; this list
-  // only says "an edit here is in scope", not "an edit here is unchecked".
-  'assets/sass/layout/_main.scss',
-  'assets/sass/layout/_intro.scss',
-  'assets/sass/base/_page.scss',
-  'assets/sass/base/_typography.scss',
-  'assets/sass/components/_button.scss',
-  'assets/sass/libs/_vars.scss',
-  'assets/sass/main.scss',
   'assets/js/main.js',
   'assets/js/waterParticles.js',
 ];
 // `docs/` appears as a bare directory in `git status --porcelain` while it is untracked,
 // which is why the prefix and not just the file path is listed.
-const ALLOWED_CHANGED_PREFIXES = ['tools/', '.kiro/', 'docs/', 'docs'];
+//
+// `assets/sass/` is a prefix rather than 31 filenames for one reason: the only in-scope
+// change there is the DELETION of the whole tree. Listing the files individually would
+// re-create, as test data, the inventory the change set exists to remove — and the gate is
+// no weaker for it, because nothing under that prefix can be edited any more.
+const ALLOWED_CHANGED_PREFIXES = ['tools/', '.kiro/', 'docs/', 'docs', 'assets/sass/'];
 // The nine pages are permitted here because a later change adds the home glyph to the
 // Projects nav anchor. The identity test above still pins the delta to exactly that
 // anchor, so allowing the paths does not weaken it.
@@ -554,14 +553,12 @@ test('Property 8: the nine Content_Pages are byte-identical to their pre-change 
 
 test('Property 8: the divider, the block box and the row height match their baselines', async () => {
   // Feature: portfolio-typography-refresh, Property 8
-  const footerScss = readSassFile('layout/_footer.scss');
   const css = readCompiledStylesheet();
 
   // Req 15 c9 — the divider IS `border-left: solid 2px` with the colour OMITTED, so it
   // resolves to currentColor and therefore to the §5.6 block colour. The omission is the
   // load-bearing part: it is exactly what someone tidying the shorthand would "fix" into a
   // literal, silently unpinning the divider from the block colour.
-  assert.match(footerScss, /border-left:\s*solid 2px;/, 'the SASS Copyright_Divider shorthand lost its colour-less form — Req 15 c9');
   assert.match(css, /#copyright ul li \{[^}]*border-left:\s*solid 2px;/, 'the compiled Copyright_Divider shorthand lost its colour-less form — Req 15 c9');
 
   await fc.assert(
@@ -773,32 +770,24 @@ test('Check C: measured 400 -> 800 nav panel advance widths match the design §6
 // ===========================================================================
 
 /**
- * Strip CSS and SASS comments before any DECLARATION-level scan.
+ * Strip CSS comments before any DECLARATION-level scan.
  *
- * Not cosmetic. Both artifacts now carry comments that quote the declarations they explain —
- * `margin-left: 1rem` is named in the §6.1 comment that records its removal, and the
+ * Not cosmetic. `main.css` carries comments that quote the declarations they explain — the
  * `#navPanelToggle` comment names the `font-weight: 900` it tells the reader not to touch. A
  * raw scan reports the explanation as the defect, and a last-declaration-wins reader stops
  * matching altogether because the comment breaks the `;`/`{` anchor before the real
- * declaration. This is the same hazard the Sync_Document's zero-occurrence step documents for
- * `scroll-behavior`, applied to the checker rather than to the grep.
+ * declaration. This is the same hazard the maintenance note's zero-occurrence rules document
+ * for `scroll-behavior`, applied to the checker rather than to the grep.
  */
 const stripComments = (text) =>
   String(text)
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
 
-test('unit: §6.1 declares the flex mechanism in both artifacts, and reverts it at <=xsmall', () => {
-  const scss = stripComments(readSassFile('layout/_footer.scss'));
+test('unit: §6.1 declares the flex mechanism in main.css, and reverts it at <=xsmall', () => {
   const css = stripComments(readCompiledStylesheet());
 
   // The base rule.
-  assert.match(scss, /#copyright[\s\S]*?ul \{[\s\S]*?display: flex;/, '_footer.scss #copyright ul is not a flex container — §6.1');
-  assert.match(scss, /flex: 0 0 calc\(50% \+ 1px\)/, 'the base li lost its calc(50% + 1px) basis — §6.1');
-  assert.match(scss, /flex-basis: calc\(50% - 1px\)/, 'the first li lost its calc(50% - 1px) basis — §6.1');
-  assert.match(scss, /min-width: 0/, 'min-width: 0 is missing — it is the declaration that makes Req 15 c4 hold for ANY label');
-  assert.doesNotMatch(scss, /#copyright[\s\S]*?ul \{[\s\S]*?li \{[^}]*margin-left: 1rem/, 'the li still carries margin-left: 1rem, which displaces the shared edge — §6.1');
-
   assert.match(css, /#copyright ul \{[^}]*display: flex;/, 'main.css #copyright ul is not a flex container — Req 7 c3');
   assert.match(css, /#copyright ul li \{[^}]*flex: 0 0 calc\(50% \+ 1px\);/, 'main.css base li basis missing — Req 7 c3');
   assert.match(css, /#copyright ul li \{[^}]*min-width: 0;/, 'main.css base li is missing min-width: 0 — Req 7 c3');
@@ -846,36 +835,14 @@ test('unit: §6.1 declares the flex mechanism in both artifacts, and reverts it 
   assert.match(xsmall[1], /#copyright ul li:first-child \{[^}]*margin-top: 0;/, 'the <=xsmall first item lost its margin-top reset — Req 15 c5');
 });
 
-test('unit: §6.2 moves exactly two weight declarations and leaves their neighbours alone', () => {
-  const scssLines = readSassFile('layout/_navPanel.scss').split('\n');
+test('unit: §6.2 pins both nav panel weights at 800 and leaves their neighbours alone', () => {
   const css = stripComments(readCompiledStylesheet());
-  const at = (lines, n) => lines[n - 1];
 
-  // Counted over the whole file rather than located by line or by selector text. Line
-  // numbers shifted when the toggle gained `transform: scale(2)`, and a selector search for
-  // `#navPanel .links` now also matches a later top-level rule that sets the nav glyph gap --
-  // both made a correct file fail. Counts are stable against both.
-  const scss = scssLines.join('\n');
-  const count = (re) => (scss.match(re) || []).length;
-
-  assert.equal(count(/font-weight:\s*_font\(weight-bold\)/g), 2, '_navPanel.scss should declare _font(weight-bold) exactly twice, at #navPanelToggle and #navPanel .links li a — Req 16 c3');
-  assert.equal(count(/font-family:\s*_font\(family\);/g), 2, '_navPanel.scss should declare _font(family) exactly twice — Req 16 c4');
-  assert.equal(count(/font-weight:\s*_font\(weight\)[^-]/g), 0, 'a _font(weight) reference survives in _navPanel.scss — Req 16 c3 moved both to weight-bold');
-  assert.match(scss, /font-size:\s*0\.9rem;/, 'the 0.9rem nav panel font-size is gone — Req 16 c5');
-  assert.match(scss, /font-size:\s*0\.8rem;/, 'the <=small 0.8rem toggle font-size is gone — Req 16 c5');
-
-  // The `#navPanel .links li a` rule used to declare `font-size: 0.9rem` TWICE, kept as the
-  // live illustration behind Req 7 c12's last-declaration-wins caveat. The duplicate has been
-  // removed: keeping a redundant declaration to demonstrate a hazard is not a reason to ship
-  // it, and the caveat now cites the `#footer` / `#copyright` double `color`, which is genuine
-  // `color(alt)` mixin output and is staying. Asserted GONE so it is not reintroduced.
-  assert.doesNotMatch(scss, /font-size:\s*0\.9rem;\s*\n\s*font-size:\s*0\.9rem;/, 'the duplicate 0.9rem font-size is back — one declaration is enough');
-
-  // The COMPILED side is asserted BY RULE, not by line number. The design records the mirrors
-  // at main.css:4660, :4677, :4751–4752 and :4753, which were correct before this change set;
-  // §6.1's mirror added comment lines above them, so every one of those numbers now points ~45
-  // lines high. A line-indexed assertion would fail on a perfectly correct file — and, worse,
-  // would pass once someone "fixed" it by deleting the comments. The rule text is the invariant.
+  // Asserted BY RULE, not by line number. The design records the mirrors at main.css:4660,
+  // :4677, :4751–4752 and :4753, which were correct before this change set; §6.1's mirror
+  // added comment lines above them, so every one of those numbers now points ~45 lines high.
+  // A line-indexed assertion would fail on a perfectly correct file — and, worse, would pass
+  // once someone "fixed" it by deleting the comments. The rule text is the invariant.
   const rule = (selector) => {
     const at = css.indexOf(selector + ' {');
     assert.notEqual(at, -1, `could not locate the ${selector} rule in main.css`);
@@ -891,7 +858,7 @@ test('unit: §6.2 moves exactly two weight declarations and leaves their neighbo
 
   const linkRule = rule('#navPanel .links li a');
   assert.equal(lastDeclaration(linkRule, 'font-weight'), '800', 'the compiled #navPanel .links li a rule does not declare font-weight: 800 — Req 7 c3, Req 16 c19');
-  // The mirror of the SASS de-duplication above: one declaration, not two.
+  // One declaration, not two: the rule used to carry `font-size: 0.9rem` twice.
   assert.equal((linkRule.match(/font-size:\s*0\.9rem;/g) || []).length, 1, 'the compiled #navPanel link rule should declare font-size: 0.9rem exactly once');
   assert.equal(lastDeclaration(linkRule, 'font-size'), '0.9rem', 'the compiled #navPanel link font-size moved — Req 16 c5');
 
@@ -901,12 +868,6 @@ test('unit: §6.2 moves exactly two weight declarations and leaves their neighbo
   const iconRule = rule('#navPanelToggle:before');
   assert.equal(lastDeclaration(iconRule, 'font-weight'), '900', 'the #navPanelToggle:before icon weight moved off 900 — that is the Font Awesome glyph, not Chrome_Text');
   assert.match(lastDeclaration(iconRule, 'font-family'), /Font Awesome/, 'the #navPanelToggle:before icon family changed');
-
-  // And the SASS still resolves the weight through the map, with no per-rule literal.
-  const scssText = scssLines.join('\n');
-  const toggleScss = /#navPanelToggle \{([\s\S]*?)\n\t\}/.exec(scssText);
-  assert.ok(toggleScss, 'could not locate the #navPanelToggle rule in the SASS source');
-  assert.doesNotMatch(toggleScss[1], /font-weight:\s*\d+/, 'the toggle declares a literal weight number — Req 16 c3 requires the map');
 });
 
 test('unit: the static.yml prune step names docs alongside tools and .kiro', () => {

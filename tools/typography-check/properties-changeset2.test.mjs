@@ -47,11 +47,10 @@ import {
   contentBox,
   repoPath,
   readCompiledStylesheet,
-  readSassFile,
   readContentPage,
 } from './fixtures.mjs';
 
-import { evaluatePill, evaluateDeclaredGeometry, classifyGeometry, measurePage, BOUNDS } from './pill-geometry.mjs';
+import { evaluatePill, classifyGeometry, measurePage, BOUNDS } from './pill-geometry.mjs';
 
 const RUNS = { numRuns: 100 };
 
@@ -313,15 +312,10 @@ test('Property 5: every Bold_Chrome_Text label is contained, in either font stat
 // ===========================================================================
 
 test('Property 6: forbidden tokens absent; no inline typography, alignment or colour', async () => {
+  // One artifact, not a pair: `assets/css/main.css` IS the stylesheet source now that the
+  // SASS tree is gone, so the zero-occurrence rules have exactly one place left to hold.
   const artifacts = {
     'assets/css/main.css': readCompiledStylesheet(),
-    'assets/sass/libs/_vars.scss': readSassFile('libs/_vars.scss'),
-    'assets/sass/layout/_footer.scss': readSassFile('layout/_footer.scss'),
-    'assets/sass/layout/_main.scss': readSassFile('layout/_main.scss'),
-    'assets/sass/layout/_nav.scss': readSassFile('layout/_nav.scss'),
-    'assets/sass/base/_page.scss': readSassFile('base/_page.scss'),
-    'assets/sass/base/_typography.scss': readSassFile('base/_typography.scss'),
-    'assets/sass/components/_button.scss': readSassFile('components/_button.scss'),
   };
 
   // Feature: portfolio-typography-refresh, Property 6
@@ -723,42 +717,6 @@ test('Property 15: every skills pill box fits its label, symmetrically and in ra
   }
 
   /**
-   * The DECLARED arm. The wider-context geometry has ZERO rendered instances — its
-   * `.button.skills` half is overridden by the later `body.home #main .button.skills`, and
-   * its `.actions .button` half by the later `body.home #main .actions .button`. Layer 2
-   * therefore cannot see it, and a rendered-only property would report a clean pass over a
-   * rule declaring `line-height` as a LENGTH equal to `height`. This arm is the only place
-   * that fault is observable.
-   */
-  const css = readCompiledStylesheet();
-  const declaredCases = VIEWPORTS.flatMap((viewport) =>
-    [['WATERJET FABRICATION', 14.096], ['C++', 2.105]].map(([label, em]) => ({ label, em, viewport })),
-  );
-  fc.assert(
-    fc.property(fc.constantFrom(...declaredCases), ({ label, em, viewport }) => {
-      const d = evaluateDeclaredGeometry(css, {
-        selector: 'body.home #main .button.skills, body.home #main .actions .button',
-        label,
-        labelWidthEm: em,
-        rootPx: ROOT_PX_BY_VIEWPORT[viewport],
-        viewport,
-      });
-      assert.ok(
-        !d.declared.lineHeightIsLength,
-        `wider-context line-height is declared as the LENGTH ${d.declared.lineHeight}; Req 12 c4's vertical gap then evaluates to zero`,
-      );
-      const bad = d.results.filter((r) => !r.ok);
-      assert.deepEqual(
-        bad.map((r) => `${r.criterion}=${r.measured}`),
-        [],
-        `declared wider-context "${label}"@${viewport}: ${bad.map((r) => `${r.criterion} = ${r.measured}`).join('; ')}`,
-      );
-      return true;
-    }),
-    RUNS,
-  );
-
-  /**
    * Multi-line arm (Req 12 c6). Current content reaches exactly 20 characters and no label
    * wraps at these sizes, so real content never reaches this path — it has to be generated.
    */
@@ -896,7 +854,7 @@ test('Check I: the Back to top control works with scripting disabled and with sc
 
         // Scroll away from the top so the assertion has something to prove. Explicitly
         // instant, so the setup cannot leave the page mid-animation if a future edit ever
-        // reintroduces CSS smooth scrolling (see the html rule in base/_page.scss).
+        // reintroduces CSS smooth scrolling (see the html rule in assets/css/main.css).
         await page.evaluate(() => window.scrollTo({ top: 100000, behavior: 'instant' }));
         const scrolledTo = await page.evaluate(() => window.scrollY);
         assert.ok(scrolledTo > 0, `${contentPage}: the page does not scroll, so the control cannot be exercised`);

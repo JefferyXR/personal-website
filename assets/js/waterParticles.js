@@ -8,16 +8,40 @@ const padding = 20;
 
 let mouse = { x: 0, y: 0, active: false };
 
-canvas.addEventListener('mousemove', e => {
+// Pointer tracking.
+//
+// The listener is on `window`, not on the canvas: #water-canvas is fixed at z-index -1,
+// so #intro sits on top of it and hit-testing means a canvas-bound listener never fires.
+// The rect offset and scale are inert while the canvas fills the viewport at DPR 1, but
+// keep it correct if it is ever repositioned or given a scaled backing store.
+function trackPointer(e) {
 	const rect = canvas.getBoundingClientRect();
-	mouse.x = e.clientX - rect.left;
-	mouse.y = e.clientY - rect.top;
-});
 
-// NOTE: this sits OUTSIDE the handler above, so it runs once at load and is never
-// reset -- mouse repulsion is always on, and before the first mousemove it repels
-// from {0,0}. Left as-is because moving it would change how the canvas behaves.
-mouse.active = true;
+	// A zero rect means the canvas is not laid out; dividing by it would set mouse.x/y to NaN.
+	if (rect.width === 0 || rect.height === 0) return;
+
+	mouse.x = (e.clientX - rect.left) * (canvas.width / rect.width);
+	mouse.y = (e.clientY - rect.top) * (canvas.height / rect.height);
+	mouse.active = true;
+}
+
+function releasePointer() {
+	mouse.active = false;
+}
+
+window.addEventListener('mousemove', trackPointer, { passive: true });
+
+// mouseleave does not bubble, so on document it fires only when the pointer really leaves.
+document.addEventListener('mouseleave', releasePointer, { passive: true });
+
+// mouseout does bubble, so guard on relatedTarget: without it every element-to-element
+// crossing inside the page would cancel the repulsion mid-move.
+window.addEventListener('mouseout', e => {
+	if (!e.relatedTarget) releasePointer();
+}, { passive: true });
+
+// The pointer can stop being relevant without moving, e.g. switching window.
+window.addEventListener('blur', releasePointer, { passive: true });
 
 // ==================================================
 // GEAR SIZE SETTINGS

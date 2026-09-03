@@ -27,9 +27,21 @@ Change Set 2 adds **no font file**, changes **no `@font-face` rule**, and change
 |---|---|---|---|
 | 1 | The Copyright_Divider sits at the exact horizontal centre of the row, for **any** label pair | Req 15 | **§6.1**, and §5.5 revised |
 | 2 | Nav_Panel_Toggle and Nav_Panel_Link move to Ultrabold (800) | Req 16, Req 11 c15 | **§6.2**, and §3.5 / §5.3 revised |
-| 3 | `README.md` returns to a short form; the regeneration procedure moves to `docs/stylesheet-sync.md`, linked in one line | Req 17, Req 7 c5/c11–c13, Req 9 c3, Req 4 c4 | **§6.3**, and the Compiled Stylesheet Sync Procedure section revised |
+| 3 | `README.md` returns to a short form; the stylesheet documentation moves to `docs/stylesheet-sync.md`, linked in one line | Req 17, Req 7 c6–c9 (c5/c11–c13 before the Change Set 4 renumbering), Req 9 c3, Req 4 c4 | **§6.3**, and §7.5 |
 
 Change Set 3 adds no font file, changes no `@font-face` rule, changes no palette value, and changes **no markup inside any of the nine Content_Pages** — which makes it the first change set since Change Set 1 to leave all nine pages byte-identical. Changes 1 and 2 are stylesheet-only. Change 3 touches `README.md`, the new `docs/stylesheet-sync.md`, and the prune step of `.github/workflows/static.yml`.
+
+**Change Set 4** removes the second stylesheet artifact. `assets/sass/` — 31 files — is **deleted**, and `assets/css/main.css` together with `assets/css/noscript.css` are now the only stylesheets in the repository; `main.css` is a source file, not an output. The requirements consequences are in `requirements.md` (Requirement 7 rewritten and renumbered, Assumptions item 16); the design consequences are collected in **§7**, and they reach back into this document in five places:
+
+| # | Change | Requirement | Design section |
+|---|---|---|---|
+| 1 | `assets/sass/**` deleted | Req 7 rewritten | **§7.1**; Architecture, §3.1, §4.1, §4.2, the Sync Procedure section (**removed**) and Property 2 (**removed**) |
+| 2 | The fully-overridden `body.home #main .button.skills, body.home #main .actions .button` rule deleted | Req 12 (no criterion changes) | **§7.2**, and §5.4 revised |
+| 3 | `assets/js/waterParticles.js` pointer tracking fixed | Req 8 c6 | **§7.3** |
+| 4 | Two dangling background layers and a broken `@import` removed from both stylesheets | Req 7 c2 | **§7.4** |
+| 5 | `docs/stylesheet-sync.md` rewritten as a five-item maintenance note | Req 7 c6–c9, Req 17 c8–c9 | **§7.5**, and §6.3 revised |
+
+Change Set 4 adds no font file, changes no `@font-face` rule, changes no colour value, and edits no Content_Page. **It is the first change set that deletes an artifact rather than editing one**, which is why its verification story is subtractive: three checks are retargeted at `main.css`, one property and one check are deleted outright, and nothing new is asserted.
 
 ### What research established
 
@@ -60,7 +72,7 @@ flowchart TD
     P -->|"&lt;link rel=stylesheet&gt;"| CSS
 
     subgraph CSS["assets/css/main.css — hand-maintained compiled output"]
-        I1["line 1: @import fontawesome-all.min.css  (RETAINED, Req 7 c6)"]
+        I1["line 1: @import fontawesome-all.min.css  (RETAINED, Req 7 c2)"]
         I2["line 2: @import Google Fonts  (REMOVED, Req 2 c11)"]
         FF["@font-face x N  (NEW — inserted after line 1)"]
         R["typography rules<br/>font-family / size / weight / line-height / letter-spacing"]
@@ -70,21 +82,17 @@ flowchart TD
     subgraph WF["assets/webfonts/ — same origin"]
         H["Horizon-*.woff2  (1 face)"]
         T["Telegraf-*.otf|ttf  (1–2 faces, unconverted)"]
-        FA["fa-*.{eot,svg,ttf,woff,woff2}  (UNTOUCHED, Req 7 c7)"]
+        FA["fa-*.{eot,svg,ttf,woff,woff2}  (UNTOUCHED, Req 7 c3)"]
         PROV["FONT-PROVENANCE.md + licence texts  (Req 9 c2)"]
     end
 
-    SASS["assets/sass/** — source of truth for intent"]
-    SASS -.->|"hand-mirrored, no compiler (Req 7)"| CSS
-
     style I2 stroke-dasharray: 4 4
-    style SASS stroke-dasharray: 4 4
 ```
 
 Two properties of this chain drive the rest of the design:
 
-- **The dotted SASS→CSS edge is not automated.** There is no `package.json`, no compiler, and `assets/css/main.css` is a shipped artifact that is edited by hand. The SASS files express intent; the CSS is what browsers execute. Requirement 7 exists because these can silently diverge, so the **Compiled Stylesheet Sync Procedure** defines a mechanical sync and **Correctness Property 2** makes divergence a detectable failure rather than a latent one.
-- **`@font-face` must be inserted after the Font Awesome `@import`.** CSS requires all `@import` rules to precede other rules; placing `@font-face` above line 1 would invalidate the Font Awesome import and break every icon (Req 7 c6).
+- **`main.css` is the only stylesheet node, and it is a source rather than an output.** There is no `package.json`, no compiler, and — since Change Set 4 — no second artifact: the `assets/sass/` tree that this diagram used to show as a dotted, hand-mirrored edge into `main.css` has been deleted (§7.1). An edit is made in `main.css` once and there is nowhere to mirror it. The **Compiled Stylesheet Sync Procedure** section that defined that mirroring, and **Correctness Property 2** that detected its failure, are both removed with the edge; what replaces them is not a weaker check but no check, because the failure mode they guarded cannot occur. `noscript.css` is a second *file* but not a second source: it styles the `<noscript>` path only and shares no declaration with `main.css`.
+- **`@font-face` must be inserted after the Font Awesome `@import`.** CSS requires all `@import` rules to precede other rules; placing `@font-face` above line 1 would invalidate the Font Awesome import and break every icon (Req 7 c2, formerly c6). This is the one item in the old sync procedure that survives it — it is a fact about `main.css` itself, not about keeping two files equal, which is exactly the distinction §7.5 uses to decide what the maintenance note keeps.
 
 ### Deployment topology and rollback
 
@@ -114,23 +122,23 @@ Sections 3.1 through 4.5 were written *before* the fonts were in hand, so severa
 
 Change Set 2 depends on three of these directly: `weight-bold: 800` is the value Req 11 c2 resolves through (§5.3), `PP Telegraf` is the family that stays unchanged under Req 11 c5, and the 101 KB bundle is why Req 11 adds no payload at all (§5.3).
 
-### 3.1 The `$font` map — `assets/sass/libs/_vars.scss`
+### 3.1 The typeface values, as `assets/css/main.css` declares them
 
-The map is the single interface through which every typeface decision is expressed (Req 7 c4). Shipped state, with the intake-resolved values from §3.0 substituted in:
+**Rewritten in Change Set 4.** This section used to document the `$font` map in `assets/sass/libs/_vars.scss` as "the single interface through which every typeface decision is expressed (Req 7 c4)". **That interface no longer exists**: the map is deleted with its file, and Req 7 c4 is deleted with it (§7.1). The *values* below are unchanged and still ship — what changes is that they are declared literally, at every site that needs them, in `main.css`.
 
-```scss
-$font: (
-    family:             ('PP Telegraf', 'Helvetica Neue', 'Segoe UI', Roboto, sans-serif),
-    family-heading:     ('Horizon', 'Arial Black', Verdana, 'Trebuchet MS', sans-serif),
-    family-fixed:       ('Courier New', monospace),   // UNCHANGED — Req 4 c8
-    weight:             400,                          // PPTelegraf-Regular.otf
-    weight-bold:        800,                          // PPTelegraf-Ultrabold.otf — no 700 face ships
-    weight-heading:     700,                          // Horizon's single solid face, measured
-    letter-spacing-heading: 0.05em                    // NEW KEY — see note below
-);
-```
+| Decision | Value as declared in `main.css` | Where it is declared |
+|---|---|---|
+| Body / interface family | `"PP Telegraf", "Helvetica Neue", "Segoe UI", Roboto, sans-serif` | the `body` rule and each Chrome_Text rule |
+| Heading family | `"Horizon", "Arial Black", Verdana, "Trebuchet MS", sans-serif` | the `h1`–`h6` rule, the Card_Heading rule, and `#header .logo` — 11 sites in total |
+| Fixed-width family | `"Courier New", monospace` — UNCHANGED (Req 4 c8) | the `code` / `pre` rules |
+| Body weight | `400` — `PPTelegraf-Regular.otf` | the `body` rule and the four Chrome_Text groups Req 11 c15 pins at 400 |
+| Bold weight | `800` — `PPTelegraf-Ultrabold.otf`; no 700 face ships | `strong`/`b`, and each of the five Bold_Chrome_Text rules |
+| Heading weight | `700` — Horizon's single solid face, measured | the `h1`–`h6` rule and the Card_Heading rule |
+| Heading letter-spacing | `0.05em` | each heading and Chrome_Text rule; Req 11 c8 makes it a **floor** |
 
-**Change Set 2 makes no edit to this map.** Requirement 11 changes which *rules* reference `weight-bold`; the token's value is already correct.
+**The cost of losing the map is real and is stated rather than glossed over.** A family change is now an edit at 11 sites instead of one, and nothing structural stops the eleventh being missed. Two things stand in for the map: Property 3 (typography invariant across pages, per role) and Property 4 (every element resolves to the token model) both quantify over rendered elements rather than over declarations, so a missed site fails as a *computed* difference on the page that carries it — which is a better signal than the map ever gave, since the map could be edited correctly while `main.css` shipped something else. See §7.1 for the residual-risk entry and R12.
+
+**Change Set 2 changed none of these values.** Requirement 11 changed which *rules* declare the bold weight; the value was already correct.
 
 **Fallback stack for `family-heading` — widest-first, as Req 6 c1 requires.** Horizon is an extra-wide face, so its advance widths exceed every installed fallback. Ordering the stack widest-first minimises the layout shift when the webfont swaps in (Req 6 c8):
 
@@ -145,16 +153,16 @@ Android/iOS ship none of positions 1–3 and will land on `sans-serif` (Roboto /
 
 **Fallback stack for `family` — Req 6 c2** requires two or more named families, each default-installed somewhere, then the generic: `Helvetica Neue` (macOS/iOS), `Segoe UI` (Windows), `Roboto` (Android), `sans-serif`. Between them these cover all four named platforms with a neo-grotesque of similar proportion to Telegraf, keeping swap reflow small (Req 6 c9).
 
-**`weight-heading` is resolved at implementation, not guessed.** Horizon ships exactly one solid face (decision 4), and Req 3 c4 requires `weight-heading` to *equal that face's weight* and requires the `@font-face` `font-weight` to match it, so that no browser-synthesized bold is ever applied. The value is read from the font's `OS/2.usWeightClass` once the file is in hand:
+**The heading weight is resolved at implementation, not guessed.** Horizon ships exactly one solid face (decision 4), and Req 3 c4 requires the declared heading weight to *equal that face's weight* and requires the `@font-face` `font-weight` to match it, so that no browser-synthesized bold is ever applied. The value is read from the font's `OS/2.usWeightClass` once the file is in hand:
 
 ```bash
 python3 -c "from fontTools.ttLib import TTFont; f=TTFont('assets/webfonts/Horizon.woff2'); \
 print('usWeightClass =', f['OS/2'].usWeightClass, '| subfamily =', f['name'].getDebugName(2))"
 ```
 
-Expected `400`. Whatever it reports is written *identically* into `weight-heading` and into the `@font-face` block. Because browsers default `h1`–`h6` to `bold`, an explicit `font-weight` is mandatory at every heading level — which the existing `_font(weight-heading)` reference already provides, **except** at the card `h2`, which hardcodes `font-weight: 700` and must be converted (§3.5).
+Expected `400`. Whatever it reports is written *identically* into the heading rules and into the `@font-face` block. Because browsers default `h1`–`h6` to `bold`, an explicit `font-weight` is mandatory at every heading level — which the `h1`–`h6` rule provides, **except** at the card `h2`, which hardcoded `font-weight: 700` and had to be converted (§3.5).
 
-**`letter-spacing-heading` is a new key that fixes a latent bug.** `assets/sass/components/_pagination.scss:31` already reads `_font(letter-spacing-heading)` — a key that does not exist in the map. Because the project has no compiler, this has never been evaluated; it would raise an error the moment anyone runs SASS. Adding the key both satisfies Req 5 c8 centrally and removes the trap. (The compiled CSS currently carries `letter-spacing: 0.075em` for pagination, from the preceding line.)
+**The `0.05em` heading letter-spacing was introduced as a shared value rather than per-rule.** In the deleted SASS tree it was a map key that fixed a latent bug — `components/_pagination.scss:31` read a `letter-spacing-heading` key that did not exist, which would have errored the first time anyone ran a compiler on the tree. **Change Set 4 retires that note along with the file**: nothing reads a missing key any more, because nothing reads keys. The value survives as `0.05em` declared at each heading and Chrome_Text rule in `main.css`, which is what Req 5 c8 and Req 11 c8 measure.
 
 ### 3.2 `@font-face` blocks — `assets/css/main.css`
 
@@ -210,7 +218,7 @@ U+00ED lands in Heading_Text, so Horizon must actually carry it. Horizon's state
 
 ### 3.3 Heading type scale
 
-Levels `h2`–`h6` are fixed by Req 3 c5 and are already correct in `_typography.scss`; they are re-declared unchanged. The base `h1` stays at `4rem`, satisfying the strictly-decreasing rule (4 → 1.75 → 1.25 → 1 → 0.9 → 0.8, every gap ≥ 0.1rem).
+Levels `h2`–`h6` are fixed by Req 3 c5 and were already correct in the `h1`–`h6` rule; they are re-declared unchanged. The base `h1` stays at `4rem`, satisfying the strictly-decreasing rule (4 → 1.75 → 1.25 → 1 → 0.9 → 0.8, every gap ≥ 0.1rem).
 
 The *overrides* are where the work is. Req 3 c6 requires the intro `h1` to be "the largest value at or below 4rem" that keeps "Jeffery Ross" on one line at 768/1024/1440 — so the value must be **derived**, not chosen.
 
@@ -271,7 +279,7 @@ Mid-word breaking is deliberately **not** on this list for the intro: it would s
 
 | Property | Current | Target | Requirement |
 |---|---|---|---|
-| `font-family` | `_font(family)` → Merriweather | `_font(family)` → Telegraf | Req 4 c1, c2 |
+| `font-family` | Merriweather stack | Telegraf stack | Req 4 c1, c2 |
 | `line-height` | `2.375` | **`1.7`** | Req 4 c5 |
 | `font-size` | `1rem` | `1rem` (unchanged) | Req 4 c6 |
 | `text-align` | `justify` | `justify` (unchanged) | Req 4 c10 |
@@ -286,16 +294,16 @@ Root steps (16pt/12pt/11pt/10pt) are preserved (Req 4 c6). The smallest resultin
 
 > **RESOLVED at intake — Branch A, at weight 800.** The free download supplied a true bold, so Branch B was not implemented and no README limitation note was required. The face is `PPTelegraf-Ultrabold.otf` at `usWeightClass` **800**, not 700; there is no 700 face, so `weight-bold: 800` is declared against the file that actually ships (Req 4 c3). Branch B below is retained as history — it is not live code. This is the token that Requirement 11 now reuses for Bold_Chrome_Text (§5.3), which is why that change ships no new font file.
 
-*Branch A — a bold face exists.* `weight: 400`, `weight-bold: 700`; both faces ship; `strong`/`b` resolve through `_font(weight-bold)` as they already do. Nothing further.
+*Branch A — a bold face exists.* Body weight `400`, bold weight `700`; both faces ship; `strong`/`b` declare the bold weight as they already do. Nothing further.
 
-*Branch B — no bold face (Req 4 c4).* `weight-bold` is set **equal to** `weight` (400), only the regular face ships, and `strong`/`b` receive an alternative emphasis that does not rely on synthesized bold:
+*Branch B — no bold face (Req 4 c4).* The bold weight is declared **equal to** the body weight (400), only the regular face ships, and `strong`/`b` receive an alternative emphasis that does not rely on synthesized bold:
 
-```scss
+```css
 strong, b {
-    font-weight: _font(weight-bold);   // == weight; no weight delta
-    font-synthesis: none;              // suppress the synthetic bold browsers would apply
-    letter-spacing: 0.02em;            // subtle tracking cue
-    background-color: rgba(24, 191, 239, 0.12);   // accent-derived tint
+    font-weight: 400;              /* == body weight; no weight delta */
+    font-synthesis: none;          /* suppress the synthetic bold browsers would apply */
+    letter-spacing: 0.02em;        /* subtle tracking cue */
+    background-color: rgba(24, 191, 239, 0.12);   /* accent-derived tint */
     padding: 0 0.15em;
 }
 ```
@@ -303,45 +311,45 @@ The tint reuses the existing accent `#18bfef` at low alpha, so emphasis stays le
 
 ### 3.5 Chrome_Text migration — Heading font → body font
 
-Chrome_Text currently inherits `family-heading` at sizes down to **0.55rem** (`body.home #main .button.skills`, `_main.scss:475`). Horizon's tight, closed apertures collapse long before that size, so all seven sites move to `_font(family)` (Req 5 c1). Every one is a `_font(family-heading)` → `_font(family)` swap plus a weight change from `weight-heading` to `weight` (Req 5 c2 — Chrome_Text must sit on a weight that actually ships).
+Chrome_Text inherited the heading family at sizes down to **0.55rem** (`body.home #main .button.skills`). Horizon's tight, closed apertures collapse long before that size, so all seven sites move to the body family (Req 5 c1). Every one is a heading-stack → body-stack swap plus a weight change from the heading weight to the body weight (Req 5 c2 — Chrome_Text must sit on a weight that actually ships).
 
-| Source file | Selector | Size |
+| Rule in `assets/css/main.css` | Selector | Size |
 |---|---|---|
-| `components/_button.scss:24` | buttons — skills + Read More | 0.8rem (0.7 small, 0.55 card) |
-| `components/_form.scss:73` | `label` | inherits |
-| `components/_pagination.scss:26` | pagination links | 0.8rem |
-| `components/_table.scss:31` | `th` | 0.8rem |
-| `layout/_navPanel.scss:22` | Nav_Panel_Toggle | 0.9rem (0.8 at `<=small`) |
-| `layout/_navPanel.scss:84` | Nav_Panel_Link | 0.9rem |
-| `layout/_footer.scss:224` | `#copyright` | 0.8rem |
-| `layout/_nav.scss:33` | `#nav ul.links` (conflict C6) | 0.8rem |
+| the base `.button` rule | buttons — skills + Read More | 0.8rem (0.7 small, 0.55 card) |
+| the `label` rules | `label` | inherits |
+| the pagination rule | `.pagination a` | 0.8rem |
+| the table-header rule | `table th` | 0.8rem |
+| the `#navPanelToggle` rule | Nav_Panel_Toggle | 0.9rem (0.8 at `<=small`) |
+| the `#navPanel .links li a` rule | Nav_Panel_Link | 0.9rem |
+| the `#copyright` rule | Copyright_Block | 0.8rem |
+| the `#nav ul.links` rule | top nav links (conflict C6) | 0.8rem |
 
-*(The two `_navPanel.scss` sites were one row in the Change Set 1 draft. They are split here because Change Set 3 treats them as two named elements — see the Nav_Panel_Toggle and Nav_Panel_Link glossary entries — and because the toggle carries a second, `<=small` size that the combined row hid. The `<=0.9rem` size bound of the Chrome_Text glossary entry was also amended in Change Set 3 from a strict to a non-strict inequality: both of these declarations are *exactly* 0.9rem, so the original wording excluded by accident the two elements the same entry already listed by file.)*
+*(The two nav-panel sites were one row in the Change Set 1 draft. They are split here because Change Set 3 treats them as two named elements — see the Nav_Panel_Toggle and Nav_Panel_Link glossary entries — and because the toggle carries a second, `<=small` size that the combined row hid. The `<=0.9rem` size bound of the Chrome_Text glossary entry was also amended in Change Set 3 from a strict to a non-strict inequality: both of these declarations are *exactly* 0.9rem, so the original wording excluded by accident the two elements the same entry already listed. **Change Set 4 replaced this table's `assets/sass/**` paths and line numbers with the selectors that carry each rule**, which is also how the unit assertions locate them — a line-indexed check goes stale on the next comment edit, and the SASS column now names files that do not exist.)*
 
-**Change Set 2 splits this table in two, and Change Set 3 moves two more rows across.** Requirement 11 moved three groups — the nav links, every `.button` label, and the skills pill labels — from `_font(weight)` to `_font(weight-bold)`, making them **Bold_Chrome_Text** (§5.3). Requirement 16 moves the **Nav_Panel_Toggle and the Nav_Panel_Link** across as well (§6.2). The family stays `_font(family)` for all five, so the Req 5 c1 routing above is unchanged; only the weight differs. Form labels, pagination links, table headers and `#copyright` are what remain at 400 — that four-group list is the amended text of Req 11 c15, and it is the authority for the 400 half of Property 4's partition.
+**Change Set 2 splits this table in two, and Change Set 3 moves two more rows across.** Requirement 11 moved three groups — the nav links, every `.button` label, and the skills pill labels — from the body weight to the bold weight, making them **Bold_Chrome_Text** (§5.3). Requirement 16 moves the **Nav_Panel_Toggle and the Nav_Panel_Link** across as well (§6.2). The family stays the body stack for all five, so the Req 5 c1 routing above is unchanged; only the weight differs. Form labels, pagination links, table headers and `#copyright` are what remain at 400 — that four-group list is the amended text of Req 11 c15, and it is the authority for the 400 half of Property 4's partition.
 
-**Chrome_Text letter-spacing: `0.05em`**, down from `0.075em` (Req 5 c8 range 0.025–0.075em; both comply). Reduced deliberately: the longest skills label is exactly **20 characters** ("Waterjet fabrication"), precisely at the Req 5 c4 single-line boundary, and it must fit inside a card pill at 0.55rem. Dropping tracking by 0.025em buys ~0.5 characters of width at zero visual cost. Centralised as `letter-spacing-heading` in the `$font` map (§3.1) so all seven sites stay consistent (Req 8 c3).
+**Chrome_Text letter-spacing: `0.05em`**, down from `0.075em` (Req 5 c8 range 0.025–0.075em; both comply). Reduced deliberately: the longest skills label is exactly **20 characters** ("Waterjet fabrication"), precisely at the Req 5 c4 single-line boundary, and it must fit inside a card pill at 0.55rem. Dropping tracking by 0.025em buys ~0.5 characters of width at zero visual cost. Declared at the same value across all seven sites so they stay consistent (Req 8 c3).
 
-**The card `h2` (Req 3 c3).** `layout/_main.scss:~361` hardcodes three values that must all change, not just the family:
+**The card `h2` (Req 3 c3).** The Card_Heading rule hardcoded three values that all had to change, not just the family:
 
-```scss
-// before                                  // after
-font-family: Merriweather, Georgia, serif; → font-family: _font(family-heading);
-font-weight: 700;                          → font-weight: _font(weight-heading);
-letter-spacing: 0;                         → letter-spacing: _font(letter-spacing-heading);
+```css
+/* before                                     after */
+font-family: Merriweather, Georgia, serif;  /* → the Horizon stack */
+font-weight: 700;                           /* → 700, now Horizon's measured face weight */
+letter-spacing: 0;                          /* → 0.05em */
 ```
-The `font-weight: 700` is as important as the family: left in place with a single-weight Horizon it would trigger exactly the synthesized bold Req 3 c4 forbids. `font-size: 1.1rem` and `text-transform: none` are deliberate card-design choices and are retained — see conflict C5. This is the only literal typeface name outside the `$font` map and `@font-face` rules, and removing it satisfies Req 7 c4.
+The `font-weight` is as important as the family: a 700 aimed at a bold Merriweather, left in place with a single-weight Horizon, would trigger exactly the synthesized bold Req 3 c4 forbids — the number is unchanged and its meaning is not. `font-size: 1.1rem` and `text-transform: none` are deliberate card-design choices and are retained — see conflict C5. Before Change Set 1 this was the one rule that named a typeface outside the shared stacks and the `@font-face` blocks; since Change Set 4 the distinction between "a literal here" and "a map lookup" no longer exists, so what the criterion asks for is simply that the Card_Heading declare the same heading stack as every other heading rule (Req 3 c3).
 
 **Skills pills cannot wrap as currently built (Req 5 c7).** `body.home #main .button.skills` sets `white-space: nowrap`, a fixed `height: 1.7rem` and `line-height: 1.55rem`, and its container sets `flex-wrap: nowrap`. Req 5 c7 requires a label that exceeds the available width to *wrap inside the card* with every character visible — impossible under `nowrap`, and a wrapped label inside a fixed 1.7rem pill would be clipped even if it did wrap. The pill therefore becomes vertically elastic:
 
-```scss
+```css
 body.home #main .skills-box { flex-wrap: wrap; }
 body.home #main .button.skills {
-    white-space: normal;        // was nowrap  — permits the Req 5 c7 wrap
-    height: auto;               // was 1.7rem  — fixed height would clip line 2
-    min-height: 1.7rem;         // preserves the current pill silhouette
-    line-height: 1.4;           // was 1.55rem — must be a ratio once multi-line
-    padding: 0.15rem 0.4rem;    // restores vertical centring without a fixed height
+    white-space: normal;        /* was nowrap  — permits the Req 5 c7 wrap */
+    height: auto;               /* was 1.7rem  — fixed height would clip line 2 */
+    min-height: 1.7rem;         /* preserves the current pill silhouette */
+    line-height: 1.4;           /* was 1.55rem — must be a ratio once multi-line */
+    padding: 0.15rem 0.4rem;    /* restores vertical centring without a fixed height */
 }
 ```
 Background, border, radius and uppercase treatment are untouched (Req 5 c5). White-on-`rgba(18,38,58,0.92)` measures 12.18:1 worst-case (over white) and 15.40:1 on the card, comfortably clearing Req 5 c6.
@@ -367,7 +375,7 @@ Selector: **`#footer a[href^="mailto:"]`**. Chosen over a class or a structural 
 }
 ```
 
-**Colour history.** Change Set 1 shipped `#4a5158` at **7.38:1**. **Change Set 2 supersedes it with `#3a4148` at 9.49:1** (Req 1 c12) — the darker of the two candidates originally considered. Both clear the 7.0:1 threshold of Req 1 c1, which the amendment leaves unchanged; the change buys margin, it does not chase a new threshold. In the SASS source all three declarations read `_palette(alt, fg-link)` and only the token's value moves (§4.2, §5.1), so exactly one literal changes in `_vars.scss` and three resolved literals change in the compiled CSS. Req 1 c13 additionally requires **zero** remaining occurrences of `#4a5158` as a link or underline colour in either artifact.
+**Colour history.** Change Set 1 shipped `#4a5158` at **7.38:1**. **Change Set 2 supersedes it with `#3a4148` at 9.49:1** (Req 1 c12) — the darker of the two candidates originally considered. Both clear the 7.0:1 threshold of Req 1 c1, which the amendment leaves unchanged; the change buys margin, it does not chase a new threshold. Three declarations in `main.css` carry the value — default text, default underline, hover underline — and all three change together (§5.1). *(Change Set 2 made this edit as one token value in `assets/sass/libs/_vars.scss` plus three resolved mirrors; Change Set 4 leaves only the three declarations, which is the same edit with the indirection removed.)* Req 1 c13 additionally requires **zero** remaining occurrences of `#4a5158` as a link or underline colour, comments included.
 
 Four things this encodes:
 
@@ -382,39 +390,41 @@ Existing `0.8rem` sizing (`#footer form label, #footer h3, #footer p`) satisfies
 
 ## Data Models
 
-The only persistent structures are the SASS maps, the font bundle, and the provenance record.
+The only persistent structures are the typeface values in `main.css`, the font bundle, and the provenance record. **Before Change Set 4 the first of those was a pair of SASS maps**; §4.1 and §4.2 below are rewritten as inventories of declared values, because that is all that is left of them.
 
-### 4.1 `$font` — typeface tokens
+### 4.1 Typeface values — declared in `assets/css/main.css`
 
-| Key | Type | Before | After | Constraint |
+| Value | Type | Before | After | Constraint |
 |---|---|---|---|---|
-| `family` | font stack | `('Merriweather', Georgia, serif)` | `('PP Telegraf', 'Helvetica Neue', 'Segoe UI', Roboto, sans-serif)` | Req 4 c1; Req 6 c2, c3 |
-| `family-heading` | font stack | `('Source Sans Pro', Helvetica, sans-serif)` | `('Horizon', 'Arial Black', Verdana, 'Trebuchet MS', sans-serif)` | Req 3 c1; Req 6 c1, c3 |
-| `family-fixed` | font stack | `('Courier New', monospace)` | unchanged | Req 4 c8 |
-| `weight` | 100–900 | `300` | `400` | Req 4 c3 |
-| `weight-bold` | 100–900 | `600` | **`800`** (Branch A; measured, §3.0) | Req 4 c3, c4; Req 11 c2 |
-| `weight-heading` | 100–900 | `900` | **`700`** (Horizon, measured) | Req 3 c4 |
-| `letter-spacing-heading` | em length | *absent* | `0.05em` | Req 5 c8; Req 11 c8; fixes `_pagination.scss:31` |
+| body family | font stack | `Merriweather, Georgia, serif` | `"PP Telegraf", "Helvetica Neue", "Segoe UI", Roboto, sans-serif` | Req 4 c1; Req 6 c2, c3 |
+| heading family | font stack | `"Source Sans Pro", Helvetica, sans-serif` | `"Horizon", "Arial Black", Verdana, "Trebuchet MS", sans-serif` | Req 3 c1; Req 6 c1, c3 |
+| fixed family | font stack | `"Courier New", monospace` | unchanged | Req 4 c8 |
+| body weight | 100–900 | `300` | `400` | Req 4 c3 |
+| bold weight | 100–900 | `600` | **`800`** (Branch A; measured, §3.0) | Req 4 c3, c4 |
+| heading weight | 100–900 | `900` | **`700`** (Horizon, measured) | Req 3 c4 |
+| heading letter-spacing | em length | `0.075em` | `0.05em` | Req 5 c8; Req 11 c8 |
 
-Change Set 2 touches none of these rows. `weight-bold` and `letter-spacing-heading` acquire additional consumers under Requirement 11 (§5.3) but keep their values — and Req 11 c8 forbids *lowering* `letter-spacing-heading`, which pins `0.05em` as a floor from here on.
+Change Set 2 touches none of these rows. The bold weight and the heading letter-spacing acquire additional consumers under Requirement 11 (§5.3) but keep their values — and Req 11 c8 forbids *lowering* the letter-spacing, which pins `0.05em` as a floor from here on.
 
-`weight` moves 300 → 400 and `weight-heading` 900 → Horizon's single weight because Req 2 c5/c16 and Req 3 c4 require every declared weight to correspond to a face that actually ships. A declared 300 with only a 400 face on disk would invite synthesis.
+The body weight moves 300 → 400 and the heading weight 900 → Horizon's single weight because Req 2 c5/c16 and Req 3 c4 require every declared weight to correspond to a face that actually ships. A declared 300 with only a 400 face on disk would invite synthesis.
 
-### 4.2 `$palette` — one additive change
+**Change Set 4 changes no value in this table.** What it changes is the number of places each value is written: a stack that was one map entry read by 11 rules is now 11 literals. §3.1 records that cost and what checks it instead.
 
-Every existing value is preserved (Req 8 c7). One key is **added** to the `alt` map:
+### 4.2 Colour values — one change since Change Set 1
 
-| Map | Key | Change Set 1 | **Change Set 2** | Purpose |
-|---|---|---|---|---|
-| `alt` | `fg-link` | `#4a5158` (7.38:1) | **`#3a4148` (9.49:1)** | Footer email link default + underline (Req 1 c12, c13) |
+Every existing colour value is preserved (Req 8 c7). One is changed:
 
-See conflict C1 under **Requirement Conflicts Requiring a Decision** for why this is additive rather than an edit to `alt.fg-bold`.
+| Role | Change Set 1 | **Change Set 2** | Purpose |
+|---|---|---|---|
+| footer email link, default text and underline | `#4a5158` (7.38:1) | **`#3a4148` (9.49:1)** | Req 1 c12, c13 |
 
-**This remains the only changed palette value after Change Set 2**, which matters because Req 8 c7 is written as a single-exception rule. The Copyright_Block recolouring of §5.6 does not widen the exception: it adjusts the `transparentize()` *amount* applied to `invert.fg` inside the `#copyright` rule, and leaves `invert.fg` itself at `#ffffff` (Req 14 c4). A per-rule opacity adjustment is not a palette edit, so the count of changed palette values stays at one — and Property 8 checks it that way, comparing every `$palette` entry against its baseline with only `alt.fg-link` allowlisted.
+See conflict C1 under **Requirement Conflicts Requiring a Decision** for why Change Set 1 introduced a link-specific value rather than editing the shared `#717981` that 15 declarations resolve to.
+
+**This remains the only changed colour value**, which matters because Req 8 c7 is written as a single-exception rule. The Copyright_Block recolouring of §5.6 does not widen the exception: it raises the alpha of the white the `#copyright` rule already declared, and the opaque `#ffffff` in the surrounding rules is untouched (Req 14 c4). Property 8 checks it that way, comparing every colour literal in `main.css` against its baseline with only the footer link value allowlisted. *(Before Change Set 4 this section described an additive `alt.fg-link` key in a `$palette` map and Property 8 compared map entries; the check is the same one read against declarations instead of tokens, which is strictly closer to what ships.)*
 
 ### 4.3 Webfont bundle manifest
 
-Budget: **≤600 KB** for the two families combined, **≤400 KB** per Telegraf file (Req 2 c12, c13). The existing Font Awesome files (~2.9 MB across 15 files) are excluded from both bounds by name (Req 2 c12) and must remain byte-identical (Req 7 c7).
+Budget: **≤600 KB** for the two families combined, **≤400 KB** per Telegraf file (Req 2 c12, c13). The existing Font Awesome files (~2.9 MB across 15 files) are excluded from both bounds by name (Req 2 c12) and must remain byte-identical (Req 7 c3).
 
 | File | Family | Weight | Format | `format()` | Typical | Bound |
 |---|---|---|---|---|---|---|
@@ -483,24 +493,28 @@ Seven follow-up changes against the merged Change Set 1 code. All seven are **de
 
 The total source delta is small and worth stating up front, because it bounds the review surface:
 
-| Change | SASS declarations | Compiled CSS rules | HTML pages |
+| Change | `main.css` rules | HTML pages | *(SASS declarations, as Change Set 2 shipped it)* |
 |---|---|---|---|
-| §5.1 email colour | 1 (`_vars.scss` token) | 3 resolved literals | 0 |
-| §5.2 centred titles | 1 (`left` → `center`) | 1 | 0 |
-| §5.3 bold weight | 2 (`weight` → `weight-bold`) | 2 | 0 |
-| §5.4 pill geometry | 2 rules retuned | 2 | 0 |
-| §5.5 Back to top | 2 added (cursor, focus) | 2 | **9** |
-| §5.6 copyright contrast | 1 (`transparentize` amount) | 1 | 0 |
-| §5.7 Horizon licence note | 0 | 0 | 0 (one Markdown file) |
+| §5.1 email colour | 3 declarations | 0 | *1 token in `_vars.scss`* |
+| §5.2 centred titles | 1 (`left` → `center`) | 0 | *1* |
+| §5.3 bold weight | 2 | 0 | *2* |
+| §5.4 pill geometry | 2 rules retuned | 0 | *2* |
+| §5.5 Back to top | 2 added (cursor, focus) | **9** | *2* |
+| §5.6 copyright contrast | 1 | 0 | *1 alpha in `_footer.scss`* |
+| §5.7 Horizon licence note | 0 | 0 (one Markdown file) | *0* |
+
+*(The last column is kept because it is the shape the review of Change Set 2 actually took. Every file it names has since been deleted — §7.1 — so it is history, not a place to make an edit.)*
 
 ### 5.1 Footer email link — `#4a5158` → `#3a4148`
 
-The mechanism is already in place: Change Set 1 routed all three declarations through `_palette(alt, fg-link)` (§3.6), so this change is **one literal in `_vars.scss`** plus its three resolved mirrors in `assets/css/main.css`.
+**Three declarations in `assets/css/main.css` carry this value** — the default text colour, the default underline colour and the hover underline colour, all on the `#footer a[href^="mailto:"]` selectors of §3.6 — and all three change together:
 
-```scss
-// assets/sass/libs/_vars.scss — alt palette
-fg-link: #3a4148,   // was #4a5158.  9.49:1 on #f5f5f5, was 7.38:1
+```css
+color: #3a4148;                 /* was #4a5158.  9.49:1 on #f5f5f5, was 7.38:1 */
+border-bottom-color: #3a4148;   /* same value, default and hover */
 ```
+
+*(Change Set 2 made this edit as one token value in `assets/sass/libs/_vars.scss` plus those three resolved mirrors. Change Set 4 deleted the token's file, so the three declarations are the whole edit — the same three literals, with nothing above them.)*
 
 | State | Colour | Ratio on `#f5f5f5` | Requirement |
 |---|---|---|---|
@@ -513,22 +527,22 @@ fg-link: #3a4148,   // was #4a5158.  9.49:1 on #f5f5f5, was 7.38:1
 Three points that keep this from being a blind find-and-replace:
 
 - **The threshold did not move.** Req 1 c1 still says ≥7.0:1, and `#4a5158` already cleared it. This change buys margin against a stricter future target and satisfies the owner's stated preference for the darker candidate; it does not fix a failure. Recording that matters, because a reader who assumes 7.38:1 was failing will misread the amendment's intent.
-- **Req 1 c13 is a zero-occurrence rule, not just a replacement rule.** After this change, `#4a5158` must appear **nowhere** in the SASS source or the compiled CSS as a link or underline colour. Two places in the existing artifacts mention it as *prose*: the conflict C2 note in this document names it as the ready remedy for the footer `h3`, and `_footer.scss` carries explanatory comments. The C2 remedy reference is updated in the conflicts section below; any SASS comment naming the old value is updated with the declaration so the source does not document a value it no longer sets.
+- **Req 1 c13 is a zero-occurrence rule, not just a replacement rule.** After this change, `#4a5158` must appear **nowhere** in `main.css` as a link or underline colour, comments included. Two places mentioned it as *prose*: the conflict C2 note in this document names it as the ready remedy for the footer `h3`, and the footer rules carried explanatory comments. The C2 remedy reference is updated in the conflicts section below; any comment naming the old value is updated with the declaration, so the stylesheet does not document a value it no longer sets. **Since Change Set 4 there is one artifact to scan rather than two**, which narrows the rule's reach without weakening it — the two-artifact version could pass on `main.css` and fail in a SASS comment nobody shipped.
 - **Relative luminance, not just ratio.** Req 1 c2 requires a lower relative luminance than `#717981`. `#3a4148` is darker than `#4a5158`, which was already darker than `#717981`, so c2 holds transitively — but Property 1 checks it directly rather than by inference.
 
 ### 5.2 Centred project card titles (Req 10)
 
-**Decision: set `text-align: center` on the Card_Header_Band, editing the existing `text-align: left` at `assets/sass/layout/_main.scss:358`. Do not add a declaration to the `h2`.**
+**Decision: set `text-align: center` on the Card_Header_Band, editing the existing `text-align: left` on that rule. Do not add a declaration to the `h2`.**
 
-```scss
-// body.home #main .posts > article > header
-text-align: center;   // was left — Req 10 c1
+```css
+/* body.home #main > .posts > article header */
+text-align: center;   /* was left — Req 10 c1 */
 ```
 
 Why the band and not the `h2`:
 
 - **It is an edit, not an addition.** The band already declares `text-align: left`; changing one token leaves the declaration count identical in both artifacts. Adding `text-align: center` to the `h2` instead would leave the source saying *"this band is left-aligned, and its only child is centred"* — an internal contradiction that invites a future editor to "tidy" one of the two and silently undo the change.
-- **The band's only content is the Card_Heading.** The glossary pins this, and `_main.scss:352-359` confirms it: the `header` contains the `h2` and nothing else. So band-level centring has no collateral reach today, and if a card header ever gains a second child, centring extends to it automatically — which is the stated intent, cards reading as a symmetrical grid.
+- **The band's only content is the Card_Heading.** The glossary pins this, and the markup confirms it: the `header` contains the `h2` and nothing else. So band-level centring has no collateral reach today, and if a card header ever gains a second child, centring extends to it automatically — which is the stated intent, cards reading as a symmetrical grid.
 - **It keeps the `h2` rule untouched.** Req 10 c4 pins the Card_Heading's `font-size: 1.1rem`, `text-transform: none`, `line-height` and `color`, and Req 10 c5 pins `h2 > a { color: inherit }`. Not editing that rule at all is the cheapest way to guarantee those four are preserved.
 
 **Multi-line titles need no extra work, and this is the load-bearing detail.** `text-align` applies per line box, not per block, so every line box inside the band is centred independently within the band's content box. That covers both cases Requirement 10 distinguishes:
@@ -536,28 +550,28 @@ Why the band and not the `h2`:
 - **Forced breaks (Req 10 c3).** "KillerByte / Full-body Spinner Battlebot" carries an explicit `<br />` inside its `h2 > a`. An anchor is inline and establishes no new block container, so the `<br />` breaks the `h2`'s line box and each resulting line centres on its own. No flex or grid centring is needed, and none should be used — `justify-content: center` on the band would centre the `h2` *box* as a single unit and leave its internal lines left-ragged, which fails c2 and c3 while appearing to pass c1.
 - **Automatic wrapping (Req 10 c2, c6).** Titles that wrap at 320px behave identically, and `overflow-wrap: break-word` from Change Set 1 still governs any unbreakable token.
 
-**Explicitly not touched (Req 10 c7).** `assets/sass/layout/_main.scss` contains exactly three `text-align: left` declarations — lines **179**, **358** and **444** — verified by grep. Line 358 is the Card_Header_Band and is the only one that changes. Lines 179 and 444 are card *description* paragraph rules (both `font-size: 0.85rem`), and left-aligning those is a deliberate readability choice for prose. Property 8 carries all three positions against their baseline so that a careless global replace fails a check rather than shipping.
+**Explicitly not touched (Req 10 c7).** The homepage card block declares `text-align: left` in exactly three places — verified by grep: the Card_Header_Band, and the two `body.home #main > .posts > article p` card *description* rules (both `font-size: 0.85rem`, one of them inside a narrow-viewport media block). Only the band changes; left-aligning prose is a deliberate readability choice. Property 8 carries all three against their baseline so that a careless global replace fails a check rather than shipping. **Change Set 4 replaced the three `_main.scss` line numbers here with selectors**, which is what the assertions match on anyway.
 
 Req 10 c9 (band `background-color: #12263a`, `padding: 0.85rem 1rem`, box dimensions preserved) holds trivially: `text-align` affects inline content position within the line box and changes no box dimension, so no card height and no grid alignment moves.
 
 ### 5.3 Ultrabold for nav, buttons and pills (Req 11)
 
-**Three element groups move from weight 400 to 800, through exactly two SASS declarations.**
+**Three element groups move from weight 400 to 800, through exactly two declarations in `assets/css/main.css`.**
 
-```scss
-// assets/sass/layout/_nav.scss:34   — ul.links, the "Projects" / "CAD Gallery" links
-font-weight: _font(weight-bold);    // was _font(weight)
+```css
+/* #nav ul.links — the "Projects" / "CAD Gallery" links */
+font-weight: 800;   /* was 400 */
 
-// assets/sass/components/_button.scss:26 — the base .button rule
-font-weight: _font(weight-bold);    // was _font(weight)
+/* the base .button rule */
+font-weight: 800;   /* was 400 */
 ```
 
 **Two declarations cover all three groups, which is exactly what Req 11 c3 asks for.** The base `.button` rule reaches Read More (`.button`), View Model (`.button.primary`, `.button.primary.small.fit`) *and* the skills pills (`.button.skills`) because `body.home #main .button.skills` declares no `font-weight` of its own and inherits from `.button`. Req 11 c3 requires a single rule covering all three so that no variant is left behind, and this is that rule. Site inventory confirms the reach: 24 `button skills`, 7 `button`, 6 `button primary`, 5 `button primary small fit`.
 
 Three things this does *not* change, all pinned by Req 11:
 
-- **Family (c5).** Both rules keep `_font(family)` → `PP Telegraf`. Only the weight moves.
-- **Letter-spacing (c8).** Both keep `_font(letter-spacing-heading)` = `0.05em`. Req 11 c8 forbids going *below* the pre-amendment value, so 0.05em is now a floor rather than a free parameter — which removes the tracking-reduction lever that §3.5 used to buy width. Any width shortfall must be absorbed by the box (§5.4), not by tighter tracking.
+- **Family (c5).** Both rules keep the `PP Telegraf` stack. Only the weight moves.
+- **Letter-spacing (c8).** Both keep `letter-spacing: 0.05em`. Req 11 c8 forbids going *below* the pre-amendment value, so 0.05em is now a floor rather than a free parameter — which removes the tracking-reduction lever that §3.5 used to buy width. Any width shortfall must be absorbed by the box (§5.4), not by tighter tracking.
 - **Appearance (c13).** `text-transform`, `background-color`, `border`, `border-radius`, default/hover colours and transition timing are all untouched. Contrast is therefore unchanged and Req 11 c14 inherits Change Set 1's measurements (white on `rgba(18,38,58,0.92)` = 12.18:1 worst case).
 
 **No new font file, and the bundle budget is untouched — stated explicitly because it is easy to assume otherwise.** `PPTelegraf-Ultrabold.otf` (44,664 bytes, `usWeightClass` 800) already ships and is already declared at `font-weight: 800` under the `PP Telegraf` CSS family, because Change Set 1 needed it for `<strong>`. Requirement 11 adds a second consumer of a face that is already downloaded on every page load. The bundle stays at **103,324 bytes (≈101 KB), 17% of the 600 KB budget**, and Req 11 c4 (add no file, remove no file, change no `@font-face` rule) is satisfied by doing nothing. Req 11 c6 likewise: 800 is a shipped `usWeightClass`, so no weight is synthesized or interpolated.
@@ -618,7 +632,7 @@ Requirement 12 deliberately pins **no pixel values**, and its criterion 13 makes
 
 The symmetry failure is the one the owner is describing as boxes mismatching their text, and its cause is worth naming precisely. Natural content height at 1440px is `line box 12.32px + 2×3.2px padding… ` — in fact `12.32 + 2×2.4 + 2 = 19.12px` — while `min-height: 1.7rem` forces **27.2px**. In normal block layout the line box sits at the top of the box and *all* 8.08px of surplus accumulates below it: top gap 2.4px, bottom gap 10.5px. The §3.5 comment claiming this arrangement "restores vertical centring" is simply incorrect, and no amount of padding tuning fixes it while a `min-height` larger than the content dominates.
 
-**Wider-context geometry** (`.button.skills, .actions .button`: `font-size: 0.7rem`, `height: 2.25rem`, `line-height: 2.25rem`, `padding: 0 1rem`) is worse, and fails in a way that is invisible until the ratios are written down:
+**Wider-context geometry** (the grouped `body.home #main .button.skills, body.home #main .actions .button` rule: `font-size: 0.7rem`, `height: 2.25rem`, `line-height: 2.25rem`, `padding: 0 1rem`) is worse, and fails in a way that is invisible until the ratios are written down — *and, as §7.2 records, invisible in a second sense too: this rule had **zero rendered instances**, which is why Change Set 4 deleted it outright rather than keeping the retune below:*
 
 | Bound | Req | Shipped value | Verdict |
 |---|---|---|---|
@@ -665,32 +679,29 @@ Layer 2 is the authority. Where Layer 1 and Layer 2 disagree, Layer 2 wins — s
 
 **Homepage geometry:**
 
-```scss
+```css
 body.home #main .button.skills {
-    font-size: 0.55rem;         // UNCHANGED — Req 12 c11 forbids reducing it
-    line-height: 1.4;           // UNCHANGED — a ratio, so it survives wrapping
-    padding: 0.2rem 0.55rem;    // was 0.15rem 0.4rem
-    min-height: 1.35rem;        // was 1.7rem
-    display: inline-flex;       // was inline-block (inherited from .button)
-    align-items: center;        // splits any residual vertical slack evenly
+    font-size: 0.55rem;         /* UNCHANGED — Req 12 c11 forbids reducing it */
+    line-height: 1.4;           /* UNCHANGED — a ratio, so it survives wrapping */
+    padding: 0.2rem 0.55rem;    /* was 0.15rem 0.4rem */
+    min-height: 1.35rem;        /* was 1.7rem */
+    display: inline-flex;       /* was inline-block (inherited from .button) */
+    align-items: center;        /* splits any residual vertical slack evenly */
     justify-content: center;
-    white-space: normal;        // UNCHANGED — Req 12 c8
-    height: auto;               // UNCHANGED — Req 12 c8, c11
+    white-space: normal;        /* UNCHANGED — Req 12 c8 */
+    height: auto;               /* UNCHANGED — Req 12 c8, c11 */
 }
 ```
 
-**Wider-context geometry:**
+**Wider-context geometry** — *this rule was deleted by Change Set 4; see §7.2. It is kept here because the reasoning below is why the deletion is safe:*
 
-```scss
-.button.skills,
-.actions .button {
-    font-size: 0.7rem;          // UNCHANGED
-    height: 2.25rem;            // UNCHANGED — no box-size change
-    line-height: 1.4;           // was 2.25rem — a LENGTH equal to height; now a ratio
-    padding: 0 1rem;            // UNCHANGED
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+```css
+body.home #main .button.skills,
+body.home #main .actions .button {
+    font-size: 0.7rem;          /* UNCHANGED */
+    height: 2.25rem;            /* UNCHANGED — no box-size change */
+    line-height: 1.4;           /* was 2.25rem — a LENGTH equal to height; now a ratio */
+    padding: 0 1rem;            /* UNCHANGED */
 }
 ```
 
@@ -778,7 +789,7 @@ Measured at 1440 px in headless Chromium, sampling `window.scrollY` every 16 ms 
 
 Two things the numbers settle. **The footer control was never the broken one** — it is native fragment navigation, so smooth easing applied to it exactly as intended, reaching 0 at 882 ms. The casualty was the **intro down-arrow**, an element this change set was not otherwise touching, reached only because `scroll-behavior` has to sit on the scrolling element and is therefore global. And **every row lands on its target**, which is precisely why final-position verification passed the defect through; see Check J in the Testing Strategy.
 
-**The `preventDefault()` reasoning is deleted rather than reworded**, deliberately: a future reader who reconstructs it will re-add the declaration. The comments that survive in `assets/sass/base/_page.scss` and `assets/css/main.css` therefore state the real mechanism and carry the measured figures instead of merely recording that the block was dropped. Two guards back that up — a static assertion of **zero** `scroll-behavior` and **zero** `prefers-reduced-motion` occurrences in both artifacts (scanned with comments stripped, since the surviving comment names the property on purpose), and Check J, which measures what the declaration actually broke.
+**The `preventDefault()` reasoning is deleted rather than reworded**, deliberately: a future reader who reconstructs it will re-add the declaration. The `DO NOT REINTRODUCE` comment that survives in the `html` rule of `assets/css/main.css` therefore states the real mechanism and carries the measured figures instead of merely recording that the block was dropped. *(Change Set 2 placed the same comment in `assets/sass/base/_page.scss` as well; Change Set 4 deleted that file, so the `main.css` comment is now the only one — which is also the only one a maintainer would ever read, since it sits in the file they edit.)* Two guards back it up — a static assertion of **zero** `scroll-behavior` and **zero** `prefers-reduced-motion` declarations in the shipped stylesheets (scanned with comments stripped, since the surviving comment names the property on purpose), and Check J, which measures what the declaration actually broke.
 
 **Nothing else about the control changes.** It is still `<a href="#top">`, still carries no `class="scrolly"`, still works with scripting disabled (Req 13 c5), and is still keyboard reachable with the focus ring described below. Only the easing is gone.
 
@@ -811,7 +822,7 @@ Req 13 c15 (Copyright_Block typography preserved — `PP Telegraf`, 0.8rem, uppe
 
 1. **The credit is the consideration, not a courtesy.** [html5up.net/license](https://html5up.net/license) places the templates under **Creative Commons Attribution 3.0** and states that personal use, commercial use and modification are all permitted — with credit for the design given in exchange. HTML5 UP separately sells attribution-free usage through Pixelarity. That an attribution-free tier is a *paid product* settles the character of the free tier's credit: it is the price, not etiquette.
 2. **CC BY 3.0 attaches attribution to adaptations, not only to verbatim copies.** So the extent of divergence does not discharge the condition. A heavily modified derivative is still a derivative, and the licence's attribution term travels with it. "It looks nothing like the demo" is an argument about *how much* was changed, and the licence does not condition attribution on that quantity.
-3. **The Site remains substantially template-derived, as a matter of fact.** Verified against the repository: **24 files under `assets/sass/` carry the Massively header** (22 partials plus `main.scss` and `noscript.scss`); six template JavaScript files still ship (`main.js`, `util.js`, `breakpoints.min.js`, `browser.min.js`, `jquery.scrollex.min.js`, `jquery.scrolly.min.js`); and the `#wrapper`, `is-preload`, `split contact`, `icons` and `actions` structures appear on all nine pages. This design document's own §5.4 fallback and §5.5 markup both build directly on template CSS (`#copyright ul li`, `.button`), which is the clearest possible demonstration that the template is still load-bearing.
+3. **The Site remains substantially template-derived, as a matter of fact.** Verified against the repository: both shipped stylesheets carry the Massively header, as do all nine Content_Pages and `assets/js/main.js`; six template JavaScript files still ship (`main.js`, `util.js`, `breakpoints.min.js`, `browser.min.js`, `jquery.scrollex.min.js`, `jquery.scrolly.min.js`); and the `#wrapper`, `is-preload`, `split contact`, `icons` and `actions` structures appear on all nine pages. This design document's own §5.4 fallback and §5.5 markup both build directly on template CSS (`#copyright ul li`, `.button`), which is the clearest possible demonstration that the template is still load-bearing. **Change Set 4 restated this list**: it previously counted 24 files under `assets/sass/` carrying the Massively header, and those files are now deleted. Deleting derived files does not make the remaining ones original, and the derivation is still visible in the two artifacts a visitor actually loads.
 
 **The one supported route to removing the credit is a Pixelarity licence**, which is what HTML5 UP sells for exactly this purpose. That would be a new owner decision outside this spec, and it is a purchase rather than a code change.
 
@@ -823,12 +834,12 @@ Req 13 c15 (Copyright_Block typography preserved — `PP Telegraf`, 0.8rem, uppe
 
 **Decision: alpha 0.25 → 0.65, composited `#b0b3b6`, measured 7.33:1 against `#1e252d`.**
 
-```scss
-// assets/sass/layout/_footer.scss:227 — #copyright
-color: transparentize(_palette(invert, fg), 0.35);   // was 0.75. alpha 0.25 -> 0.65
+```css
+/* the #copyright rule in assets/css/main.css */
+color: rgba(255, 255, 255, 0.65);   /* was rgba(255, 255, 255, 0.25) */
 ```
 
-`transparentize($color, $amount)` *subtracts* `$amount` from the alpha, so the target alpha 0.65 is written as `0.35`. The compiled mirror is `rgba(255, 255, 255, 0.65)`.
+*(Change Set 2 wrote this as `transparentize(_palette(invert, fg), 0.35)` in `assets/sass/layout/_footer.scss` — that function subtracts its amount from the alpha, so 0.65 was written as 0.35 — plus the compiled mirror above. Change Set 4 deleted the file; the `rgba()` declaration is the whole change, and there is no longer an indirection in which 0.65 is spelled 0.35.)*
 
 **Correction to a claim this document previously made.** Conflict C3 recorded the deferred remedy as "raise the alpha to ~0.65 (≈4.6:1)". **That pairing is wrong.** Measured values for white over `#1e252d`:
 
@@ -862,7 +873,7 @@ At 0.65 the default and hover states sit at essentially identical contrast, so t
 
 Both links resolve their default colour through the existing `#copyright a { color: inherit }` rule, so one declaration change carries all three default-state rows. This is also why Req 14 c5 (a single colour value, resolving identically on all nine pages, applied to the `#copyright` rule only) is satisfied without adding per-link colours.
 
-**Scope (Req 14 c4, c5, c8).** The edit changes only the `transparentize` amount inside the `#copyright` rule. `invert.fg` stays `#ffffff`, the Copyright_Block background stays `#1e252d`, and every other rule resolving through the `invert` palette is untouched — so Req 8 c7 continues to hold with `alt.fg-link` as the single changed palette value (§4.2). The footer `h3` at 4.05:1 and the footer social icon links are explicitly **not** touched: conflict C2 stands as decided, and the Req 1 c11 exemption reaches the Copyright_Block and nothing else.
+**Scope (Req 14 c4, c5, c8).** The edit changes only the alpha inside the `#copyright` rule's `color`. The opaque `#ffffff` declared elsewhere in the footer stays as it is, the Copyright_Block background stays `#1e252d`, and every other rule over that dark background is untouched — so Req 8 c7 continues to hold with the footer email link colour as the single changed value (§4.2). The footer `h3` at 4.05:1 and the footer social icon links are explicitly **not** touched: conflict C2 stands as decided, and the Req 1 c11 exemption reaches the Copyright_Block and nothing else.
 
 **Consequence for Property 1 (Req 14 c7).** The `#copyright` entry is **removed** from that property's accepted-exceptions set, leaving the footer `h3` as the only member. This is not bookkeeping: the set pins each entry to a *measured* ratio and fails if the measurement drifts in either direction, so leaving a 2.27:1 entry in place while shipping 7.33:1 would turn a successful fix into a red check.
 
@@ -897,11 +908,13 @@ Req 9 c3's `README.md` credits (Horizon → Alberto Fontense, PP Telegraf → Pa
 
 Three follow-up changes against the Change Set 2 tree. Two are stylesheet-only; the third touches no stylesheet, no page and no font file at all. The total delta, stated up front to bound the review surface:
 
-| Change | SASS | Compiled CSS | HTML pages | Other files |
+*(The **SASS** column is parenthesised throughout: Change Set 3 edited `assets/sass/layout/_footer.scss` and `_navPanel.scss` and mirrored each edit into `main.css`. Change Set 4 deleted both files — §7.1 — so the `main.css` column is now the whole of the stylesheet delta.)*
+
+| Change | *(SASS)* | `main.css` | HTML pages | Other files |
 |---|---|---|---|---|
-| §6.1 divider centring | `#copyright ul` + its `li` rule restructured, `<=xsmall` block extended | `main.css:4601–4620` and the `max-width: 480px` block at `:4630–4641` | **0** | — |
-| §6.2 nav panel weights | 2 declarations (`_navPanel.scss:24`, `:87`) | 2 declarations (`main.css:4660`, `:4753`) | **0** | — |
-| §6.3 short README | 0 | 0 | **0** | `README.md` rewritten, `docs/stylesheet-sync.md` added, `static.yml` prune step |
+| §6.1 divider centring | *(`#copyright ul` + its `li` rule)* | the `#copyright ul` rule and its `li` / `:first-child` rules, plus the `max-width: 480px` block | **0** | — |
+| §6.2 nav panel weights | *(2 declarations)* | 2 declarations — the `#navPanelToggle` rule and the `#navPanel .links li a` rule | **0** | — |
+| §6.3 short README | *(0)* | 0 | **0** | `README.md` rewritten, `docs/stylesheet-sync.md` added, `static.yml` prune step |
 
 Change Set 3 is the first amendment since Change Set 1 that leaves all nine Content_Pages byte-identical: Req 15 c12 forbids touching the Copyright_Block markup, Req 16's elements are script-injected or reparented rather than authored, and Req 17 c13 restricts change 3 to three files. Property 8's page-markup clause therefore holds across this change set with **no** allowlist entry added for HTML.
 
@@ -947,40 +960,40 @@ The measured offset back-solves to `W₂ − W₁ = 40.2px`. Reading the two lab
 
 #### The chosen mechanism
 
-```scss
-// assets/sass/layout/_footer.scss — inside #copyright
-ul {
-    display: flex;                  // was an ordinary block with two inline-block children
+```css
+/* assets/css/main.css — inside the #copyright block */
+#copyright ul {
+    display: flex;                  /* was an ordinary block with two inline-block children */
     justify-content: center;
     align-items: center;
-    min-height: 1.2rem;             // = 1.5 line-height x 0.8rem font-size — see "row height"
-    list-style: none;               // UNCHANGED
-    margin: 0;                      // UNCHANGED
-    padding-left: 0;                // UNCHANGED
+    min-height: 1.2rem;             /* = 1.5 line-height x 0.8rem font-size — see "row height" */
+    list-style: none;               /* UNCHANGED */
+    margin: 0;                      /* UNCHANGED */
+    padding-left: 0;                /* UNCHANGED */
+}
 
-    li {
-        border-left: solid 2px;     // UNCHANGED — this IS the Copyright_Divider (Req 15 c9)
-        flex: 0 0 calc(50% + 1px);  // half the row, plus half the divider's own 2px
-        line-height: 1;             // UNCHANGED
-        min-width: 0;               // NEW — defeats the automatic minimum size (Req 15 c4)
-        padding-left: 1rem;         // UNCHANGED — clearance on the divider's right
-        text-align: left;           // NEW — sit the label against the divider
-        // margin-left: 1rem  REMOVED — it displaces the shared edge off centre
+#copyright ul li {
+    border-left: solid 2px;         /* UNCHANGED — this IS the Copyright_Divider (Req 15 c9) */
+    flex: 0 0 calc(50% + 1px);      /* half the row, plus half the divider's own 2px */
+    line-height: 1;                 /* UNCHANGED */
+    min-width: 0;                   /* NEW — defeats the automatic minimum size (Req 15 c4) */
+    padding-left: 1rem;             /* UNCHANGED — clearance on the divider's right */
+    text-align: left;               /* NEW — sit the label against the divider */
+    /* margin-left: 1rem  REMOVED — it displaces the shared edge off centre */
+}
 
-        &:first-child {
-            border-left: 0;         // UNCHANGED
-            flex-basis: calc(50% - 1px);
-            padding-left: 0;        // UNCHANGED
-            padding-right: 1rem;    // NEW — clearance on the divider's left
-            text-align: right;      // NEW
-        }
-    }
+#copyright ul li:first-child {
+    border-left: 0;                 /* UNCHANGED */
+    flex-basis: calc(50% - 1px);
+    padding-left: 0;                /* UNCHANGED */
+    padding-right: 1rem;            /* NEW — clearance on the divider's left */
+    text-align: right;              /* NEW */
 }
 ```
 
 At 1440px this computes to: first item **144 → 719**, second item **719 → 1296**, its `border-left` painting **719 → 721** for a divider box centre of **x 720.0** — the row centre, offset **0.0px**. The five decisions inside that block each carry a specific criterion:
 
-- **Equal halves, so the shared edge *is* the centre.** `flex: 0 0 …` fixes each item's main size to its basis, with no grow and no shrink, and a percentage `flex-basis` resolves against the flex container's inner main size — the row content box — and nothing else. `box-sizing: border-box` is inherited globally (`_page.scss:29`, `main.css:144`), so the basis is a border-box size and the two items tile the row exactly. **No term in the item sizing derives from a label.** That is Req 15 c4 satisfied structurally rather than by arithmetic coincidence, which is the distinction the requirement is built around.
+- **Equal halves, so the shared edge *is* the centre.** `flex: 0 0 …` fixes each item's main size to its basis, with no grow and no shrink, and a percentage `flex-basis` resolves against the flex container's inner main size — the row content box — and nothing else. `box-sizing: border-box` is applied globally near the top of `main.css`, so the basis is a border-box size and the two items tile the row exactly. **No term in the item sizing derives from a label.** That is Req 15 c4 satisfied structurally rather than by arithmetic coincidence, which is the distinction the requirement is built around.
 - **The ±1px is half the divider's own width, and it is not a fudge.** The divider is painted *inside* the second item, starting at its left edge. A plain 50/50 split therefore puts the divider box centre at `centre + 1px` — exactly 1.0px off, which satisfies c1's "within 1 CSS pixel" only on an inclusive reading and with zero margin for measurement noise. Biasing the halves by 1px each way puts the *divider box*, not the item boundary, on the centre line. Should the declared border width ever change, this constant changes with it: it is `border-width / 2` and the comment says so.
 - **The `margin-left: 1rem` has to go.** Left in place it is part of the items' outer sizes, so two 50% items plus a 16px margin exceed the container and the shared edge lands 8px right of centre — the same class of fault, smaller. The `:first-child { margin-left: 0 }` reset becomes redundant once the base rule declares no margin, and is dropped with it.
 - **`min-width: 0` is what makes c4 hold for *any* label.** Flex items default to `min-width: auto`, whose automatic minimum size floors the used main size at the item's min-content size. Without this declaration a label wider than half the row would grow its item past 50% and displace the divider — reintroducing the exact content-dependence this change removes, and doing so only for the long-label case that c4 exists to cover. With `min-width: 0` an over-long label wraps inside its own half instead, and the divider does not move. This is one declaration and it is the most important one in the block.
@@ -999,24 +1012,23 @@ At 1440px this computes to: first item **144 → 719**, second item **719 → 12
 
 This is the most likely way to break 320px, and it breaks silently: a flex container lays its items out in a row **regardless of their `display` value**, so the existing `display: block` on the `li` would stop stacking them the moment the `ul` becomes a flex container. The Side_By_Side mechanism must therefore be reverted, not merely overridden:
 
-```scss
-@include breakpoint('<=xsmall') {
-    ul {
-        display: block;             // NEW — reverts the flex container so that the
-        min-height: 0;              //       `display: block` below stacks again
-        li {
-            border-left: 0;         // UNCHANGED (Req 15 c5)
-            margin: 1rem 0 0 0;     // UNCHANGED (Req 15 c5)
-            padding-left: 0;        // UNCHANGED (Req 15 c5)
-            display: block;         // UNCHANGED (Req 15 c5)
-            text-align: inherit;    // NEW — undo the Side_By_Side left alignment
-
-            &:first-child {
-                margin-top: 0;      // UNCHANGED (Req 15 c5)
-                padding-right: 0;   // NEW — undo the first item's clearance padding
-                text-align: inherit;// NEW — see the specificity note
-            }
-        }
+```css
+@media screen and (max-width: 480px) {
+    #copyright ul {
+        display: block;             /* NEW — reverts the flex container so that the */
+        min-height: 0;              /*       `display: block` below stacks again */
+    }
+    #copyright ul li {
+        border-left: 0;             /* UNCHANGED (Req 15 c5) */
+        margin: 1rem 0 0 0;         /* UNCHANGED (Req 15 c5) */
+        padding-left: 0;            /* UNCHANGED (Req 15 c5) */
+        display: block;             /* UNCHANGED (Req 15 c5) */
+        text-align: inherit;        /* NEW — undo the Side_By_Side left alignment */
+    }
+    #copyright ul li:first-child {
+        margin-top: 0;              /* UNCHANGED (Req 15 c5) */
+        padding-right: 0;           /* NEW — undo the first item's clearance padding */
+        text-align: inherit;        /* NEW — see the specificity note */
     }
 }
 ```
@@ -1087,25 +1099,25 @@ Four things this record establishes beyond c1.
 
 ### 6.2 Ultrabold for the Nav_Panel_Toggle and the Nav_Panel_Links (Req 16)
 
-**Two declarations, both in `assets/sass/layout/_navPanel.scss`.**
+**Two declarations, both in `assets/css/main.css`.**
 
-```scss
-// :24 — the #navPanelToggle rule (the fixed "Menu" control)
-font-weight: _font(weight-bold);    // was _font(weight)
+```css
+/* the #navPanelToggle rule (the fixed "Menu" control) */
+font-weight: 800;   /* was 400 */
 
-// :87 — the #navPanel .links li a rule (the slide-out panel's links)
-font-weight: _font(weight-bold);    // was _font(weight)
+/* the #navPanel .links li a rule (the slide-out panel's links) */
+font-weight: 800;   /* was 400 */
 ```
 
-Their compiled mirrors are `main.css:4660` and `main.css:4753`. **Line numbers as implemented:** the two SASS lines are still exactly 24 and 87 — the rationale comments were written as *trailing* comments precisely so that neither moved, since Req 16 c3 names both by number. Every compiled line number in this section and in §6.1, however, shifted by roughly +45 once §6.1's mirror gained its comment block: the toggle weight now sits at `main.css:4710`, the nav panel link weight at `:4809`, the Font Awesome `font-weight: 900` at `:4727`, and the duplicate `font-size: 0.9rem` at `:4801–4802`. The unit assertions locate the compiled rules **by selector** for this reason; a line-indexed check would fail on a correct file and, worse, would pass again once someone "fixed" it by deleting the comments. `font-family: _font(family)` is unchanged at both sites (`:22` and `:84`), as are both declared `font-size` values — 0.9rem, reducing to 0.8rem at `<=small` for the toggle only (Req 16 c4, c5). **No font file is added:** `PPTelegraf-Ultrabold.otf` already ships at `usWeightClass` 800 and is already declared at `font-weight: 800` under the `PP Telegraf` family, so the bundle stays at 103,324 bytes and Req 16 c6 is satisfied by doing nothing — the same position §5.3 records for Requirement 11.
+**Both are located by selector, not by line.** Change Set 3 named them by SASS line number (`_navPanel.scss:24` and `:87`, as Req 16 c3 required) and wrote their rationale as *trailing* comments so that neither line moved; the compiled mirrors then shifted by roughly +45 lines anyway, the moment §6.1's mirror gained a comment block. **Change Set 4 deletes the SASS file and, with it, Req 16 c3** — so a line number is no longer even nominally the identifier. Every assertion locates these rules by selector: a line-indexed check fails on a correct file and, worse, passes again once someone "fixes" it by deleting the comments. The `PP Telegraf` stack is unchanged at both sites, as are both declared `font-size` values — 0.9rem, reducing to 0.8rem at `<=small` for the toggle only (Req 16 c4, c5). **No font file is added:** `PPTelegraf-Ultrabold.otf` already ships at `usWeightClass` 800 and is already declared at `font-weight: 800` under the `PP Telegraf` family, so the bundle stays at 103,324 bytes and Req 16 c6 is satisfied by doing nothing — the same position §5.3 records for Requirement 11.
 
-**Do not touch `main.css:4677`.** The `#navPanelToggle:before` rule declares `font-weight: 900` for the Font Awesome `\f0c9` glyph and resolves through the icon family, not the `$font` map. It is not Chrome_Text, it is not Bold_Chrome_Text, and Property 8 carries it against its baseline. Two `font-weight` declarations in one rule block is exactly the shape a careless mirror gets wrong.
+**Do not touch the `#navPanelToggle:before` rule.** It declares `font-weight: 900` for the Font Awesome `\f0c9` glyph and belongs to the icon family, not to the typography scope. It is not Chrome_Text, it is not Bold_Chrome_Text, and Property 8 carries it against its baseline. Two `font-weight` declarations a few lines apart is exactly the shape a careless edit gets wrong — that was true when the risk was a bad hand-mirror and it is still true now that the risk is a bad find-and-replace.
 
-**Leave the duplicate `font-size` at `_navPanel.scss:85–86` alone.** The Nav_Panel_Link rule declares `font-size: 0.9rem` twice, and the compiled CSS mirrors the duplicate at `main.css:4751–4752`. It is pre-existing, harmless and identical in both artifacts, so removing it would be an unrelated edit to a rule this change set is already touching. It is also the live example behind Req 7 c12's last-declaration-wins caveat: a parity checker that reads the first match rather than the last would report a false failure here, and this rule is where a maintainer will meet that behaviour.
+**Leave the duplicate `font-size` in the Nav_Panel_Link rule alone.** It declares `font-size: 0.9rem` twice. The duplicate is pre-existing and harmless, so removing it would be an unrelated edit to a rule this change set is already touching. It is also the live example behind Req 7 c8's last-declaration-wins item — **whose purpose narrowed in Change Set 4**: with one artifact there is no parity checker to mislead, but a *reader* still has to know which of two declarations paints, and this rule is where they will first meet the question.
 
 #### The rationale: this closes a Change Set 2 inconsistency rather than adding a style
 
-`assets/js/main.js:130` injects the toggle, and the same file appends the children of `#nav` into `#navPanel > nav` at the `<=medium` breakpoint and returns them above it. **The Nav_Panel_Link elements and the top navigation links are therefore the same two anchors** — "Projects" and "CAD Gallery" — under two different parents, not two independent pairs.
+`assets/js/main.js` injects the toggle, and the same file appends the children of `#nav` into `#navPanel > nav` at the `<=medium` breakpoint and returns them above it. **The Nav_Panel_Link elements and the top navigation links are therefore the same two anchors** — "Projects" and "CAD Gallery" — under two different parents, not two independent pairs.
 
 Change Set 2 set `#nav ul.links a` to 800 (§5.3) and left `#navPanel .links li a` at 400. The observable result is that **those two anchors changed weight as the viewport crossed 980px**: the same link rendered Ultrabold on a desktop window and Regular once the window narrowed enough to reparent it into the panel. That is what Req 16 c17 names and what this change fixes. Recording it this way matters for review: the change is not "make the mobile nav bolder to match a taste", it is "make one pair of anchors carry one weight on both sides of a reparenting that a script performs", and the Bold_Chrome_Text glossary entry was amended in the same amendment to say so.
 
@@ -1165,7 +1177,7 @@ Twenty-one lines, against a 40-line ceiling:
 
 You can visit my website [here](https://jefferyxr.github.io/personal-website/index.html)
 
-Maintainers: the compiled-stylesheet regeneration and parity procedure is in [`docs/stylesheet-sync.md`](docs/stylesheet-sync.md).
+Maintainers: the `assets/css/main.css` maintenance notes are in [`docs/stylesheet-sync.md`](docs/stylesheet-sync.md).
 
 ---
 
@@ -1192,7 +1204,7 @@ How that satisfies each criterion:
 | c2 — ≤40 lines | 21 |
 | c3 — template, icons, libraries and fonts credits | The four bullets, each naming what c3 enumerates, with the required Markdown links |
 | c4 / Req 9 c3 — fonts credit as one bullet of ≤4 lines | The `**Fonts:**` bullet, 4 lines, carrying all four facts per typeface: name, what it renders, designer/foundry, licence tier |
-| c7 / Req 7 c11 — the Sync_Document linked in one line of body text | Line 5 |
+| c7 / Req 7 c7 — the Sync_Document linked in one line of body text | Line 5 |
 | c10 — a reference to the Provenance_Record | The closing link of the `**Fonts:**` bullet |
 | c12 — every Markdown link resolves | Two relative links (`docs/stylesheet-sync.md`, `assets/webfonts/FONT-PROVENANCE.md`) and five absolute ones |
 
@@ -1200,22 +1212,23 @@ The template credit is retained on exactly the grounds §5.5 records — CC BY 3
 
 #### What moves to `docs/stylesheet-sync.md`
 
-The Sync_Document carries the full seven-step regeneration procedure. Req 7 c12 enumerates what must survive the move, and c13 makes any omitted step, file name or verification instruction a reportable defect — so the move is a **relocation with no editorial reduction**. The eight items c12 pins, each in its execution position:
+Change Set 3 moved the full seven-step regeneration procedure here, unreduced. **Change Set 4 rewrote it as a five-item maintenance note** — see §7.5 for the item-by-item disposition and why the reduction is not the editorial shortening that risk R11 warned about. Requirement 7 criterion 8 (c12 before the renumbering) is the authority for what the note must contain, and criterion 9 still makes any omitted item, file name or verification instruction a reportable defect.
+
+The five items, each in its own position:
 
 | # | Retained item | Why it is load-bearing |
 |---|---|---|
-| 1 | The SASS edit step naming `libs/_vars.scss` first, then every rule-level file | Map values must be settled before the rules that read them |
-| 2 | The by-hand map-resolution step | There is no compiler; `_font(family)` has to be expanded by a person |
-| 3 | "Apply the change at **every** location in `assets/css/main.css`" | `family-heading` resolves at 11 sites; changing the first is the default mistake |
-| 4 | The `@import` / `@font-face` ordering step | An `@font-face` above line 1 invalidates the Font Awesome `@import` and every icon on all nine pages disappears (Req 7 c6) |
-| 5 | The parity-verification step, with the last-declaration-wins caveat **and** the browser-measured Skills_Pill geometry instruction | See below |
-| 6 | The zero-occurrence check for `Merriweather`, `Source Sans Pro` and `#4a5158` | Req 7 c9 and Req 1 c13 are zero-occurrence rules, not replacement rules |
-| 7 | The per-page Copyright_Block markup step | `div#copyright` is hand-written per page; three pages write it on one source line |
-| 8 | *(carried forward)* the `scroll-behavior` / `prefers-reduced-motion` zero-occurrence scan, comments stripped | §5.5's removal, guarded at the line where someone would re-add it |
+| 1 | The `@import` / `@font-face` ordering item | An `@font-face` above line 1 invalidates the Font Awesome `@import` and every icon on all nine pages disappears (Req 7 c2) |
+| 2 | The zero-occurrence item: `Merriweather`, `Source Sans Pro`, `#4a5158`, and `scroll-behavior` / `prefers-reduced-motion` with the comments-stripped instruction | Req 7 c4 and Req 1 c13 are zero-occurrence rules, not replacement rules |
+| 3 | The smooth-scroll guard, with the measured first-movement figures | §5.5's removal, guarded at the line where someone would re-add it |
+| 4 | The last-declaration-wins item | See below |
+| 5 | The per-page Copyright_Block markup item | `div#copyright` is hand-written per page; three pages write it on one source line |
 
-Item 5's caveat is the one most easily lost in a move, and it must survive **in full**: `#footer` and `#copyright` each declare `color` twice, an artifact of the `color(alt)` mixin, so a checker reading the first match reports a false failure — and for `#copyright` specifically **the first value is the mixin's opaque `#ffffff`, not the value that renders**. The value the block actually paints is the second declaration, the `rgba(255,255,255,0.65)` of §5.6. A maintainer who trusts the first `color` in that rule will conclude the copyright bar is opaque white and measure a contrast ratio that does not exist. §6.2's duplicate `font-size` at `_navPanel.scss:85–86` is the same hazard in a rule this change set touches.
+**Item 4 is the one most easily lost, and it must survive in full**, though what it protects has changed: `#footer` and `#copyright` each declare `color` twice, and for `#copyright` **the first value is the opaque `#ffffff`, not the value that renders**. The block paints the second declaration, the `rgba(255,255,255,0.65)` of §5.6. Before Change Set 4 the hazard was a *parity checker* reading the first match and reporting a false failure; now it is a *maintainer* concluding the copyright bar is opaque white and computing a contrast ratio for a colour that is never painted. The duplicate `font-size` in §6.2's Nav_Panel_Link rule is the same hazard in a rule Change Set 3 touched.
 
-**The non-commercial standing-obligation statement moves here too** (Req 17 c9). The README's current paragraph — both grants hold only while the site stays a personal job-application showcase, and adding paid services, rates, sponsorship or any other monetisation lapses them and requires paid licences including a Pangram Pangram Web licence scoped to the domain and pageview tier — is broader than the Horizon-scoped sentence already in the Provenance_Record, so it is carried into the Sync_Document rather than assumed to be covered.
+**What left the note, and why it is not a loss.** Old items 1, 2, 3 and the parity half of old item 5 all described the same task: expand a map lookup by hand and mirror the result into `main.css` at every site. There is no map and no second artifact, so those steps have no referent — Req 17 c9 says explicitly that they are *retired rather than relocated*, so a reader does not go looking for them somewhere else. Old item 5's other half, the browser-measured Skills_Pill geometry instruction, is not documentation but a design-phase obligation discharged in §5.4 and re-run by Property 15 on every verification pass.
+
+**The non-commercial standing-obligation statement moves here too** (Req 17 c9), and it survives the Change Set 4 rewrite unchanged, together with the HTML5 UP licence-condition note. The README's pre-Change-Set-3 paragraph — both grants hold only while the site stays a personal job-application showcase, and adding paid services, rates, sponsorship or any other monetisation lapses them and requires paid licences including a Pangram Pangram Web licence scoped to the domain and pageview tier — is broader than the Horizon-scoped sentence already in the Provenance_Record, so it is carried into the Sync_Document rather than assumed to be covered.
 
 #### What is already in the Provenance_Record, and why it is not edited
 
@@ -1241,13 +1254,96 @@ So the README's copies of both are **deletions of duplicates, not losses**, whic
 
 ---
 
+## Change Set 4 — Design
+
+Five changes, and **four of them are deletions**. That shape is the point: this change set removes artifacts, rules and checks rather than adding behaviour, so its design work is establishing that each thing removed was unobservable, and recording what the removal costs.
+
+| Change | `main.css` | `noscript.css` | HTML pages | Other |
+|---|---|---|---|---|
+| §7.1 the SASS tree | 0 | 0 | 0 | **31 files deleted**; harness rewritten |
+| §7.2 the dead pill rule | 1 rule deleted | 0 | 0 | one property arm deleted |
+| §7.3 the pointer fix | 0 | 0 | 0 | `assets/js/waterParticles.js` |
+| §7.4 dangling references | 5 declarations retuned | 5 declarations + 1 `@import` | 0 | — |
+| §7.5 the maintenance note | 0 | 0 | 0 | `docs/stylesheet-sync.md` rewritten, `README.md` one line |
+
+### 7.1 Deleting `assets/sass/**` (Req 7 rewritten)
+
+**Decision: delete the tree. `assets/css/main.css` is the stylesheet source.**
+
+The requirements record the reasoning in full (Assumptions item 16); the design consequences are what belong here. Three facts justified it — the tree was never compiled, it had drifted far enough that compiling it would have produced a `main.css` missing several rules that only ever existed in the compiled file, and it was a second source of truth that had already produced live divergences. The rejected alternative was **introducing a real build step**, which would have required back-porting every compiled-only rule into the SASS *first*, each back-port verified against the rendered page, before the compiler could be trusted to emit the site. Adding a compiler to a tree that does not reproduce the site converts a documentation problem into a rendering regression.
+
+What that removes from this document:
+
+| Removed | Where it was |
+|---|---|
+| The dotted `SASS -.-> CSS` edge and the prose about the hand-mirrored, uncompiled edge | **Architecture** |
+| The `$font` map as "the single interface through which every typeface decision is expressed" | **§3.1**, rewritten as the declared-value inventory it always compiled down to |
+| The `$font` / `$palette` map tables | **§4.1 / §4.2**, rewritten as value inventories |
+| The seven-step regeneration procedure | the **Compiled Stylesheet Sync Procedure** section, **deleted entirely** |
+| Parity of the compiled CSS against the resolved SASS | **Correctness Property 2**, deleted; its number is left as a gap |
+| Every `assets/sass/**` path, `.scss` line number and `_font()` / `_palette()` lookup | §3.x, §5.x and §6.x, restated against `main.css` **by selector rather than by line** |
+| Requirement 7's parity criteria | old c1, c3, c4, c8 — see the disposition table in `requirements.md` |
+| Risk R4, SASS/CSS divergence | **Risks**, retired by construction and replaced by **R12** |
+
+**Selectors, not line numbers, throughout.** Every restated reference names the rule's selector. This is not cosmetic: §6.2 already recorded that its compiled line numbers moved by ~+45 the moment a neighbouring rule gained a comment, so a line-indexed reference fails on a correct file and passes again once someone deletes the comments. The assertions already matched on selectors; the prose now agrees with them.
+
+**What it costs is R12**, and the trade is deliberate: a divergence that was detectable-but-recurring is exchanged for a fan-out exposure that the property suite catches on the rendered page. Requirement 7's documentation criteria (c6–c9) survive the rewrite intact precisely because the note is now the only structure the file has.
+
+### 7.2 Deleting the dead skills-pill rule (Req 12, no criterion changes)
+
+**Decision: delete the grouped `body.home #main .button.skills, body.home #main .actions .button` rule, and delete the property arm that existed only to reach it.**
+
+The rule had **zero rendered instances**, established three ways: its `.button.skills` half was overridden in full by the later, equally specific `body.home #main .button.skills`; its `.actions .button` half by the later, equally specific `body.home #main .actions .button`; and no page other than `index.html` carries a `.button.skills` element at all, while `index.html` is `body.home`, so nothing escaped the homepage geometry either. It survived Change Set 2 with an explicit comment saying it was kept *because the verification harness read its declared values* — which is the clearest possible statement that it existed for the checker rather than for the browser.
+
+**The declared-value arm of Property 15 goes with it, and this is the part worth being precise about.** That arm was correct and useful *given* the rule: §5.4's Layer 2 measures rendered pills, no element resolved to this rule, so a rendered-only check would have reported a clean pass over a rule declaring `line-height` as a LENGTH equal to `height` — the arm was the only place that fault was observable. With the rule deleted the fault does not exist, so the arm has nothing to read. **Deleting a check because its subject is gone is not the same as deleting a check that was failing**, and the distinction is why this is recorded here rather than in the harness commit message: a future reader who finds Req 12 c10 naming two geometries and only one geometry in the stylesheet should find this paragraph, not conclude that a check was quietly dropped.
+
+Requirement 12's criteria are **unamended**. Criteria 1–9, 11 and 12 bind every Skills_Pill that renders, all of which take the homepage geometry; criterion 10's wider-context arm has no declaration site left to measure and is retained so that any future second geometry inherits the same bounds. §5.4's analysis of that geometry's two faults is kept as the record of why the deletion is safe rather than convenient.
+
+### 7.3 The `waterParticles.js` pointer fix (Req 8 c6)
+
+**Decision: move the `mousemove` listener from the canvas to `window`, set `mouse.active` inside the handler, and add release listeners.**
+
+The canvas-bound listener received **0 of 96** synthetic sweep events. The cause is not a scripting subtlety but a stacking one: `#water-canvas` is `position: fixed` at **`z-index: -1`**, so `#intro` paints on top of it and hit-testing delivers every pointer event to `#intro`. A listener on the canvas is a listener on an element the pointer can never be over. `window` is the correct target because it is above the whole stacking context and sees the event regardless of which element is hit — the handler then converts client coordinates into canvas coordinates through the canvas's own `getBoundingClientRect()`, so the effect still tracks the canvas rather than the viewport.
+
+Three details are deliberate:
+
+- **`mouse.active = true` moves *inside* the handler.** It was previously set once at load, outside every handler, with a comment recording that this meant repulsion was always on and, before the first `mousemove`, repelled from `{0, 0}`. Setting it in the handler makes "active" mean *the pointer has been seen*, which is what the animation reads it as.
+- **Release listeners, and why `mouseout` needs a guard.** `document`'s `mouseleave` does not bubble, so on `document` it fires only when the pointer really leaves the page. `mouseout` *does* bubble, so it is guarded on `!e.relatedTarget`: without that guard every element-to-element crossing inside the page would cancel the repulsion mid-sweep. A `blur` listener covers the pointer becoming irrelevant without moving — switching windows.
+- **A zero-sized rect returns early.** Dividing by a zero width or height would set `mouse.x` / `mouse.y` to `NaN`, which propagates silently through the animation rather than throwing.
+
+This is a **Req 8 c6 fix, not a new requirement**: c6 already required the canvas to initialise and animate and the page to report no uncaught script error, and it was passing on both counts while the pointer interaction did nothing. The failure was invisible to every check the suite had — nothing errored, the animation ran — which is why the Error Handling table now carries a row for it: *a pointer-driven effect wired to an element that cannot receive the event* is a class of defect, not an incident.
+
+### 7.4 Removing dangling background and import references (Req 7 c2)
+
+**Decision: remove the two `background-image` layers naming files that do not exist, from both stylesheets, and the broken `@import` from `noscript.css`.**
+
+Both stylesheets declared `background-image: url("../../images/overlay.png"), linear-gradient(…), url("../../images/bg.jpg")` on the `#wrapper` background layer, with matching `background-size` / `-position` / `-repeat` / `-attachment` lists. **Neither image file is in the repository.** The gradient is kept and the two `url()` layers are dropped, along with the now-single-valued position of each companion list.
+
+**Why the 404s only appeared on the noscript path, and why that made this easy to miss.** `main.js` gives `#wrapper > .bg` `display: none` once it runs, and a `display: none` element's background images are never fetched — so with JavaScript enabled the browser requested neither file and the console stayed clean. With JavaScript disabled, `noscript.css` applies, nothing hides the layer, and both requests 404 on the one path where the site is already at its most degraded. That is also why the edit had to be made in **both** files: removing the layers from `main.css` alone would have left the defect live exactly where it costs something.
+
+`noscript.css` additionally opened with `@import url(font-awesome.min.css)` — a file that does not exist under `assets/css/`, and whose real counterpart, `fontawesome-all.min.css`, `main.css` already imports on its first line. The import is removed rather than corrected: a second import of the same icon stylesheet would be redundant, and Req 7 c2's ordering rule concerns `main.css`, which is untouched by the removal.
+
+The `url()` clause of Property 6 is the check that should have caught all three, which is why §7.1's sweep widens it to `background-image` and adds `noscript.css` to the artifact set.
+
+### 7.5 Rewriting the maintenance note (Req 7 c6–c9, Req 17 c8–c9)
+
+**Decision: `docs/stylesheet-sync.md` becomes a five-item maintenance note for `main.css`, and the README's one-line pointer is reworded to match.**
+
+The note opens by stating the fact that everything else in it depends on: `assets/css/main.css` is the stylesheet **source**, there is no SASS tree and no compiler, and a change is made once with nothing to mirror it into. It then carries the pre-push verification command, the five items enumerated in Req 7 c8 (§6.3 lists them against their old positions), and the two standing licence conditions — the HTML5 UP attribution and the fonts' non-commercial grants — both unchanged.
+
+**The reduction from eight items to five is by criterion, not by editorial judgement**, which is the whole defence against risk R11. Old items 1, 2, 3 and the parity half of old item 5 described one task: expand a map lookup by hand and mirror the result into `main.css` at every site. That task has no referent now, and Req 17 c9 exempts those steps from the relocation obligation explicitly — so their absence reads as a recorded retirement rather than as content lost. Old item 5's other half, the browser-measured Skills_Pill geometry instruction, was never documentation: it is a design-phase obligation, discharged in §5.4 and re-run by Property 15 on every pass.
+
+**The README line changes by four words** — from the compiled-stylesheet regeneration and parity procedure to the `main.css` maintenance notes — and that is the entire README delta. Req 17 c1–c6 are untouched: every attribution stays, the file stays inside its 40-line ceiling, and Property 18's attribution clauses are expected to pass before and after, which is the signal that the rewrite reached the prose and not the credits.
+
+---
+
 ## Correctness Properties
 
 *A property is a characteristic or behavior that should hold true across all valid executions of a system — essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
 
 This project is a good fit for property-based testing despite there being no application code, because the acceptance criteria quantify over an input space far too large to enumerate by hand: **9 pages × 4 viewports × 2 font states × ~40 in-scope elements per page**, plus every colour pair, every selector, and every font file. The oracles are all computable — the WCAG luminance formula, string equality of resolved declarations, bounding-box containment, `cmap` membership, SHA-256 equality. What PBT is *not* used for is recorded in the Testing Strategy: GitHub Pages' compression and same-origin behaviour, Font Awesome icon rendering, and the water-particle canvas are integration concerns whose behaviour does not vary with input.
 
-Prework classified ~70 of the 106 criteria as property-shaped and then consolidated them: many criteria are the same universal quantification seen through different requirements. The 18 properties below are the result, and no two share both an oracle and a generator. Properties 1–13 come from Change Set 1 and several are **extended** by later change sets; Properties 14–16 were added by Change Set 2 for Requirements 10, 12 and 13. Requirement 11 and Requirement 14 deliberately add **no** new property — they are absorbed by the existing weight clause of Property 4 and the threshold clause of Property 1 respectively, because inventing near-duplicates of those oracles would add checks without adding discrimination.
+Prework classified ~70 of the 106 criteria as property-shaped and then consolidated them: many criteria are the same universal quantification seen through different requirements. The properties below are the result, and no two share both an oracle and a generator. **There are 17 of them, numbered 1 through 18 with number 2 left as a gap**: Property 2 asserted parity between the SASS source and the compiled CSS, and Change Set 4 deleted it along with the SASS tree — the numbering is preserved so that every task, test tag and cross-reference in this spec stays valid. Properties 1–13 come from Change Set 1 and several are **extended** by later change sets; Properties 14–16 were added by Change Set 2 for Requirements 10, 12 and 13. Requirement 11 and Requirement 14 deliberately add **no** new property — they are absorbed by the existing weight clause of Property 4 and the threshold clause of Property 1 respectively, because inventing near-duplicates of those oracles would add checks without adding discrimination.
 
 **Change Set 3 adds two properties and extends five.** Requirement 15 gets a property of its own (**17**) because its oracle is new — a distance between two box centres, quantified over *substituted label pairs*, which no existing generator produces. Requirement 17 gets one (**18**) for the same reason: attribution presence and Markdown link resolution are quantified over a set that changes whenever the file is edited. **Requirement 16 gets none**, exactly as Requirement 11 got none: it moves two elements from one side of Property 4's weight partition to the other, its containment criteria are Property 5's existing oracle at two more viewports, its contrast criteria are Property 1's, and its preservation criteria are Property 8's. A "the nav panel is bold" property would duplicate three generators to catch a strict subset of what those clauses already catch.
 
@@ -1255,7 +1351,7 @@ Prework classified ~70 of the 106 criteria as property-shaped and then consolida
 
 *For all* (foreground, background, element-role, interaction-state) tuples derived from the typography scope, **either** the tuple is a member of the accepted-exceptions set defined below and its measured WCAG 2.1 relative-luminance contrast ratio equals the ratio recorded for it there, **or** that measured ratio is greater than or equal to the threshold for its role — 7.0:1 for the footer email link in its default state, 3.0:1 for its underline in every state and for every focus indicator, and 4.5:1 for Heading_Text, Body_Text and Chrome_Text, the Copyright_Block, the Back_To_Top_Control and the Design_Credit link in their default, hover, focus and active states — and, in every case, the footer email link's default colour has a strictly lower relative luminance than `#717981`.
 
-Generator: the `$palette` maps plus every `color`/`border-bottom-color`/`outline-color` declaration in the typography scope, crossed with `{default, hover, focus, active}`. Any `rgba()` value is alpha-composited over its resolved backdrop before measurement — the defect this catches is precisely a translucent underline that looks fine and measures 1.85:1, and it is the same mechanism that measures the Copyright_Block's `rgba(255,255,255,0.65)` as its composited `#b0b3b6`.
+Generator: every `color`/`border-bottom-color`/`outline-color` declaration in the typography scope of `assets/css/main.css`, crossed with `{default, hover, focus, active}`. *(Before Change Set 4 it also enumerated the `$palette` maps; those entries were a second spelling of the same declarations, so removing them narrows the generator's input and not its coverage.)* Any `rgba()` value is alpha-composited over its resolved backdrop before measurement — the defect this catches is precisely a translucent underline that looks fine and measures 1.85:1, and it is the same mechanism that measures the Copyright_Block's `rgba(255,255,255,0.65)` as its composited `#b0b3b6`.
 
 **Accepted-exceptions set — exactly one entry, following the Change Set 2 reversal of conflict C3:**
 
@@ -1277,13 +1373,15 @@ The exception set is what stops an accepted shortfall from producing a red failu
 
 **Validates: Requirements 1.1, 1.2, 1.6, 1.7, 3.14, 4.7, 5.6, 11.14, 13.9, 14.1, 14.2, 14.3, 14.7, 16.16**
 
-### Property 2: Compiled CSS is value-identical to the resolved SASS source
+### Property 2: *(removed in Change Set 4)*
 
-*For all* selectors governing Heading_Text, Body_Text or Chrome_Text, and for all five properties `font-family`, `font-size`, `font-weight`, `line-height`, `letter-spacing`, the value declared in `assets/css/main.css` equals the value obtained by resolving that selector's declaration in the SASS source through the `$font` and `$palette` maps, with zero differing declarations.
+This slot held **Compiled CSS is value-identical to the resolved SASS source** — for all selectors governing Heading_Text, Body_Text or Chrome_Text, and all five typography properties, the value declared in `assets/css/main.css` equalled the value obtained by resolving that selector's declaration in the SASS source through the `$font` and `$palette` maps, with zero differing declarations.
 
-Oracle detail: resolution must apply **last-declaration-wins** within a rule, because the compiled output already contains duplicate declarations for one property in one rule (`#footer` declares `color` twice, from the `color(alt)` mixin). A checker that reads the first match would report a false failure.
+**It is deleted, not weakened.** Its subject was the relationship between two artifacts, and one of them no longer exists (§7.1); there is nothing left for the oracle to compare. The criteria it validated — old Req 7 c1, c2, c3 and c8 — are themselves deleted or folded into the rewritten Req 7 c1, which Property 6 and the unit assertions cover. Its one durable finding, that a checker must apply **last-declaration-wins** because `#footer` and `#copyright` each declare `color` twice, was never about parity: it is now item 4 of the maintenance note (§7.5), where it warns a reader instead of a checker.
 
-**Validates: Requirements 7.1, 7.2, 7.3, 7.8**
+**The number is retained as a gap** so that Properties 3 through 18 keep the numbers every other section, every task and every test tag already cites. Renumbering seventeen properties to close one hole would invalidate more references than it tidies.
+
+**Validates: nothing. This property is removed.**
 
 ### Property 3: Typography is invariant across pages, per role
 
@@ -1310,7 +1408,11 @@ This is why neither Requirement 11 nor Requirement 16 gets a property of its own
 
 **Requirement 16 c17 falls out of the partition for free, and is the clause worth naming.** Because `assets/js/main.js` reparents the same two anchors between `#nav` and `#navPanel` across the `<=medium` breakpoint, the generator's viewport dimension visits those anchors under *both* parents — at 320px and 768px inside `#navPanel`, at 1024px and 1440px inside `#nav`. The partition demands 800 in every case, so the pre-amendment behaviour, in which one pair of links changed weight as the viewport crossed 980px, is a failure of this clause at two of the four viewports. No cross-viewport comparison needs writing: requiring one value everywhere is strictly stronger than requiring two observations to be equal.
 
-**Validates: Requirements 3.2, 3.3, 3.4, 3.5, 3.7, 3.8, 3.10, 4.2, 4.5, 4.6, 4.11, 4.12, 5.1, 5.2, 5.8, 6.3, 11.1, 11.2, 11.5, 11.6, 11.8, 11.15, 16.1, 16.2, 16.3, 16.4, 16.5, 16.7, 16.8, 16.14, 16.17**
+*("Token model" in the title is historical. Since Change Set 4 the model is the value set that §4.1 inventories, declared literally in `main.css` rather than held in a `$font` map — the property's oracle never read the map, so nothing about it changes. The title is kept because tasks and test tags cite it by name.)*
+
+**Change Set 4 drops two entries from the list below, and adds two.** Req 11 c2 and Req 16 c3 are **deleted criteria** — both required the weight to resolve through the `$font` map and forbade per-rule literals, which describes a mechanism this property never measured anyway; the computed-weight partition that did the work is untouched. Req 3 c1 and Req 4 c1 are added: they now require the *declared* stacks in `main.css`, and the family arm of this property is what confirms every element actually resolves to them.
+
+**Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 3.7, 3.8, 3.10, 4.1, 4.2, 4.5, 4.6, 4.11, 4.12, 5.1, 5.2, 5.8, 6.3, 11.1, 11.5, 11.6, 11.8, 11.15, 16.1, 16.2, 16.4, 16.5, 16.7, 16.8, 16.14, 16.17**
 
 ### Property 5: Nothing overflows, in either font state
 
@@ -1326,15 +1428,17 @@ Font-state is a generator dimension rather than a separate property, which is wh
 
 ### Property 6: No forbidden token, no off-origin font, no inline typography
 
-*For all* (artifact, pattern) pairs over `assets/css/main.css`, the SASS sources and the nine Content_Pages: the family names `Merriweather` and `Source Sans Pro` occur zero times; every font `url()` and stylesheet `href` is relative, carries no scheme or host, and resolves to an existing local file; every `font-family` declaration in the SASS source is a `_font()` map lookup rather than a literal typeface name, except inside the `$font` map itself, the `@font-face` rules, and the Font Awesome icon families; and no inline `style` attribute and no embedded `<style>` block declares `font-family`, `font-size`, `font-weight`, `line-height` or `letter-spacing`.
+*For all* (artifact, pattern) pairs over `assets/css/main.css`, `assets/css/noscript.css` and the nine Content_Pages: the family names `Merriweather` and `Source Sans Pro` occur zero times; every font `url()`, `background-image` `url()` and stylesheet `href` is relative, carries no scheme or host, and resolves to an existing local file; and no inline `style` attribute and no embedded `<style>` block declares `font-family`, `font-size`, `font-weight`, `line-height` or `letter-spacing`.
 
-Two oracle details. The literal-name clause is what catches the hardcoded `Merriweather, Georgia, serif` on the card `h2` — and, more usefully, prevents the next one. The inline-style oracle must target those five properties specifically rather than inline styles in general: `index.html` legitimately uses `style="--project-image: url(…)"` on every card, and a blanket ban would produce seven false failures on one page.
+Two oracle details. The **local-file-resolution** clause is the one that earns its place: it is what would have caught the `images/overlay.png` and `images/bg.jpg` layers and the `font-awesome.min.css` import that §7.4 removed, none of which existed in the repository. The inline-style oracle must target those five properties specifically rather than inline styles in general: `index.html` legitimately uses `style="--project-image: url(…)"` on every card, and a blanket ban would produce seven false failures on one page.
 
-**Extended by Change Set 2.** Two additions. First, the forbidden-token set gains **`#4a5158`** as a link or underline colour: Req 1 c13 is a zero-occurrence rule, so the superseded value must appear nowhere in either artifact, and a partial replacement that leaves one of the three compiled mirrors behind fails here rather than shipping two different email colours across the site. Second, the inline-style clause is widened from the five typography properties to also cover **`text-align`** and **`color`** on the nine pages, because Req 10 c8 and Req 14 c9 both forbid achieving their effect through an inline attribute or an in-page `<style>` block — the centring and the copyright colour must live in the stylesheet where Property 2 can check parity. The `--project-image` carve-out is unaffected, since a custom property is neither of the added names.
+**Narrowed and widened by Change Set 4.** The clause requiring every SASS `font-family` to be a `_font()` map lookup rather than a literal is **deleted** with old Req 7 c4 and with the tree it read: it asserted a mechanism, and `main.css` has always carried literals at every site, so restating it would forbid the only form the artifact can take. What that clause was originally for — catching the hardcoded `Merriweather, Georgia, serif` on the card `h2` — is covered by the zero-occurrence clause above and by Property 4's family arm, both of which read the shipped stylesheet. In exchange the artifact set gains `noscript.css`, and the `url()` clause gains `background-image`, which is where §7.4's dangling references lived.
 
-**Extended by Change Set 3.** The inline-style clause gains `display`, `flex`, `flex-basis` and `min-height` on the nine pages, because Req 15 c13 and Req 16 c19 both require their effect to be achieved in the stylesheet pair and nowhere else — the divider centring in particular is a layout mechanism, and a page that reproduced it inline would pass Property 17's geometry check while sitting outside the reach of Property 2's parity check. The literal-typeface-name clause is unaffected: Change Set 3 adds no `font-family` declaration anywhere.
+**Extended by Change Set 2.** Two additions. First, the forbidden-token set gains **`#4a5158`** as a link or underline colour: Req 1 c13 is a zero-occurrence rule, so the superseded value must appear nowhere, and a partial replacement that leaves one of the three declarations behind fails here rather than shipping two different email colours across the site. Second, the inline-style clause is widened from the five typography properties to also cover **`text-align`** and **`color`** on the nine pages, because Req 10 c8 and Req 14 c9 both forbid achieving their effect through an inline attribute or an in-page `<style>` block — the centring and the copyright colour must live in the stylesheet, which is now the only place any of it can live at all. The `--project-image` carve-out is unaffected, since a custom property is neither of the added names.
 
-**Validates: Requirements 1.13, 2.7, 2.11, 2.14, 7.4, 7.9, 7.10, 8.4, 10.8, 14.9, 15.13, 16.19**
+**Extended by Change Set 3.** The inline-style clause gains `display`, `flex`, `flex-basis` and `min-height` on the nine pages, because Req 15 c13 and Req 16 c19 both require their effect to be achieved in the stylesheet and nowhere else — the divider centring in particular is a layout mechanism, and a page that reproduced it inline would pass Property 17's geometry check while sitting outside the reach of this one.
+
+**Validates: Requirements 1.13, 2.7, 2.11, 2.14, 7.2, 7.4, 7.5, 8.4, 10.8, 14.9, 15.13, 16.19**
 
 ### Property 7: Every character used is a character the font can render
 
@@ -1346,13 +1450,13 @@ Measured content contains exactly three non-ASCII codepoints — U+00ED (í), U+
 
 ### Property 8: Everything outside the intended delta is byte-identical to the baseline
 
-*For all* declarations, markup structures and files outside an explicit allowlist of intended changes, the value equals its pre-change baseline in `git`: every `$palette` entry (the additive `alt.fg-link` key excepted), the footer `h3` and social-icon colours, heading `text-transform` and colour resolution, the skills and Read More button background and uppercase treatment, every `mailto:` href and its visible text, every navigation and project `href` (each internal target resolving to a file present in the repository), the set, count, order and nesting of the intro, nav, card, footer-contact, social-icon and copyright element groups on every page, and the name, count and SHA-256 of all fifteen pre-existing Font Awesome webfont files.
+*For all* declarations, markup structures and files outside an explicit allowlist of intended changes, the value equals its pre-change baseline in `git`: every colour literal in `assets/css/main.css` (the footer email link value excepted), the footer `h3` and social-icon colours, heading `text-transform` and colour resolution, the skills and Read More button background and uppercase treatment, every `mailto:` href and its visible text, every navigation and project `href` (each internal target resolving to a file present in the repository), the set, count, order and nesting of the intro, nav, card, footer-contact, social-icon and copyright element groups on every page, and the name, count and SHA-256 of all fifteen pre-existing Font Awesome webfont files.
 
 The allowlist *is* the specification of scope. This property is what makes "restrict the change to the email link only" mean something enforceable, given that `#717981` appears 15 times in the compiled CSS and a palette edit would silently recolour five unrelated components.
 
 **Change Set 2 moves three items out of the baseline set and adds five to it.** Removed, because they are now intended changes: the `#copyright` colour (Req 14 exempts it — the pin survives only for the footer `h3` and the social icons, per Req 14 c8), the Card_Header_Band `text-align` value, and the *content* of the Copyright_Block (Req 8 c5 now exempts the inner markup while still pinning the block itself and its position in the footer). Added to the baseline set:
 
-- The `text-align` resolution of **every element other than the Card_Header_Band**, and specifically the two further `text-align: left` declarations at `_main.scss:179` and `:444` — the card description paragraph rules (Req 10 c7). A careless global replace of `left` → `center` in either artifact fails here.
+- The `text-align` resolution of **every element other than the Card_Header_Band**, and specifically the two further `text-align: left` declarations on the `body.home #main > .posts > article p` card-description rules (Req 10 c7). A careless global replace of `left` → `center` in either artifact fails here.
 - The Card_Header_Band `background-color: #12263a`, `padding: 0.85rem 1rem` and box dimensions (Req 10 c9), so centring cannot be smuggled in alongside a box change that shifts card heights or grid alignment.
 - The Card_Heading `font-size: 1.1rem`, `text-transform: none`, `line-height` and `color`, plus the absence of any `color` declaration on `h2 > a` (Req 10 c4, c5).
 - Every Bold_Chrome_Text element's `text-transform`, `background-color`, `border`, `border-radius`, default and hover `color`, and hover transition timing (Req 11 c13), and each Skills_Pill's `border-radius: 999px`, background, border and label colour (Req 12 c9) — so the weight and geometry work cannot drift into a restyle.
@@ -1363,10 +1467,12 @@ The allowlist *is* the specification of scope. This property is what makes "rest
 - **All nine Content_Pages, whole-file.** Req 15 c12 and Req 17 c13 between them forbid any page edit, so for this change set the page clause tightens from "element set, count, order and nesting" to file-level identity, including the Copyright_Block inner markup that Change Set 2 had moved out of the baseline. Change Set 3 is the first amendment since Change Set 1 that can be checked this strictly, and doing so is free.
 - **The Copyright_Divider's declared width and inherited colour** — `border-left: solid 2px` on the second Copyright_Item, with the colour still omitted from the shorthand so it resolves to `currentColor` and therefore to the §5.6 block colour (Req 15 c9). The mechanism change of §6.1 must not become a restyle of the divider itself, and the omitted colour component is easy to "fix" into a literal by someone tidying the shorthand — which would silently unpin it from the block colour.
 - **The Copyright_Block `margin`, `width`, `max-width` and `<=large` margin override, and the Copyright_Row's border-box height** (Req 15 c10). The height entry is the one that matters: a flex container generates no strut, so the row can lose ~0.4rem of height without any other symptom (§6.1). This is the clause that turns that argument into a check.
-- **Both nav panel sites' `text-transform`, default and hover `color`, `background-color`, `border`, `box-shadow`, `padding` and transition timing, including the `#navPanelToggle.alt` scrolled state** (Req 16 c15) — plus the `#navPanelToggle:before` icon rule's own `font-family` and `font-weight: 900`, which is Font Awesome's and is not part of the weight partition. Two `font-weight` declarations in one rule block is precisely where a hand-mirrored edit goes wrong.
-- **The Stylesheet_Source, the Compiled_Stylesheet, the Webfont_Bundle and the Provenance_Record, against the state §6.1 and §6.2 leave them in, for the purposes of Requirement 17** (Req 17 c13). Change 3 is documentation and workflow only; a README rewrite that also "tidied" a stylesheet would fail here. The Provenance_Record entry does double duty, since §6.3 relies on two statements already being present in it rather than writing them there.
+- **Both nav panel sites' `text-transform`, default and hover `color`, `background-color`, `border`, `box-shadow`, `padding` and transition timing, including the `#navPanelToggle.alt` scrolled state** (Req 16 c15) — plus the `#navPanelToggle:before` icon rule's own `font-family` and `font-weight: 900`, which is Font Awesome's and is not part of the weight partition. Two `font-weight` declarations a few lines apart is precisely where a careless edit goes wrong.
+- **The Compiled_Stylesheet, the Noscript_Stylesheet, the Webfont_Bundle and the Provenance_Record, against the state §6.1 and §6.2 leave them in, for the purposes of Requirement 17** (Req 17 c13). Change 3 is documentation and workflow only; a README rewrite that also "tidied" a stylesheet would fail here. The Provenance_Record entry does double duty, since §6.3 relies on two statements already being present in it rather than writing them there.
 
-**Validates: Requirements 1.9, 1.10, 1.11, 3.9, 5.5, 7.7, 8.5, 8.7, 8.8, 10.4, 10.5, 10.7, 10.9, 11.4, 11.13, 12.9, 13.15, 14.4, 14.5, 14.8, 15.9, 15.10, 15.12, 16.6, 16.15, 17.13**
+**Change Set 4 removes one artifact from the baseline set and adds one.** The `assets/sass/**` entries are **gone with the tree** — an allowlist cannot pin files that do not exist, and every `_vars.scss` / `_footer.scss` / `_navPanel.scss` clause above is therefore read against `main.css` alone. `assets/css/noscript.css` is **added**, because §7.4 edits it: its two dangling background layers were declared in both stylesheets, and removing them from only one would have left the defect live on precisely the path where it costs something. The scope-as-a-set check that compares the intended file list against `git status` keeps working unchanged; it simply has fewer names in it.
+
+**Validates: Requirements 1.9, 1.10, 1.11, 3.9, 5.5, 7.3, 8.5, 8.7, 8.8, 10.4, 10.5, 10.7, 10.9, 11.4, 11.13, 12.9, 13.15, 14.4, 14.5, 14.8, 15.9, 15.10, 15.12, 16.6, 16.15, 17.13**
 
 ### Property 9: Bundle and declarations agree, within budget
 
@@ -1424,6 +1530,8 @@ Two oracle details carry the whole property. The per-**line** quantification is 
 
 Three things make this a property rather than a set of examples. The bounds are **relationships**, so they hold or fail independently of which label happens to be in the pill — which is what lets generated over-long labels exercise the multi-line clause that no current content reaches. The two geometries are a generator dimension rather than two properties, since the oracle is identical and only the declared `font-size` and the effective-vertical-gap definition differ. And the label box must come from a `Range` over the text node, not from the anchor's own rect: the anchor *is* the pill, so measuring it would compare the pill to itself and every ratio would be 1.000 — a checker that reported all-pass here would be measuring nothing.
 
+**Change Set 4 deletes this property's declared-value arm** (§7.2). That arm read the wider-context geometry's *declared* values because no element resolved to that rule, so the rendered arm could not see its faults — and Change Set 4 deleted the rule itself. The arm therefore has nothing left to read: its subject is gone, which is a different thing from a check being dropped. The rendered arm below is untouched and still carries every Requirement 12 bound that has an element to measure; the geometry dimension of the generator now yields one value in practice, because every Skills_Pill that renders takes the homepage geometry.
+
 This is the property that fails on the shipped geometry, in three places at once (§5.4): the homepage width ratio at 0.891–0.893 against the 0.88 ceiling, the homepage vertical symmetry at ≈8.1px against the 1px tolerance, and the wider-context height ratio at 1.000 against the 0.85 ceiling with an undefined padding-to-gap ratio. Its recorded output for the narrowest and widest label of each geometry is what discharges Req 12 c13.
 
 **Validates: Requirements 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 12.10, 12.12, 12.13**
@@ -1464,18 +1572,20 @@ This is the property that **fails on the shipped tree**, by 20.1px at 1440px on 
 
 ### Property 18: Every required attribution is present and every documentation link resolves
 
-*For all* attributions that Requirement 17 c3 enumerates — the Massively / HTML5 UP template credit with a Markdown link to `https://html5up.net`, the Font Awesome icons credit, the jQuery / Scrollex / Responsive Tools libraries credit, and the fonts credit naming Horizon with Alberto Fontense and its free personal-use tier and Telegraf with Pangram Pangram Foundry and its free personal non-commercial tier — the attribution is present in `README.md`; *for all* Markdown links in `README.md`, the link target exists, with every relative target resolving to a file present **in the repository** and the Sync_Document link resolving to `docs/stylesheet-sync.md`; *for all* items that Requirement 7 c12 enumerates, the item is present in the Sync_Document in its execution position; and `README.md` is at most 40 lines with its fonts credit occupying at most four.
+*For all* attributions that Requirement 17 c3 enumerates — the Massively / HTML5 UP template credit with a Markdown link to `https://html5up.net`, the Font Awesome icons credit, the jQuery / Scrollex / Responsive Tools libraries credit, and the fonts credit naming Horizon with Alberto Fontense and its free personal-use tier and Telegraf with Pangram Pangram Foundry and its free personal non-commercial tier — the attribution is present in `README.md`; *for all* Markdown links in `README.md`, the link target exists, with every relative target resolving to a file present **in the repository** and the Sync_Document link resolving to `docs/stylesheet-sync.md`; *for all* items that Requirement 7 c8 enumerates, the item is present in the Sync_Document in its document position; and `README.md` is at most 40 lines with its fonts credit occupying at most four.
+
+**Amended by Change Set 4.** The item set shrinks from the eight of the old regeneration procedure to the **five** of the maintenance note (§7.5), and the ordering clause reads *document position* rather than *execution position* — a note has no execution order, and asserting one would fail a correct file. The clause is kept rather than dropped because order still carries meaning: the ordering item comes first because it is the only one whose violation is instantly fatal to all nine pages. Each of the five is matched by an anchor plus a set of required sub-patterns, so an item that survives as a heading with its content hollowed out fails by name (Req 7 c9).
 
 Four oracle details, each guarding a specific way this check could be hollow:
 
 - **Relative links resolve against the repository, not the deployed origin.** Req 17 c11 adds `docs` to the workflow's prune step, so `docs/stylesheet-sync.md` is *deliberately* absent from GitHub Pages (§6.3). A checker pointed at the live site would report a false failure on a file whose absence is the intended design.
 - **Presence is checked; adequacy is not.** Whether the credits are *sufficient* attribution is a licence reading, recorded in §5.5 and R8, not something a test can decide. The oracle is the four enumerated facts per typeface and the named parties per credit — which is what Req 17 c6 makes a reportable defect, and it is more than a substring match on "HTML5 UP".
-- **The relocation clause reads the Provenance_Record rather than writing it.** Req 17 c9 requires each statement removed from the README to survive somewhere, and Req 17 c13 requires the Provenance_Record to be unchanged; the oracle therefore asserts that the declared-weights table and the no-italic-face note are *found* in `FONT-PROVENANCE.md` and that the non-commercial standing obligation is found in the Sync_Document. A statement present in neither location fails, naming the statement.
-- **The line bounds are checked at both ends of the move.** A README under 40 lines whose Sync_Document is missing a step satisfies Req 17 c2 and fails Req 7 c13, and that is the failure this amendment most plausibly produces: the length target is the visible goal, and the procedure is the thing that gets quietly shortened to hit it.
+- **The relocation clause reads the Provenance_Record rather than writing it.** Req 17 c9 requires each statement removed from the README to survive somewhere, and Req 17 c13 requires the Provenance_Record to be unchanged; the oracle therefore asserts that the declared-weights table and the no-italic-face note are *found* in `FONT-PROVENANCE.md` and that the non-commercial standing obligation is found in the Sync_Document. A statement present in neither location fails, naming the statement. **Change Set 4 exempts the parity steps from this clause** (Req 17 c9): they are retired, not relocated, so the oracle must not look for them — an oracle that still did would fail a correct tree and send the reader hunting for a procedure that has been deliberately withdrawn.
+- **The line bounds are checked at both ends of the move.** A README under 40 lines whose Sync_Document is missing an item satisfies Req 17 c2 and fails Req 7 c9, and that is the failure this amendment most plausibly produces: the length target is the visible goal, and the note is the thing that gets quietly shortened to hit it.
 
 The generator is the set of links and required items, which is what makes this property-shaped rather than a fixture: both sets change whenever either document is edited, and the check discovers them by parsing rather than by carrying a hardcoded list that would go stale in exactly the edit it is meant to guard.
 
-**Validates: Requirements 4.4, 7.5, 7.11, 7.12, 7.13, 9.3, 17.1, 17.2, 17.3, 17.4, 17.5, 17.6, 17.7, 17.8, 17.9, 17.10, 17.12**
+**Validates: Requirements 4.4, 7.6, 7.7, 7.8, 7.9, 9.3, 17.1, 17.2, 17.3, 17.4, 17.5, 17.6, 17.7, 17.8, 17.9, 17.10, 17.12**
 
 ---
 
@@ -1493,7 +1603,9 @@ Nothing here executes logic, so "error handling" means **degradation paths**: wh
 | Glyph absent from Horizon (e.g. U+00ED) | Glyph audit, Check G | Browser substitutes **per character** from the next stack family; the string is not re-rendered wholesale | Req 3 c16; Req 4 c14 |
 | No true italic in Telegraf | Download inspection | Synthesized oblique **within** the Telegraf family; no family substitution. Requires that `font-synthesis: none` is never applied to `em`/`i` | Req 4 c11 |
 | No bold face in Telegraf | Download inspection | **Did not occur** — Branch A selected at intake, `PPTelegraf-Ultrabold.otf` at weight 800 ships, so §3.4's Branch B alternative emphasis is not implemented and no synthesized bold arises. This is also the face Requirement 11 reuses (§5.3) | Req 4 c4 |
-| Font Awesome `@import` displaced | Icon rendering | Must not happen: `@font-face` is inserted *after* line 1, since a rule before an `@import` invalidates it | Req 7 c6 |
+| Font Awesome `@import` displaced | Icon rendering | Must not happen: `@font-face` is inserted *after* line 1, since a rule before an `@import` invalidates it | Req 7 c2 |
+| **A `url()` names a file that is not in the repository** | Property 6's local-file-resolution clause | **Occurred, and was invisible with JavaScript on.** Two `background-image` layers referenced `images/overlay.png` and `images/bg.jpg`, neither of which exists; `main.js` sets `#wrapper > .bg` to `display: none` once it runs, so the layers were never fetched and the 404s materialised **only on the noscript path** — where `noscript.css` declares the same layers and nothing hides them. Both are removed from both stylesheets (§7.4) | Req 7 c2; Req 8 c6 |
+| **A pointer-driven canvas effect is wired to an element that cannot receive the event** | Check F, extended | **Occurred.** `waterParticles.js` bound `mousemove` to the canvas, which is `z-index: -1` behind `#intro`, so hit-testing sent every event to `#intro` and the handler received **0 of 96** sweep events. The listener moves to `window` (§7.3). Silent by construction: nothing errors, the animation still runs, and the repulsion simply never responds | Req 8 c6 |
 | **Scripting disabled, or `jquery.scrolly.min.js` 404s, or any page script throws** | Property 16's script-blocked arm | Back_To_Top_Control still works: the `href="#top"` fragment jump is browser behaviour, not scripted. No `class="scrolly"`, no click handler, no `javascript:` URL | Req 13 c5, c6 |
 | **Visitor prefers reduced motion** | — | Nothing to degrade: the Back_To_Top_Control is an instant fragment jump for everyone, so the reduced-motion path and the default path are the same one. No CSS scroll animation exists to suppress, and no `prefers-reduced-motion` block is declared | Req 13 c2 |
 | **`scroll-behavior: smooth` interferes with the template's scroll plugins** | **Occurred.** Caught by Check J (scroll latency), *not* by Check F | The declaration is **removed** (§5.5). It applied to jQuery's own per-frame `scrollTop` writes in `jquery.scrolly.min.js`, each write restarting a smooth scroll, so the intro down-arrow did not move for 1056 ms. The instant jump still satisfies Req 13 c2, c3, c5. A re-added declaration now fails Check J and the static zero-occurrence assertion | Req 13 c2; Req 8 c6 |
@@ -1504,7 +1616,7 @@ Nothing here executes logic, so "error handling" means **degradation paths**: wh
 | **The Copyright_Row loses height when it becomes a flex container** | Property 8's row-height clause; the §6.1 c14 record | A flex container generates no **strut**, so the row would collapse from the inherited 1.2rem toward 0.8rem and every footer element below it would move up. `min-height: 1.2rem` restores the floor in the same rem terms, so it tracks the root steps. Silent without the height clause — nothing about the divider's position would change | Req 15 c10 |
 | **The wider `MENU` label pushes the toggle into the `#header` title** | Property 5's c11 clause; the §6.2 c21 record | The box is `position: fixed` with a pinned right edge, so it grows **leftward** by exactly the label delta — +2.92px at 320px, +3.62px at 768px, the icon being Font Awesome at its own weight and unchanged. If the clearance fails: enlarge the box or reduce its horizontal padding. Never reduce `font-size` below the Req 5 c3 floor, never revert to weight 400, never truncate | Req 16 c11, c13 |
 | **`docs/` reaches the deployed Pages artifact** | Static assertion on the prune step | Must not happen: `static.yml` uploads `path: '.'`, so `docs` joins `tools` and `.kiro` in the prune step (§6.3). The intended consequence is that the README's Sync_Document link resolves on GitHub, where the README is read, and **not** on the deployed origin, where nothing links to the README — recorded so it is not later mistaken for a broken link | Req 17 c11 |
-| **The Sync_Document is deleted, or the move drops a step** | Property 18's Req 7 c12 clause | Reported as a defect **naming the missing step, file name or verification instruction**. This is the realistic failure of Change Set 3: the 40-line README is the visible goal and the procedure is what gets quietly shortened to reach it, so c13 makes the omission a defect rather than a judgement call | Req 7 c13; Req 17 c8 |
+| **The Sync_Document is deleted, or the rewrite drops an item** | Property 18's Req 7 c8 clause | Reported as a defect **naming the missing item, file name or verification instruction**. This is the realistic failure of Change Sets 3 and 4 alike: the 40-line README is the visible goal and the note is what gets quietly shortened to reach it, so c9 makes the omission a defect rather than a judgement call. Change Set 4 shortens the note **by design** from eight items to five, which is why the five are enumerated in a criterion rather than left to editorial judgement | Req 7 c9; Req 17 c8 |
 
 Two failures are silent and therefore the dangerous ones. A **missing glyph** looks like a slightly-off letter, not an error, so it is caught by the up-front glyph audit rather than by inspection. An **over-narrow `unicode-range`** diverts characters to the fallback with no console warning; §3.2 pins the range against measured page content for exactly this reason. Neither may surface an error message, empty run, or placeholder glyph to the visitor (Req 6 c10).
 
@@ -1542,7 +1654,7 @@ So C3 below is marked **RESOLVED BY FIXING IT** rather than "leave unchanged", w
 
 **C5 — Cross-page `h2` identity vs. deliberate per-context sizes. ADOPTED.** Req 8 c1 requires an identical computed `h2` size on all nine pages, but three sizes coexist by design: base `1.75rem`, card `h2` `1.1rem` (index), post `h2` `1.5rem` (project pages). Also `cad.html` has **no** `h1` and **no** `h2` at all, so a literal all-pages comparison is undefined there. *Adopted: read Req 8 c1 per **role** — base heading, card heading, post heading — requiring identity within a role across every page where the role appears. Correctness Property 3 encodes this reading, and implementation follows it.* The alternative, collapsing all `h2`s to one size, would destroy the card design.
 
-**C6 — Two elements are unclassified. ADOPTED.** `#nav .links a` (0.8rem, `family-heading`) meets the glossary's general Chrome_Text description but is not in its enumeration; `#header .logo` (2.25rem, `family-heading`) is neither Heading_Text, Body_Text, nor Chrome_Text. *Adopted: route `#nav .links a` to `_font(family)` with the other small chrome (consistent with Req 5's rationale — Horizon's apertures close up at 0.8rem), and keep `#header .logo` on `_font(family-heading)` as a display element.* Recorded here because neither classification follows from the requirements as written, but the routing above is what implementation does.
+**C6 — Two elements are unclassified. ADOPTED.** `#nav .links a` (0.8rem, heading family) meets the glossary's general Chrome_Text description but is not in its enumeration; `#header .logo` (2.25rem, heading family) is neither Heading_Text, Body_Text, nor Chrome_Text. *Adopted: route `#nav .links a` to the body stack with the other small chrome (consistent with Req 5's rationale — Horizon's apertures close up at 0.8rem), and keep `#header .logo` on the heading stack as a display element.* Recorded here because neither classification follows from the requirements as written, but the routing above is what implementation does.
 
 ---
 
@@ -1554,7 +1666,7 @@ So C3 below is marked **RESOLVED BY FIXING IT** rather than "leave unchanged", w
 
 **R3 — Uncompressed body font on first paint. LARGELY CLOSED.** A 200 KB unconverted OTF, likely served as `identity`, would have been a real first-paint cost. Mitigations were `font-display: swap` (never blocks text), the ≤400 KB per-file bound, minimum face count, and §4.5 measurement to replace assumption with fact. The shipped reality is far better than feared: the two Telegraf faces total **86 KB** and the whole bundle is **101 KB**, 17% of the 600 KB budget. Change Set 2 adds nothing to it (§5.3), so the residual risk is only the post-deploy `Content-Encoding` measurement of Check H.
 
-**R4 — SASS/CSS divergence.** Two artifacts, no compiler, and the CSS is what ships. A correct SASS edit with a forgotten CSS mirror is invisible until a visitor notices. Mitigation: the Compiled Stylesheet Sync Procedure and Correctness Property 2, which turns divergence into a check failure.
+**R4 — SASS/CSS divergence. RETIRED BY CONSTRUCTION in Change Set 4.** Two artifacts, no compiler, and the CSS is what ships: a correct SASS edit with a forgotten CSS mirror was invisible until a visitor noticed. Mitigation *was* the Compiled Stylesheet Sync Procedure plus Correctness Property 2, which turned divergence into a check failure. **The `assets/sass/` tree is deleted (§7.1), so the risk no longer has a mechanism** — there is no second artifact to diverge from, and the procedure and the property are removed rather than kept as dead weight. This is the only risk in this list closed by removing a possibility rather than by adding a check, and it is replaced by R12, which is the price of doing so.
 
 **R5 — Licence drift.** Both grants depend on the site staying non-commercial (Req 9 c4) — a standing obligation that outlives this change. Mitigation: Property 12 scans for commercial markers on every run, so a future edit adding rates or freelance availability trips a check rather than passing silently.
 
@@ -1568,39 +1680,11 @@ So C3 below is marked **RESOLVED BY FIXING IT** rather than "leave unchanged", w
 
 **R10 — The divider is "fixed" by a mechanism that only centres the current two labels.** *(highest Change Set 3 risk)* The offset is exactly half the difference between the two label widths (§6.1), so a great many edits move the divider to x 720 **for the shipped pair**: nudging `margin-left`, adding a compensating `padding`, tightening the second label's `letter-spacing`, or shortening the credit text. Every one of them passes a check that renders `Back to top` / `Design: HTML5 UP` and measures the result, and every one of them fails Req 15 c4 the moment either label changes length — which the credit wording has already done once, in Change Set 2. The equal-length control makes this trap worse rather than better: **S3 passes on the shipped, broken mechanism** at a derived −0.1px, so a substitution suite that exercised only the equal-count case would report a clean pass against a mechanism that is 20.1px off in production. Mitigation: the chosen mechanism removes label width from the item sizing entirely, so `min-width: 0` and the `calc(50% ± 1px)` bases are load-bearing rather than stylistic; Property 17 pins S1 and S2 as **required** cases with offsets of opposite sign and adds a sampled arm reaching 40-character and unbreakable labels; and Req 15 c14's record requires the substituted measurements, not only the shipped one. Residual exposure: a future editor who deletes `min-width: 0` as noise reintroduces content-dependence for long labels only — which S1 and S3 would both still pass. S2 and the sampled arm are what catch that.
 
-**R11 — Shortening the README quietly shortens the procedure.** Requirement 17's visible goal is a line count, and the seven-step regeneration procedure is the bulk of the 134 lines being reduced. The natural way to reach 40 lines is to compress the procedure into a summary, and a summary drops exactly the steps that look like trivia and are not: the `@import`/`@font-face` ordering step (an `@font-face` above line 1 invalidates the Font Awesome import and every icon on all nine pages disappears), the last-declaration-wins caveat with its detail that `#copyright`'s *first* `color` is the mixin's opaque `#ffffff` rather than the value that renders, the `#4a5158` zero-occurrence step, and the per-page Copyright_Block markup step. The damage is invisible at the time it is done: documentation produces no failing check when a step is dropped, only a wrong edit months later against two artifacts that can diverge silently (R4). Mitigation: the move is specified as a **relocation with no editorial reduction** (§6.3); Req 7 c12 enumerates the eight items that must survive in their execution positions and Req 7 c13 makes an omission a defect naming the missing item; and Property 18 checks the Sync_Document's contents as well as the README's length, because a 21-line README with a gutted procedure satisfies one requirement by breaking another.
+**R11 — Shortening the README quietly shortens the documentation.** *(Change Set 4 note: the specific steps this entry protects are the ones the note **keeps** — items 1 through 5 of §7.5. The parity steps it also named are now withdrawn deliberately and by criterion, which is the opposite of the silent loss described here: a documented retirement leaves a reader informed, a dropped step leaves them wrong.)* Requirement 17's visible goal is a line count, and the seven-step regeneration procedure is the bulk of the 134 lines being reduced. The natural way to reach 40 lines is to compress the procedure into a summary, and a summary drops exactly the steps that look like trivia and are not: the `@import`/`@font-face` ordering step (an `@font-face` above line 1 invalidates the Font Awesome import and every icon on all nine pages disappears), the last-declaration-wins caveat with its detail that `#copyright`'s *first* `color` is the mixin's opaque `#ffffff` rather than the value that renders, the `#4a5158` zero-occurrence step, and the per-page Copyright_Block markup step. The damage is invisible at the time it is done: documentation produces no failing check when a step is dropped, only a wrong edit months later — against two artifacts that could diverge silently when this entry was written (R4), and since Change Set 4 against one artifact with no structure to catch a partial edit (R12). Mitigation: the move is specified as a **relocation with no editorial reduction** (§6.3); Req 7 c8 enumerates the items that must survive — eight when this entry was written, **five since the Change Set 4 rewrite** — and Req 7 c9 makes an omission a defect naming the missing item; and Property 18 checks the Sync_Document's contents as well as the README's length, because a 21-line README with a gutted procedure satisfies one requirement by breaking another.
 
----
+**R12 — `main.css` is now hand-edited with no source structure.** *(the Change Set 4 risk, and the price paid for retiring R4)* Deleting the SASS tree removes the divergence risk and, with it, the only structure the stylesheet ever had: no variables, no nesting, no single place to change a family, a weight or a tracking value. The concrete exposure is **fan-out**: the heading stack is declared at 11 sites and the `0.05em` tracking at seven, so a family or weight change is an 11-site edit in a 5,000-line file where the tenth and eleventh sites are easy to miss, and the resulting page looks *almost* right. Nothing in the artifact makes an incomplete edit obvious. Note what the old structure did **not** protect against: the map could be edited perfectly while `main.css` shipped something else, which is exactly the failure R4 described — so this is a different exposure, not a worse version of the same one.
 
-## Compiled Stylesheet Sync Procedure
-
-**Amended by Change Set 3: the canonical location of this procedure is now `docs/stylesheet-sync.md`, the Sync_Document.** Req 7 c5 originally required it in `README.md`, and that is the main reason the README reached 134 lines; as amended, c5 permits either location, c11 requires `README.md` to link the Sync_Document in one line of body text, c12 enumerates what must survive the move, and c13 makes any omitted step, file name or verification instruction a reportable defect. **The obligation moves location and not substance** — see §6.3, which lists the eight c12 items against the steps below. It is reproduced here as the design's interface between the two artifacts. Every typography change follows it in order:
-
-1. **Edit the SASS source** — `_vars.scss` first (the `$font` map and the additive palette key), then the rule-level files (`base/_typography.scss`, `layout/_footer.scss`, `layout/_main.scss`, `layout/_intro.scss`, `layout/_navPanel.scss`, `components/_button.scss`, `_form.scss`, `_pagination.scss`, `_table.scss`).
-2. **Resolve each map reference by hand.** `_font(family)` → the full comma-separated stack, with family names quoted exactly as the compiler would emit them (`"PP Telegraf", "Helvetica Neue", "Segoe UI", Roboto, sans-serif`).
-3. **Apply the same change to `assets/css/main.css`** at every location. Map-driven values appear many times — `family-heading` resolves at **11** sites in the compiled CSS today — so change *all* occurrences, not the first.
-4. **Remove the Google Fonts `@import` (line 2)** and insert the `@font-face` blocks directly after the Font Awesome `@import` on line 1 — never before it (Req 7 c6).
-5. **Verify parity** by running the Testing Strategy checks. Property 2 is the authority: for every selector governing Heading_Text, Body_Text or Chrome_Text, the value resolved from SASS must equal the value declared in the CSS, with zero differing declarations.
-6. **Confirm zero occurrences** of `Merriweather` and `Source Sans Pro` in both artifacts (Req 7 c9).
-
-Note for step 3: the compiled CSS already contains duplicate declarations for the same property in one rule, so a parity checker must apply last-declaration-wins rather than reading the first match. **This caveat has two live instances and both must survive into the Sync_Document (Req 7 c12).** `#footer` carries `color: #717981` followed by `color: #909498`, an artifact of the `color(alt)` mixin. `#copyright` carries `color` twice from the same mixin, and there **the first value is the mixin's opaque `#ffffff`, not the value that renders** — the block actually paints the second declaration, `rgba(255, 255, 255, 0.65)` (§5.6). A maintainer or checker reading the first `color` in that rule will conclude the copyright bar is opaque white and compute a contrast ratio for a colour that is never painted. Change Set 3 adds a third instance of the same hazard in a rule it touches: `#navPanel .links li a` declares `font-size: 0.9rem` twice, at `_navPanel.scss:85–86` and `main.css:4751–4752` (§6.2). All three are pre-existing, harmless and identical across the two artifacts, and all three are left as they are.
-
-`README.md` retains the Credits entries required by Req 9 c3 (Horizon → Alberto Fontense, PP Telegraf → Pangram Pangram Foundry, each with its licence tier), in the compact single-bullet form that the Change Set 3 amendment to c3 permits — see §6.3 for the target file. Branch A was selected at intake, so the Req 4 c4 missing-bold limitation note is **not** required in either `README.md` or the Sync_Document; the amendment to c4 only names the two permitted locations for a note that is not needed.
-
-**Change Set 2 adds a step 7, because it is the first change set to touch HTML.** Steps 1–6 above cover the stylesheet pair; Change Set 2's §5.5 replaces markup inside `div#copyright` on all nine pages:
-
-7. **Apply the Copyright_Block markup to all nine pages**, then verify the inner `<ul>…</ul>` is **byte-identical** across them. Three pages (`killerbyte.html`, `launchtoy.html`, `vexlego.html`) write the div on a single source line and six write it multi-line, so the surrounding whitespace legitimately differs while the inner markup must not. The new wording contains no ampersand, which retires the pre-existing `&` / `&amp;` divergence in `vexlego.html` — do not reintroduce an entity. Property 16 is the authority for this step.
-
-Step 6's zero-occurrence confirmation also covers **`scroll-behavior` and `prefers-reduced-motion`**, in both artifacts, with comments stripped before the scan — §5.5 removed that block and the surviving comment names the property deliberately, so the check must read declarations rather than text.
-
-Two further notes for Change Set 2. The §5.1 colour change is **one literal in `_vars.scss` and three resolved mirrors** in `main.css`; step 6's zero-occurrence confirmation extends to `#4a5158`, which Req 1 c13 requires to appear nowhere in either artifact as a link or underline colour — including in comments that document a value the source no longer sets. And the §5.4 pill geometry must be **measured in a browser before it is mirrored**, not after: the values in §5.4 are derived from font metrics and declared CSS, and Req 12 c13 is discharged only by the rendered numbers.
-
-**Three notes for Change Set 3.**
-
-- **Step 1's file list already names `layout/_footer.scss` and `layout/_navPanel.scss`**, which are the only two SASS files this change set touches, so no step gains a file. Step 3's "every location" instruction covers the four compiled sites: `main.css:4601–4620` and the `max-width: 480px` block at `:4630–4641` for §6.1, and `main.css:4660` and `:4753` for §6.2. The `#navPanelToggle:before` rule's `font-weight: 900` at `main.css:4677` is Font Awesome's and is **not** one of them.
-- **The §6.1 divider position must be measured in a browser before the mechanism is accepted**, on the same reasoning as the §5.4 pill geometry: the offsets in §6.1 are derived from the shipped binaries and the declared CSS, and Req 15 c14 is discharged only by the rendered numbers — including the row's border-box height, which is what detects the strut a flex container does not generate. The label substitution is performed at runtime, in the page under test, and never by editing the nine pages.
-- **The Sync_Document is now where steps 1–7 live**, so a change to this procedure is a change to `docs/stylesheet-sync.md` — and step 5's parity check gains one item for §6.3 itself: `README.md` at 40 lines or fewer with every Markdown link resolving against the repository, and `docs` present in the `static.yml` prune step. Property 18 is the authority for that item, as Property 16 is for step 7.
-
+Mitigation is two-part and neither part is new machinery. **The maintenance note** (§7.5) records the five things about the file that reading it does not reveal, and Req 7 c9 makes an omission from it a reportable defect. **The property suite** is what actually catches fan-out, because it quantifies over *rendered elements* rather than over declarations: Property 3 compares each role's computed typography across all nine pages at four viewports, Property 4 requires every element to resolve to the declared stacks and to a shipped weight, and Property 8 pins everything outside the intended delta against its `git` baseline. A missed eleventh site fails Property 3 or Property 4 on the page that carries it, with the shrink output naming the element — which is a strictly better signal than a map edit that was correct in a file nobody compiled. Residual exposure: a change that is *consistently* wrong at all 11 sites passes both, exactly as it would have passed a correct map edit; that is what the pre-push visual review is for.
 
 ---
 
@@ -1661,17 +1745,25 @@ Webfont blocking for Properties 5 and 13 uses Playwright request interception, a
 | Check | What | Type | Gate |
 |---|---|---|---|
 | **A** | Files present at expected paths | Smoke | pre-push |
-| **B** | Static properties: 2, 6, 8, 9, 11, 12, **16** (markup clauses), **18** | Property (fast-check) | pre-push |
+| **B** | Static properties: 6, 8, 9, 11, 12, **16** (markup clauses), **18** — *Property 2 was in this row until Change Set 4 removed it* | Property (fast-check) | pre-push |
 | **C** | Font-binary properties: 7, 9 (weights), **and the §5.3 / §6.2 advance-width tables** | Property (fontTools + fast-check) | pre-push |
 | **D** | Rendered properties: 1, 3, 4, 5, 10, 13, **14, 15, 17** | Property (Playwright + fast-check) | pre-push |
 | **E** | Font Awesome icons render; no missing-glyph substitution | Integration, 1 run | pre-push |
-| **F** | Water canvas animates; card interactions respond; no console errors | Integration, 1 run | pre-push |
+| **F** | Water canvas animates; **the pointer sweep reaches the handler**; card interactions respond; no console errors | Integration, 1 run | pre-push |
 | **G** | **Font intake gate** — see below | Manual + smoke | **before any CSS work** (passed in Change Set 1) |
 | **H** | Same-origin 200s; `Content-Encoding`; transfer bytes | Integration, 1 run | **post-deploy** |
 | **I** | **Back_To_Top_Control with scripting disabled** — Property 16's no-JS arm | Property (Playwright, `javaScriptEnabled: false`) | pre-push |
 | **J** | **Scroll latency** — each same-document scroll control begins moving within 150 ms, and still lands correctly | Integration, 1 run per control | pre-push |
 
 **Change Set 2 adds two checks and extends two.** Check I is separated from D because it needs a *differently configured browser context* rather than a different generator — scripting off for the whole context, which cannot be mixed into a run that also exercises the card-interaction paths. Check J is described below; it replaces the Check F extension that Change Set 2 originally added. Check C gains the `fontTools` advance-width comparison that discharges Req 11 c16, which is deterministic and needs no browser. Check D gains the two geometric properties, and its Playwright helper needs one addition that is easy to get wrong: label boxes must be read from a `Range` over the text node via `getClientRects()`, not from the element rect, or Properties 14 and 15 measure the container against itself and report a vacuous pass.
+
+**Change Set 4 adds no check, deletes one property and one check arm, and retargets three checks.** In order:
+
+- **Deleted: Property 2, from Check B.** Its subject was parity between two artifacts and there is now one (§7.1). Nothing replaces it, because the failure it detected cannot occur.
+- **Deleted: Property 15's declared-value arm.** It existed only to reach a rule with zero rendered instances, and that rule is gone (§7.2). Property 15's rendered arm is untouched and still carries every Requirement 12 bound that has an element to measure.
+- **Retargeted at `main.css`: three checks.** Check B's zero-occurrence scans (`Merriweather`, `Source Sans Pro`, `#4a5158`, `scroll-behavior`, `prefers-reduced-motion`) previously ran over the SASS sources *and* the compiled CSS; they now run over the two shipped stylesheets. Property 8's baseline set drops its `assets/sass/**` entries and gains `assets/css/noscript.css` (§7.4). Property 6's artifact set does the same, and its `url()` clause widens to `background-image`, which is where §7.4's dangling references lived.
+- **Deleted outright: the map-lookup mechanism check.** Property 6's clause requiring every SASS `font-family` to be a `_font()` lookup rather than a literal is removed with old Req 7 c4. It is worth naming as a deletion rather than a retarget, because there was no honest way to restate it: `main.css` carries literals at every site by construction, so the `main.css` analogue would either be vacuous or forbid the only form the artifact can take. **It asserted a mechanism, and mechanisms are not observable** — which is exactly the test this spec applies to every criterion it swept.
+- **Unchanged in count:** the harness still runs Checks A–F plus I and J, and the unit assertions listed below lose their SASS halves and keep their `main.css` halves.
 
 **Change Set 3 adds no check, and extends three.** Check B gains Property 18, which is a file-reading and link-resolving check with no browser and no font in it. Check C gains the §6.2 advance-width comparison for `MENU`, `PROJECTS` and `CAD GALLERY` at 0.8rem and 0.9rem, which is the same deterministic `fontTools` measurement that discharged Req 11 c16 and here discharges the label-width half of Req 16 c21. Check D gains Property 17 and, with it, the one new capability this change set needs from the Playwright helper:
 
@@ -1703,19 +1795,21 @@ Against the tree as Change Set 2 first shipped it, Check J fails at 1056 ms on t
 
 ### Unit and integration tests (the non-property half)
 
-Deliberately few, because the properties carry the general cases. Reserved for single literal assertions where universal quantification would add nothing: the `$font` map heads (`Horizon`, `PP Telegraf`); `family-fixed` unchanged; `p { text-align: justify }` retained; the literal **`#3a4148`** as the `alt.fg-link` value; the intro `h1` declared value ≤ 4rem; exactly one Horizon face shipped, at the `weight-heading` value (Req 2 c4); `font-display: swap` present; fallback stacks having ≥2 named families each, checked against a curated platform-availability table (whether a family ships on Windows/macOS/iOS/Android is external knowledge, not a computable property — and "widest first" is a design judgement recorded in §3.1, since metrics for uninstalled fonts cannot be measured); README sections required by Req 7 c5 and Req 9 c3. Branch A was selected, so the Req 4 c4 note is not asserted.
+Deliberately few, because the properties carry the general cases. Reserved for single literal assertions where universal quantification would add nothing: the heads of the two declared stacks (`Horizon`, `PP Telegraf`); the fixed-width stack unchanged; `p { text-align: justify }` retained; the literal **`#3a4148`** as the footer email link colour; the intro `h1` declared value ≤ 4rem; exactly one Horizon face shipped, at the `weight-heading` value (Req 2 c4); `font-display: swap` present; fallback stacks having ≥2 named families each, checked against a curated platform-availability table (whether a family ships on Windows/macOS/iOS/Android is external knowledge, not a computable property — and "widest first" is a design judgement recorded in §3.1, since metrics for uninstalled fonts cannot be measured); README sections required by Req 7 c6 and Req 9 c3. Branch A was selected, so the Req 4 c4 note is not asserted.
 
-Change Set 2 adds four literal assertions in the same spirit: the Card_Header_Band declares `text-align: center` while `_main.scss:179` and `:444` still declare `left`; both `_nav.scss:34` and `_button.scss:26` declare `_font(weight-bold)`; the `#copyright` rule declares `transparentize(_palette(invert, fg), 0.35)` and resolves to `rgba(255, 255, 255, 0.65)`; and the `Horizon.woff2` provenance record carries the "none — accepted" sentinel with **no** `TODO` marker anywhere in `FONT-PROVENANCE.md`. Each is a single fixed fact about a single line, which is precisely where a property would add cost without adding coverage.
+Change Set 2 adds four literal assertions in the same spirit: the Card_Header_Band declares `text-align: center` while the two card-description rules still declare `left`; the `#nav ul.links` rule and the base `.button` rule each declare `font-weight: 800`; the `#copyright` rule declares `rgba(255, 255, 255, 0.65)`; and the `Horizon.woff2` provenance record carries the "none — accepted" sentinel with **no** `TODO` marker anywhere in `FONT-PROVENANCE.md`. Each is a single fixed fact about a single declaration, which is precisely where a property would add cost without adding coverage.
 
-Change Set 3 adds four more of the same kind. `_navPanel.scss:24` and `:87` each declare `_font(weight-bold)` while `:22` and `:84` still declare `_font(family)` and the two `font-size` values are untouched — and `main.css:4677` still declares `font-weight: 900` for the Font Awesome `:before` glyph, which is the one nearby declaration that must **not** move. The `#copyright ul` rule declares `display: flex` with the two `calc(50% ∓ 1px)` bases and `min-width: 0`, and the `<=xsmall` block declares `display: block` on the `ul` with `text-align: inherit` on **both** the `li` rule and its `:first-child` — that second one is asserted literally because it is a specificity trap rather than a value question (§6.1), and a property quantified over viewports would report the resulting 320px failure without pointing at the cause. `static.yml`'s prune step names `docs` alongside `tools` and `.kiro`. And the duplicate `font-size: 0.9rem` at `_navPanel.scss:85–86` is asserted **still present** and mirrored at `main.css:4751–4752`, because it is the live example the last-declaration-wins caveat refers to and a well-meant cleanup would delete the illustration along with the duplicate.
+Change Set 3 adds four more of the same kind. The `#navPanelToggle` and `#navPanel .links li a` rules each declare `font-weight: 800` while both keep the `PP Telegraf` stack and their untouched `font-size` values — and the `#navPanelToggle:before` rule still declares `font-weight: 900` for the Font Awesome glyph, which is the one nearby declaration that must **not** move. The `#copyright ul` rule declares `display: flex` with the two `calc(50% ∓ 1px)` bases and `min-width: 0`, and the `max-width: 480px` block declares `display: block` on the `ul` with `text-align: inherit` on **both** the `li` rule and its `:first-child` — that second one is asserted literally because it is a specificity trap rather than a value question (§6.1), and a property quantified over viewports would report the resulting 320px failure without pointing at the cause. `static.yml`'s prune step names `docs` alongside `tools` and `.kiro`. And the Nav_Panel_Link rule's duplicate `font-size: 0.9rem` is asserted **still present**, because it is the live example the last-declaration-wins item refers to and a well-meant cleanup would delete the illustration along with the duplicate.
+
+**Change Set 4 halves this list without weakening it.** Every assertion above had a SASS half and a `main.css` half; the SASS halves are gone with the files, and the `main.css` halves are exactly the ones that describe what browsers execute. Two assertions are **added**, both about absence: `assets/sass/` does not exist, and neither stylesheet contains a `url()` naming a file that is not in the repository (§7.4). Absence assertions are worth having here for the same reason zero-occurrence rules are: the failure they catch is something reappearing, and nothing else in the suite would notice.
 
 ### Where PBT is deliberately not used
 
 - **GitHub Pages behaviour** (Req 2 c10, c17, c18) — external service; behaviour does not vary with input; each check costs a network round trip. Integration, 1 run.
-- **Font Awesome icon rendering** (Req 7 c6) — third-party font behaviour, already tested by its authors. Integration, 1–2 examples. The one genuinely fragile part, that `@font-face` must not precede the `@import`, is a static assertion in Check B.
+- **Font Awesome icon rendering** (Req 7 c2) — third-party font behaviour, already tested by its authors. Integration, 1–2 examples. The one genuinely fragile part, that `@font-face` must not precede the `@import`, is a static assertion in Check B.
 - **Water canvas and card interactions** (Req 8 c6) — unrelated to typography; a regression guard, not a property. Integration, 1 run.
 - **Scroll latency of the two same-document controls** (Check J, Req 13 c2) — the oracle is a wall-clock bound on a fixed interaction, so 100 iterations would add jitter and runtime without widening the input space. Integration, 1 run per control. What makes it worth having is not quantification but the *timing clause* itself, which the final-position assertion it replaces lacked.
-- **Documentation obligations** (Req 7 c5, Req 9 c3, c5) — presence is checkable, adequacy is not. **Change Set 3 splits this line rather than reversing it.** The *presence* half is now large enough to be worth quantifying — Requirement 17 c3 enumerates four attributions, Req 7 c12 enumerates eight retained procedure items, and every Markdown link in the README is a target that has to resolve — so Property 18 owns it, with the link and item sets discovered by parsing rather than hardcoded. The *adequacy* half stays exactly where it was: whether the credits constitute sufficient attribution is a licence reading (§5.5, R8) and whether the procedure is followable is a judgement, and neither is a computable oracle. Human review at the pre-push gate keeps that half.
+- **Documentation obligations** (Req 7 c6, Req 9 c3, c5) — presence is checkable, adequacy is not. **Change Set 3 splits this line rather than reversing it.** The *presence* half is now large enough to be worth quantifying — Requirement 17 c3 enumerates four attributions, Req 7 c8 enumerates the retained note items (eight then, **five since Change Set 4**), and every Markdown link in the README is a target that has to resolve — so Property 18 owns it, with the link and item sets discovered by parsing rather than hardcoded. The *adequacy* half stays exactly where it was: whether the credits constitute sufficient attribution is a licence reading (§5.5, R8) and whether the procedure is followable is a judgement, and neither is a computable oracle. Human review at the pre-push gate keeps that half.
 - **Future-conditional obligations** (Req 9 c5, c7) — antecedents are false today. Recorded as standing conditions; Property 11's `converted` flag makes c7 detectable if the delivery path ever changes.
 
 ### Pre-push verification gate
@@ -1729,7 +1823,7 @@ cd tools/typography-check && npm ci && npm test    # Checks A–F, plus I and J
 The full sequence:
 
 1. **Check G** passes — fonts in hand, weights and styles known, branch selected.
-2. SASS edited, then mirrored into `assets/css/main.css` by the procedure in the Compiled Stylesheet Sync Procedure section.
+2. `assets/css/main.css` edited — at **every** site the change touches, since Change Set 4 left it without the map that used to make "every site" one place (R12). *(This step read "SASS edited, then mirrored by the Compiled Stylesheet Sync Procedure" until that section was deleted with the tree — §7.1.)*
 3. **Checks A–F, I and J** pass locally against the working tree via `file://`, or a local static server.
 4. Visual review of `index.html` and one project page at 320 and 1440, in both font states — the properties bound overflow and containment, but not whether the result looks right. **For Change Set 2 this step also carries Req 11 c7**, the only criterion in the amendment that no property covers: at 0.55rem and weight 800, no two adjacent glyph outlines may overlap or touch and every enclosed counter must stay open. That is a rendering judgement, not a bounding-box computation, so it is reviewed at all four viewports rather than asserted. **Change Set 3 adds Req 16 c18** on the same footing — the same glyph-collision judgement at 0.9rem and 0.8rem, reviewed with the nav panel open at 320px and 768px, which are the only widths where the two elements are not `display: none` — and it adds one reviewer instruction that is not a criterion: look at the footer divider at 481px, the narrowest width at which the Side_By_Side_Layout applies. Req 15 c2 names 768/1024/1440 and c7 names 320, so nothing asserts anything at the layout's own lower edge, where the two fixed halves are at their narrowest relative to the labels.
 5. Push to `main`; the workflow deploys.
@@ -1748,5 +1842,7 @@ Change Set 1's expected first-run failure is **closed**: Property 5 previously f
 **Change Set 3 has one expected first-run failure, and it is Property 17.** On the shipped tree the divider is 20.1px left of centre at 1440px with the pair that is actually in the markup, so the property fails before any edit — and it fails on **four** of its five label cases, S3 excepted. That distribution is the evidence for §6.1: seeing S3 pass while the shipped pair, S1 and S2 all fail confirms the generator has discrimination, because S3's two labels are 0.17px apart in width and *should* pass under the broken mechanism. A Property 17 that failed on S3 too would mean the row and block centres were being computed from the wrong boxes. A Property 17 that **passed** on the unmodified tree would mean the divider box was being taken from the `li` rect rather than from `left` plus half the resolved `border-left-width` — that should be treated as a broken check, not as good news, exactly as with Property 15's label-box reading.
 
 **Property 18 is expected to fail on the shipped tree too, for one reason only:** `README.md` is 134 lines against a 40-line ceiling and `docs/stylesheet-sync.md` does not exist. Every attribution clause is expected to **pass** before the edit and to keep passing after it, which is the point of the change: the compaction reaches the prose around the credits and never the credits themselves, so an attribution clause that flips from pass to fail during implementation means content was lost rather than moved.
+
+**Change Set 4 has no expected first-run failure, and that is the correct expectation rather than a weak one.** Four of its five changes are deletions of things nothing observed: the SASS tree (no page loaded it), the dead pill rule (no element resolved to it), and the dangling `url()`s and `@import` (never fetched with JavaScript on). The fifth, §7.3's pointer fix, repairs an interaction that **no check was watching** — which is why it produced no red before and produces no green now; Check F is extended to exercise the pointer sweep so that the next regression of that shape does show up. Two things must be true after the change set and are worth reading rather than assuming: **Property 6 must pass on `noscript.css` as well as `main.css`**, since it is newly in the artifact set and was carrying two unresolvable `url()`s until §7.4; and **Property 15 must still fail on nothing** — if it now passes *more* than it did, check that the deleted declared-value arm was removed rather than silently stubbed.
 
 By contrast, Property 1 is **expected to pass**. The footer `h3` (4.05:1) and `#copyright` (2.27:1, measured from the unrounded alpha composite) shortfalls are now settled by owner decision — leave both unchanged — so they are carried in that property's accepted-exceptions set and surface in the run output as *known-and-accepted*, with their conflict IDs, rather than as failures. A red Property 1 therefore means one of three real things: a new contrast regression somewhere outside the set, or one of the two accepted ratios having drifted from its recorded value, or an entry having been added to the set without an owner decision. None of those is a first-run expectation.

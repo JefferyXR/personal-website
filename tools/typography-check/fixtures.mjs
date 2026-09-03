@@ -42,7 +42,7 @@ export const NINE_PAGES = [
 /** The four viewport widths every rendered property is measured at. */
 export const VIEWPORTS = [320, 768, 1024, 1440];
 
-/** Root font-size steps, as declared in base/_typography.scss (Req 3 c10, Req 4 c6). */
+/** Root font-size steps, as declared in assets/css/main.css (Req 3 c10, Req 4 c6). */
 export const ROOT_PX_BY_VIEWPORT = {
   320: 13.333, // <=xxsmall, 10pt
   768: 14.667, // <=large,   11pt
@@ -678,7 +678,7 @@ export function scrollLatencyDiagnosis(label, measurement, scrollBehavior, budge
     'those ~60 writes starts a new smooth scroll, so the page does not visibly move until the ' +
     "1000ms animation ends and the last write sticks. The control still LANDS correctly, which is why " +
     'a final-position assertion passes while the interaction feels broken.\n' +
-    '    Check the `html` rule in assets/sass/base/_page.scss and its mirror in assets/css/main.css. ' +
+    '    Check the `html` rule in assets/css/main.css. ' +
     'Measured here: smooth 1056ms vs auto 48ms to first movement. `preventDefault()` in scrolly does ' +
     'NOT help — it suppresses native fragment navigation, not scroll-behavior applied to programmatic ' +
     'scrollTop writes.'
@@ -832,11 +832,13 @@ export async function closeAll() {
 // Static-artifact helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * The ONE stylesheet artifact. `assets/css/main.css` is the source of truth — there is no
+ * SASS tree behind it and no compiler in the repository, so nothing here resolves variables,
+ * maps or nesting, and no assertion has a second artifact to agree with.
+ */
 export const readCompiledStylesheet = () =>
   fs.readFileSync(repoPath('assets', 'css', 'main.css'), 'utf8');
-
-export const readSassFile = (relative) =>
-  fs.readFileSync(repoPath('assets', 'sass', relative), 'utf8');
 
 export const readContentPage = (page) => fs.readFileSync(repoPath(page), 'utf8');
 
@@ -1560,93 +1562,67 @@ export const README_STRUCTURE_PATTERNS = [
 export const SYNC_LINK_PATTERN = /\[[^\]]*docs\/stylesheet-sync\.md[^\]]*\]\(docs\/stylesheet-sync\.md\)/;
 
 /**
- * The eight items Req 7 c12 pins, in EXECUTION ORDER.
+ * The items the Sync_Document must still carry, in DOCUMENT ORDER.
  *
- * `anchor` locates the item; `patterns` are the details that must survive with it. The
- * order of this array is asserted against the order the items appear in the document,
- * because c12 requires each item "in its execution position" — a procedure with all eight
- * items shuffled is not the procedure.
+ * `anchor` locates the item; `patterns` are the details that must survive with it. The order
+ * of this array is asserted against the order the items appear in the document.
+ *
+ * THREE ITEMS WERE REMOVED WITH THE SASS TREE AND MUST NOT COME BACK: the SASS edit step
+ * (`libs/_vars.scss` first, then every rule-level file), the by-hand map-resolution step
+ * (`_font(family)` -> the expanded stack), and the parity step asserting the compiled CSS is
+ * value-identical to the resolved SASS. All three describe reconciling two artifacts, and
+ * there is now one. Their removal is mandatory rather than tidy-up: this array is asserted
+ * EXHAUSTIVELY in document order, so a stale entry would make the correct document read as a
+ * missing step.
+ *
+ * What survives is the part that was never about the SASS: the ordering constraint that keeps
+ * the icons alive, the zero-occurrence rules, the reader-facing last-declaration-wins caveat,
+ * the per-page markup step, and the smooth-scroll guard.
  */
 export const SYNC_REQUIRED_ITEMS = [
   {
     n: 1,
-    id: 'sass-edit-step',
-    anchor: /libs\/_vars\.scss/,
-    patterns: [
-      /libs\/_vars\.scss/,
-      /base\/_typography\.scss/,
-      /layout\/_footer\.scss/,
-      /layout\/_navPanel\.scss/,
-      /layout\/_main\.scss/,
-      /layout\/_intro\.scss/,
-      /layout\/_nav\.scss/,
-      /components\/_button\.scss|_button\.scss/,
-      /_form\.scss/,
-      /_pagination\.scss/,
-      /_table\.scss/,
-    ],
-    what: 'the SASS edit step naming libs/_vars.scss first and then every rule-level file',
-  },
-  {
-    n: 2,
-    id: 'map-resolution-step',
-    anchor: /_font\(family\)/,
-    patterns: [/_font\(family\)/, /"PP Telegraf",\s*"Helvetica Neue",\s*"Segoe UI",\s*Roboto,\s*sans-serif/],
-    what: 'the by-hand map-resolution step with the expanded stack',
-  },
-  {
-    n: 3,
-    id: 'every-location-step',
-    anchor: /every\*{0,2}\s*location/i,
-    patterns: [/assets\/css\/main\.css/, /\b11\b/],
-    what: 'the "apply the change at every location in assets/css/main.css" step',
-  },
-  {
-    n: 4,
     id: 'import-order-step',
     anchor: /@import\s*url\(fontawesome-all\.min\.css\)/,
     patterns: [/@font-face/, /line 1/i, /icon/i],
     what: 'the @import / @font-face ordering step',
   },
   {
-    n: 5,
-    id: 'parity-step',
+    n: 2,
+    id: 'zero-occurrence-step',
+    anchor: /zero[- ]occurrence|zero occurrences/i,
+    patterns: [/Merriweather/, /Source Sans Pro/, /#4a5158/i, /scroll-behavior/, /prefers-reduced-motion/],
+    what: 'the zero-occurrence rules for Merriweather, Source Sans Pro, #4a5158, scroll-behavior and prefers-reduced-motion',
+  },
+  {
+    n: 3,
+    id: 'scroll-behaviour-guard',
+    anchor: /smooth scroll/i,
+    patterns: [/jquery\.scrolly/, /1056\s*ms/, /48\s*ms/, /re-?add/i],
+    what: 'the smooth-scroll guard with the measured 1056ms / 48ms figures',
+  },
+  {
+    n: 4,
+    id: 'last-declaration-wins-caveat',
     anchor: /last[- ]declaration[- ]wins/i,
     patterns: [
-      /parity/i,
       /#footer/,
       /#copyright/,
       /#ffffff/i,
       /rgba\(255,\s*255,\s*255,\s*0\.65\)/,
-      /pill/i,
-      /browser/i,
-      // The concrete site the caveat cites used to be the `#navPanel .links li a` duplicate
-      // `font-size`. That duplicate has been removed as dead code, so the caveat now cites
-      // the `#footer` / `#copyright` double `color` — genuine `color(alt)` mixin output,
-      // already pinned by the `#footer`, `#copyright` and `#ffffff` patterns above.
+      // The caveat cites the `#footer` / `#copyright` double `color`, which is the original
+      // `color(alt)` mixin output and is staying. It is no longer framed as a parity
+      // instruction: with one artifact there is nothing to compare, but a READER still has to
+      // know which of the two declarations paints.
     ],
-    what: 'the parity-verification step with the last-declaration-wins caveat and the browser-measured pill instruction',
+    what: 'the last-declaration-wins caveat for #footer and #copyright',
   },
   {
-    n: 6,
-    id: 'zero-occurrence-step',
-    anchor: /zero[- ]occurrence|zero occurrences/i,
-    patterns: [/Merriweather/, /Source Sans Pro/, /#4a5158/i, /scroll-behavior/, /prefers-reduced-motion/],
-    what: 'the zero-occurrence step for Merriweather, Source Sans Pro, #4a5158, scroll-behavior and prefers-reduced-motion',
-  },
-  {
-    n: 7,
+    n: 5,
     id: 'copyright-markup-step',
-    anchor: /Copyright_Block markup/i,
+    anchor: /#copyright.{0,20}markup|markup change to all nine/i,
     patterns: [/killerbyte\.html/, /launchtoy\.html/, /vexlego\.html/, /byte-identical/i],
-    what: 'the per-page Copyright_Block markup verification step',
-  },
-  {
-    n: 8,
-    id: 'scroll-behaviour-guard',
-    anchor: /_page\.scss:31/,
-    patterns: [/main\.css:140/, /re-?add/i],
-    what: 'the carried-forward scroll-behavior guard note at the line where someone would re-add it',
+    what: 'the per-page #copyright markup verification step',
   },
 ];
 
@@ -1679,10 +1655,14 @@ export const RELOCATED_STATEMENTS = [
     what: 'the non-commercial standing-obligation statement',
   },
   {
-    id: 'regeneration-procedure',
+    // Was 'regeneration-procedure', pinned on /parity/. There is no regeneration and no
+    // parity: `assets/css/main.css` is the source. What Req 17 c9 still needs relocated out
+    // of the README is the stylesheet maintenance guidance itself, so the clause now pins the
+    // rules a maintainer of that single artifact cannot do without.
+    id: 'stylesheet-maintenance-notes',
     where: 'sync',
-    patterns: [/assets\/css\/main\.css/, /parity/i],
-    what: 'the regeneration procedure and its parity caveats',
+    patterns: [/assets\/css\/main\.css/, /last[- ]declaration[- ]wins/i, /zero[- ]occurrence|zero occurrences/i],
+    what: 'the main.css maintenance notes (the @import order, the zero-occurrence rules and the last-declaration-wins caveat)',
   },
 ];
 

@@ -23,4 +23,4 @@ You can visit my website [here](https://jefferyxr.github.io/personal-website/ind
 
 ---
 
-Maintainers: the stylesheet regeneration and parity procedure is in [`docs/stylesheet-sync.md`](docs/stylesheet-sync.md).
+Maintainers: the `assets/css/main.css` maintenance notes are in [`docs/stylesheet-sync.md`](docs/stylesheet-sync.md).

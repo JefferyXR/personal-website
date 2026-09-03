@@ -22,7 +22,6 @@ import {
   NINE_PAGES as PAGES,
   repoPath,
   readCompiledStylesheet,
-  readSassFile,
   readContentPage,
   sfntFormat,
   contrastRatio,
@@ -71,12 +70,9 @@ test('Check A: the fifteen Font Awesome files are still present — Req 7 c7', (
   assert.equal(fa.length, 15, `expected 15 fa-* files, found ${fa.length}`);
 });
 
-test('Req 7 c9: neither artifact mentions Merriweather or Source Sans Pro', () => {
+test('Req 7 c9: main.css does not mention Merriweather or Source Sans Pro', () => {
   const artifacts = {
     'assets/css/main.css': readCompiledStylesheet(),
-    'assets/sass/libs/_vars.scss': readSassFile('libs/_vars.scss'),
-    'assets/sass/base/_typography.scss': readSassFile('base/_typography.scss'),
-    'assets/sass/layout/_main.scss': readSassFile('layout/_main.scss'),
   };
   for (const [name, text] of Object.entries(artifacts)) {
     for (const forbidden of FORBIDDEN_FAMILY_NAMES) {
@@ -98,22 +94,6 @@ test('Req 7 c6: the @font-face blocks sit AFTER the Font Awesome @import', () =>
   assert.ok(!/fonts\.googleapis\.com/.test(css), 'the Google Fonts @import is still present');
 });
 
-test('$font map heads and the untouched fixed stack', () => {
-  const vars = readSassFile('libs/_vars.scss');
-  assert.match(vars, /family:\s*\('PP Telegraf',/, "family must begin with 'PP Telegraf'");
-  assert.match(vars, /family-heading:\s*\('Horizon',/, "family-heading must begin with 'Horizon'");
-  assert.match(vars, /family-fixed:\s*\('Courier New', monospace\)/, 'family-fixed must be unchanged');
-  assert.match(vars, /weight-heading:\s*700/, 'weight-heading must equal Horizon usWeightClass 700');
-  assert.match(vars, /weight-bold:\s*800/, 'weight-bold must equal the shipped Ultrabold weight');
-  assert.match(vars, /letter-spacing-heading:\s*0\.05em/, 'the new letter-spacing key is missing');
-  // Change Set 2 §5.1: was #4a5158.
-  assert.match(
-    vars,
-    new RegExp(`fg-link:\\s*${FG_LINK}`),
-    `the additive alt.fg-link palette key must be ${FG_LINK}`,
-  );
-});
-
 test('every @font-face declares font-display: swap — Req 2 c8, Req 6 c6', () => {
   const css = readCompiledStylesheet();
   const blocks = css.match(/@font-face\s*\{[^}]*\}/g) ?? [];
@@ -123,10 +103,6 @@ test('every @font-face declares font-display: swap — Req 2 c8, Req 6 c6', () =
     assert.match(block, /font-display:\s*swap/, `missing font-display: swap in ${block}`);
     assert.ok(!/https?:|\/\//.test(block.replace(/\.\.\/webfonts\//g, '')), 'off-origin font URL');
   }
-});
-
-test('p { text-align: justify } is retained — Req 4 c10', () => {
-  assert.match(readSassFile('base/_typography.scss'), /p\s*\{[^}]*text-align:\s*justify/);
 });
 
 test(`the footer email link declares the literal ${FG_LINK} — Req 1 c12`, () => {
@@ -143,18 +119,12 @@ test(`the footer email link declares the literal ${FG_LINK} — Req 1 c12`, () =
   assert.equal(occurrences, 3, `expected 3 resolved ${FG_LINK} literals, found ${occurrences}`);
 });
 
-test('Req 1 c13: the superseded link colour occurs ZERO times in either artifact', () => {
+test('Req 1 c13: the superseded link colour occurs ZERO times in main.css', () => {
   // A zero-occurrence rule, not a replacement rule — explanatory comments naming the old
   // value count as occurrences, because the source would then document a value it no
   // longer sets. Raw file text is scanned deliberately, comments included.
   const artifacts = {
     'assets/css/main.css': readCompiledStylesheet(),
-    'assets/sass/libs/_vars.scss': readSassFile('libs/_vars.scss'),
-    'assets/sass/layout/_footer.scss': readSassFile('layout/_footer.scss'),
-    'assets/sass/layout/_main.scss': readSassFile('layout/_main.scss'),
-    'assets/sass/base/_page.scss': readSassFile('base/_page.scss'),
-    'assets/sass/layout/_nav.scss': readSassFile('layout/_nav.scss'),
-    'assets/sass/components/_button.scss': readSassFile('components/_button.scss'),
   };
   for (const [name, text] of Object.entries(artifacts)) {
     for (const forbidden of FORBIDDEN_COLOUR_LITERALS) {
@@ -164,58 +134,23 @@ test('Req 1 c13: the superseded link colour occurs ZERO times in either artifact
 });
 
 test('Req 10: the Card_Header_Band centres, and the description paragraphs do not', () => {
-  const sass = readSassFile('layout/_main.scss');
   const css = readCompiledStylesheet();
 
-  // The band declares center in both artifacts.
+  // The band declares center.
   assert.match(
     css,
     /body\.home #main > \.posts > article header \{[^}]*text-align:\s*center/,
     'the compiled Card_Header_Band rule does not declare text-align: center',
   );
 
-  // ...and the two card description paragraph rules still declare left (Req 10 c7).
-  // Counted on declarations with comments stripped, so a comment mentioning alignment
-  // cannot inflate or deflate either count.
-  const strip = (t) => t.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|\s)\/\/[^\n]*/g, '');
-  const sassLefts = (strip(sass).match(/text-align:\s*left/g) ?? []).length;
-  const sassCenters = (strip(sass).match(/text-align:\s*center/g) ?? []).length;
-  assert.equal(sassLefts, 2, `expected exactly 2 surviving left declarations, found ${sassLefts}`);
-  assert.ok(sassCenters >= 1, 'the band lost its centring');
-
-  // Both surviving left declarations belong to a 0.85rem card description rule.
-  for (const m of strip(sass).matchAll(/text-align:\s*left/g)) {
-    const before = strip(sass).slice(0, m.index);
-    const ruleStart = before.lastIndexOf('{');
-    assert.match(
-      strip(sass).slice(ruleStart, m.index),
-      /font-size:\s*0\.85rem/,
-      'a surviving text-align: left is not on a card description paragraph rule',
-    );
-  }
-});
-
-test('Req 11: both weight declarations route through the $font map', () => {
+  // ...and the card description paragraph rule still declares left (Req 10 c7), on a rule
+  // that is a 0.85rem card description and not something else that happens to be left.
+  // Comments are stripped so a comment mentioning alignment cannot fake the match.
+  const strip = (t) => t.replace(/\/\*[\s\S]*?\*\//g, '');
   assert.match(
-    readSassFile('layout/_nav.scss'),
-    /&\.links\s*\{[\s\S]{0,600}?font-weight:\s*_font\(weight-bold\)/,
-    '_nav.scss ul.links does not declare _font(weight-bold)',
-  );
-  assert.match(
-    readSassFile('components/_button.scss'),
-    /font-weight:\s*_font\(weight-bold\)/,
-    '_button.scss base .button does not declare _font(weight-bold)',
-  );
-
-  // Req 11 c2 and c3: exactly TWO declarations, and no per-rule literal weight on the
-  // pill. A third declaration would defeat the single-rule requirement.
-  const pillRule = readSassFile('layout/_main.scss').match(
-    /body\.home #main \.button\.skills \{[^}]*\}/,
-  );
-  assert.ok(pillRule, 'the homepage pill rule was not found');
-  assert.ok(
-    !/font-weight/.test(pillRule[0]),
-    'the pill rule declares its own font-weight — Req 11 c2/c3 forbid a third declaration',
+    strip(css),
+    /body\.home #main > \.posts > article p \{[^}]*font-size:\s*0\.85rem[^}]*text-align:\s*left/,
+    'the 0.85rem card description rule no longer declares text-align: left — Req 10 c7',
   );
 });
 
@@ -234,11 +169,10 @@ test('Req 11 c4: no font file added and no @font-face rule changed', () => {
   assert.equal(total, 103324, `bundle total moved to ${total} — Req 11 c4 adds no file`);
 });
 
-test('Req 12: the two pill geometries declare the §5.4 values', () => {
-  const sass = readSassFile('layout/_main.scss');
+test('Req 12: the homepage pill geometry declares the §5.4 values', () => {
   const css = readCompiledStylesheet();
 
-  for (const [name, text] of [['SASS', sass], ['compiled', css]]) {
+  for (const [name, text] of [['compiled', css]]) {
     const homepage = text.match(/body\.home #main \.button\.skills \{[\s\S]*?\}/);
     assert.ok(homepage, `${name}: homepage pill rule not found`);
     const body = homepage[0].replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|\s)\/\/[^\n]*/g, '');
@@ -256,31 +190,13 @@ test('Req 12: the two pill geometries declare the §5.4 values', () => {
     assert.match(body, /border-radius:\s*999px/, `${name}: capsule silhouette`);
   }
 
-  // Wider-context geometry: line-height becomes a RATIO; height and padding are untouched.
-  const wider = css.match(
-    /body\.home #main \.button\.skills,\s*body\.home #main \.actions \.button \{[\s\S]*?\}/,
-  );
-  assert.ok(wider, 'compiled wider-context rule not found');
-  const widerBody = wider[0].replace(/\/\*[\s\S]*?\*\//g, '');
-  assert.match(widerBody, /line-height:\s*1\.4\s*;/, 'wider-context line-height must be the ratio 1.4');
-  assert.ok(
-    !/line-height:\s*2\.25rem/.test(widerBody),
-    'wider-context line-height is still a LENGTH equal to height',
-  );
-  assert.match(widerBody, /height:\s*2\.25rem/, 'wider-context height must be unchanged');
-  assert.match(widerBody, /padding:\s*0 1rem/, 'wider-context padding must be unchanged');
 });
 
 test('Req 13/14: the Copyright_Block declarations', () => {
-  const sass = readSassFile('layout/_footer.scss');
   const css = readCompiledStylesheet();
 
-  // Req 14: the transparentize amount, and its resolved mirror.
-  assert.match(
-    sass,
-    /color:\s*transparentize\(_palette\(invert, fg\), 0\.35\)/,
-    'the #copyright transparentize amount is not 0.35 (target alpha 0.65)',
-  );
+  // Req 14: the resolved alpha. main.css is the source, so the resolved value IS the value —
+  // there is no longer a `transparentize(..., 0.35)` expression upstream of it to agree with.
   const block = css.match(/#copyright \{[\s\S]*?\}/)[0];
   // last-declaration-wins: the color(alt) mixin declares color first, as opaque #ffffff.
   const colours = [...block.matchAll(/color:\s*([^;]+);/g)].map((m) => m[1].trim());
@@ -309,8 +225,7 @@ test('Req 13/14: the Copyright_Block declarations', () => {
   // purpose. Check J measures the behaviour; this is the cheap static guard that fails
   // first and points at the right line.
   const stripComments = (t) => t.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|\s)\/\/[^\n]*/g, '');
-  const pageScss = readSassFile('base/_page.scss');
-  for (const [name, text] of [['assets/css/main.css', css], ['assets/sass/base/_page.scss', pageScss]]) {
+  for (const [name, text] of [['assets/css/main.css', css]]) {
     const code = stripComments(text);
     assert.ok(
       !/scroll-behavior/.test(code),
@@ -392,23 +307,122 @@ test('Req 7 c5 / Req 9 c3: the credits stay in the README, the procedure moves t
   // Req 17 c7 / Req 7 c11 — one line of body text reaching the procedure.
   assert.match(readme, /\]\(docs\/stylesheet-sync\.md\)/, 'the README no longer links the Sync_Document');
 
-  // Req 7 c12 — the procedure clauses, at their new address.
-  assert.match(sync, /byte-identical/, 'the Sync_Document does not state the Copyright_Block byte-identity check');
+  // Req 7 c12 — the maintenance clauses, at their new address.
+  assert.match(sync, /byte-identical/, 'the Sync_Document does not state the #copyright byte-identity check');
   assert.match(sync, /#4a5158/, 'the Sync_Document does not name the superseded colour as a zero-occurrence token');
   assert.match(sync, /last-declaration-wins/, 'the Sync_Document lost the last-declaration-wins caveat');
-  assert.match(sync, /#ffffff/, "the caveat lost its detail that #copyright's FIRST colour is the mixin's opaque white");
+  assert.match(sync, /#ffffff/, "the caveat lost its detail that #copyright's FIRST colour is the opaque white");
   assert.match(sync, /fontawesome-all\.min\.css/, 'the Sync_Document lost the @import ordering step');
-  // The eight steps, by heading, in order — the count is not asserted as prose ("seven steps")
-  // because the procedure now carries eight and a sentence saying otherwise is the kind of
-  // stale claim this test exists to catch.
+
+  // The numbered items, by heading, in order. The count is asserted rather than described in
+  // prose because a sentence claiming a different number is exactly the stale claim this test
+  // exists to catch — it was "eight steps" while the document reconciled two artifacts, and it
+  // is five now that `main.css` is the only one.
   const headings = [...sync.matchAll(/^## (\d+)\./gm)].map((m) => Number(m[1]));
-  assert.deepEqual(headings, [1, 2, 3, 4, 5, 6, 7, 8], `the Sync_Document declares steps ${headings.join(', ')} — Req 7 c12 wants all eight, in order`);
+  assert.deepEqual(headings, [1, 2, 3, 4, 5], `the Sync_Document declares items ${headings.join(', ')} — Req 7 c12 wants all five, in order`);
+
+  // The SASS procedure is GONE, and its absence is asserted rather than assumed: this document
+  // is where a maintainer would most plausibly re-add "edit the SASS first", and the tree it
+  // would point at no longer exists.
+  assert.doesNotMatch(sync, /assets\/sass|\.scss|_font\(|_palette\(/, 'the Sync_Document describes a SASS source that no longer exists');
+
+  // Req 17 c10 — the provenance link, which the README depends on. Nothing else points at it.
+  assert.match(sync, /assets\/webfonts\/FONT-PROVENANCE\.md/, 'the Sync_Document lost the Provenance_Record link — Req 17 c10 leaves it unreferenced');
 });
 
-test('the intro h1 declared size is at or below 4rem — Req 3 c6', () => {
-  const intro = readSassFile('layout/_intro.scss');
-  const sizes = [...intro.matchAll(/font-size:\s*([\d.]+)rem/g)].map((m) => parseFloat(m[1]));
-  for (const size of sizes) {
-    assert.ok(size <= 4, `intro font-size ${size}rem exceeds the 4rem ceiling`);
+
+// ---------------------------------------------------------------------------
+// RETARGETED BY THE SASS REMOVAL
+//
+// These three checks used to read `assets/sass/**`. The tree is gone, but what they pinned are
+// properties of the SHIPPED stylesheet rather than of the removed source, so they are
+// re-pointed at `assets/css/main.css` instead of dropped — the coverage was never really about
+// the SASS.
+//
+// A FOURTH check is deliberately NOT retargeted and must not come back: the one asserting that
+// both weight declarations routed through the `$font` map. It asserted the MECHANISM of a map
+// lookup, and with no map there is no mechanism to assert. The weight values it protected are
+// covered by the @font-face inventory below, and their computed values by verify.mjs.
+// ---------------------------------------------------------------------------
+
+/**
+ * Bodies of every rule whose selector list is EXACTLY `selector`.
+ *
+ * Comments are stripped first, so a commented-out rule cannot satisfy an assertion. The
+ * leading `[{}]` boundary is what keeps `p` from also matching `#intro p` or `h1, p`: only
+ * whitespace may sit between the previous brace and the selector.
+ */
+function rulesFor(css, selector) {
+  const code = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  const re = new RegExp(`(?:^|[{}])\\s*${selector}\\s*\\{([^}]*)\\}`, 'g');
+  return [...code.matchAll(re)].map((m) => m[1]);
+}
+
+test('Req 4 c10: the bare `p` rule still declares text-align: justify', () => {
+  const bodies = rulesFor(readCompiledStylesheet(), 'p');
+  assert.ok(bodies.length > 0, 'no bare `p` rule found in main.css at all');
+
+  // last-declaration-wins, the caveat the Sync_Document records: a rule may carry the same
+  // property twice, and the one that paints is the LAST. Reading the first match would pass a
+  // rule that declares justify and then overrides it.
+  const withAlign = bodies.filter((b) => /text-align:/.test(b));
+  assert.ok(withAlign.length > 0, 'no bare `p` rule declares text-align');
+  for (const body of withAlign) {
+    const values = [...body.matchAll(/text-align:\s*([^;]+);/g)].map((m) => m[1].trim());
+    assert.equal(
+      values.at(-1),
+      'justify',
+      `a bare \`p\` rule resolves text-align to ${values.at(-1)}, not justify — Req 4 c10`,
+    );
   }
+});
+
+test('Req 3 c6: every declared #intro h1 font-size is at or below 4rem', () => {
+  const bodies = rulesFor(readCompiledStylesheet(), '#intro h1');
+  // The ceiling is only meaningful if the rules are actually being found. main.css declares
+  // the size twice — the base rule and the narrow-viewport step — and a regex that silently
+  // matched neither would "pass" a 10rem heading.
+  assert.ok(bodies.length >= 2, `expected at least 2 #intro h1 rules, found ${bodies.length}`);
+
+  const sizes = bodies.flatMap((b) => [...b.matchAll(/font-size:\s*([\d.]+)rem/g)].map((m) => parseFloat(m[1])));
+  assert.ok(sizes.length >= 2, `expected at least 2 declared #intro h1 font-sizes, found ${sizes.length}`);
+  for (const size of sizes) {
+    assert.ok(size <= 4, `an #intro h1 font-size of ${size}rem exceeds the 4rem ceiling — Req 3 c6`);
+  }
+});
+
+test('the two font stacks lead with their webfont, and only 400/700/800 faces are declared', () => {
+  const css = readCompiledStylesheet();
+
+  // Stack HEADS, checked on every multi-family declaration rather than on one known site: a
+  // stack that lists the webfont second falls back for every visitor whose system happens to
+  // have the earlier name, which is invisible on the machine that made the change.
+  const stacks = [...css.matchAll(/font-family:\s*([^;]+);/g)]
+    .map((m) => m[1].trim())
+    .filter((v) => v.includes(','));
+  assert.ok(stacks.length > 0, 'no multi-family font stacks found');
+
+  for (const stack of stacks) {
+    const head = stack.split(',')[0].replace(/["']/g, '').trim();
+    if (/PP Telegraf/.test(stack)) {
+      assert.equal(head, 'PP Telegraf', `body stack does not lead with PP Telegraf: ${stack}`);
+    } else if (/Horizon/.test(stack)) {
+      assert.equal(head, 'Horizon', `heading stack does not lead with Horizon: ${stack}`);
+    }
+  }
+  // Both stacks must actually be present — an empty filter would vacuously satisfy the loop.
+  assert.ok(stacks.some((s) => /PP Telegraf/.test(s)), 'the PP Telegraf body stack is gone');
+  assert.ok(stacks.some((s) => /Horizon/.test(s)), 'the Horizon heading stack is gone');
+
+  // Declared weights: every @font-face weight must be one the bundle actually ships, and the
+  // full set must be exactly 400/700/800. Font Awesome's own faces are excluded — their
+  // font-weight: 900 is the icon font's and has always been out of scope.
+  const declared = (css.match(/@font-face\s*\{[^}]*\}/g) ?? [])
+    .filter((b) => /'(?:Horizon|PP Telegraf)'/.test(b))
+    .map((b) => (b.match(/font-weight:\s*(\d+)/) ?? [])[1]);
+  assert.deepEqual(
+    [...new Set(declared)].sort(),
+    ['400', '700', '800'],
+    `declared webfont weights are ${[...new Set(declared)].sort().join('/')}, expected 400/700/800`,
+  );
 });

@@ -46,9 +46,9 @@ const within = (v, [lo, hi]) => v >= lo - 1e-9 && v <= hi + 1e-9;
 
 /**
  * Which geometry a measured pill resolved to, decided from its COMPUTED font-size rather
- * than from its selector. Selector-based classification would be wrong here: the homepage
- * rule and the wider-context rule share the `.button.skills` selector and differ only by
- * cascade order, so the only reliable discriminator is what actually computed.
+ * than from its selector. Classification stays computed-value based even though only the
+ * homepage geometry now has a rule: several selectors can reach the same pill, so what
+ * actually computed is the only reliable discriminator.
  */
 export function classifyGeometry(pill, rootPx) {
   const rem = pill.style.fontSize / rootPx;
@@ -140,10 +140,10 @@ export function evaluatePill(pill, { rootPx, geometry }) {
 
   // c4 — declared horizontal padding as a multiple of the effective vertical gap.
   //
-  // The two geometries define that gap differently, and the definition is what makes the
-  // wider-context fault visible: with `line-height` declared as a LENGTH equal to
-  // `height`, the gap is zero and any non-zero horizontal padding is an infinite multiple
-  // of it. That is reported as `Infinity`, not as a pass.
+  // The two geometries define that gap differently, and the fixed-height definition is the
+  // one that can degenerate: if `line-height` ever resolves to a LENGTH equal to `height`
+  // the gap is zero, and any non-zero horizontal padding is then an infinite multiple of
+  // it. That is reported as `Infinity`, not as a pass.
   const effectiveVerticalGap =
     geometry === 'homepage' ? style.paddingTop : (box.height - style.borderTopWidth - style.borderBottomWidth - lineBoxHeight) / 2;
   const padToGap = effectiveVerticalGap === 0 ? Infinity : style.paddingLeft / effectiveVerticalGap;
@@ -183,10 +183,10 @@ export function evaluatePill(pill, { rootPx, geometry }) {
   // c7 — the pill's MINIMUM box can never clip a single line.
   //
   // Read as the effective minimum: `min-height` for the homepage geometry, and the fixed
-  // `height` for the wider-context geometry, which is where the guarantee comes from
-  // there. Taking `min-height` alone would fail the wider geometry for having none, which
-  // misreads the criterion's intent ("a single-line label can never be vertically
-  // clipped by the pill's minimum box").
+  // `height` for the wider geometry, which is where the guarantee comes from there. Taking
+  // `min-height` alone would fail the wider geometry for having none, which misreads the
+  // criterion's intent ("a single-line label can never be vertically clipped by the pill's
+  // minimum box").
   const declaredMinPx = parseFloat(style.minHeight) || 0;
   const declaredHeightPx = style.heightDeclared === 'auto' ? 0 : parseFloat(style.heightDeclared) || 0;
   const effectiveMinPx = Math.max(declaredMinPx, declaredHeightPx);
@@ -216,148 +216,6 @@ export function evaluatePill(pill, { rootPx, geometry }) {
     fontWeight: style.fontWeight,
     label: { width: +first.width.toFixed(2), height: +first.height.toFixed(2) },
     borderBox: { width: +box.width.toFixed(2), height: +box.height.toFixed(2) },
-    results,
-    ok: results.every((r) => r.ok),
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Declared-value arm — the wider-context geometry
-// ---------------------------------------------------------------------------
-
-/**
- * FINDING, recorded here because it contradicts a design §5.4 assumption.
- *
- * The wider-context geometry rule `body.home #main .button.skills, body.home #main
- * .actions .button` (SASS `layout/_main.scss:195`, compiled `main.css:4863`) has **zero
- * rendered instances**:
- *
- *   - Its `.button.skills` half is overridden in full by the later, identically specific
- *     `body.home #main .button.skills` (compiled `main.css:5148`), which is the homepage
- *     geometry.
- *   - Its `.actions .button` half is overridden in full by the later, identically specific
- *     `body.home #main .actions .button` (compiled `main.css:5168`, a compiled-only rule
- *     with no SASS counterpart), which declares `font-size: 0.66rem; height: 2rem;
- *     line-height: 2rem`.
- *   - No page other than `index.html` carries a `.button.skills` element at all, and
- *     `index.html` is `body.home`, so nothing escapes the homepage geometry either.
- *
- * §5.4 measured that geometry arithmetically and never claimed a browser measurement for
- * it, so nothing in the design is wrong — but Layer 2 CANNOT see its breach, because no
- * element resolves to it. Property 15's rendered arm would therefore report a clean pass
- * over a rule that declares `line-height` as a LENGTH equal to `height`. This arm closes
- * that hole by evaluating the DECLARED values directly, which is the only place the fault
- * is observable.
- */
-export function evaluateDeclaredGeometry(rawCssText, { selector, label, labelWidthEm, rootPx, viewport }) {
-  // Strip CSS comments FIRST. This is not tidiness: an explanatory comment containing a
-  // colon (`/* was 2.25rem: a LENGTH ... */`) makes the declaration scanner treat
-  // everything up to the next semicolon as one value, swallowing the real declaration
-  // that follows it. The symptom is a silently absent property, not a parse error.
-  const cssText = rawCssText.replace(/\/\*[\s\S]*?\*\//g, '');
-
-  // Whitespace-insensitive: the compiled CSS writes grouped selectors one per line, so a
-  // literal match on ", " never fires.
-  const escaped = selector
-    .split(',')
-    .map((part) =>
-      part
-        .trim()
-        .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        .replace(/\s+/g, '\\s+'),
-    )
-    .join('\\s*,\\s*');
-  const re = new RegExp(`(?:^|\\})[^{}]*?${escaped}\\s*\\{([^}]*)\\}`, 'g');
-  const bodies = [...cssText.matchAll(re)].map((m) => m[1]);
-  if (!bodies.length) throw new Error(`declared-geometry arm: no rule matched ${selector}`);
-
-  // Last-declaration-wins across every matching rule, in source order.
-  const decl = {};
-  for (const body of bodies) {
-    for (const m of body.matchAll(/([a-z-]+)\s*:\s*([^;]+)/gi)) {
-      decl[m[1].trim().toLowerCase()] = m[2].trim();
-    }
-  }
-
-  const toPx = (v, fallback = 0) => {
-    if (v === undefined || v === null) return fallback;
-    if (/rem$/.test(v)) return parseFloat(v) * rootPx;
-    if (/px$/.test(v)) return parseFloat(v);
-    if (v === 'auto') return fallback;
-    return fallback;
-  };
-
-  const fontSizePx = toPx(decl['font-size'], rootPx);
-  // The load-bearing distinction: a UNITLESS line-height is a ratio and scales with the
-  // font; a length is frozen. `2.25rem` against `height: 2.25rem` leaves no vertical gap
-  // for the c4 padding ratio to be in ratio WITH.
-  const rawLineHeight = decl['line-height'] ?? 'normal';
-  const lineHeightIsLength = /rem$|px$|em$/.test(rawLineHeight);
-  const lineBoxPx = lineHeightIsLength ? toPx(rawLineHeight, fontSizePx) : parseFloat(rawLineHeight) * fontSizePx;
-
-  const padding = (decl.padding ?? '0').split(/\s+/);
-  const padV = toPx(padding[0], 0);
-  const padH = toPx(padding[1] ?? padding[0], 0);
-  const borderW = /solid\s+(\S+)/.test(decl.border ?? '') ? toPx(RegExp.$1, 0) : 0;
-
-  const declaredHeightPx = decl.height && decl.height !== 'auto' ? toPx(decl.height) : null;
-  const minHeightPx = toPx(decl['min-height'], 0);
-  const borderBoxHeightPx = declaredHeightPx ?? Math.max(minHeightPx, lineBoxPx + 2 * padV + 2 * borderW);
-
-  const labelWidthPx = labelWidthEm * fontSizePx;
-  const borderBoxWidthPx = labelWidthPx + 2 * padH + 2 * borderW;
-
-  const effectiveVerticalGap =
-    declaredHeightPx === null ? padV : (declaredHeightPx - 2 * borderW - lineBoxPx) / 2;
-  const padToGap = effectiveVerticalGap === 0 ? Infinity : padH / effectiveVerticalGap;
-  const widthRatio = labelWidthPx / borderBoxWidthPx;
-  const heightRatio = lineBoxPx / borderBoxHeightPx;
-  const requiredMinPx = lineBoxPx + 2 * padV + 2 * borderW;
-  const effectiveMinPx = Math.max(minHeightPx, declaredHeightPx ?? 0);
-
-  const results = [
-    {
-      criterion: 'c4',
-      name: 'horizontal padding / effective vertical gap',
-      measured: Number.isFinite(padToGap) ? +padToGap.toFixed(3) : 'Infinity',
-      ok: Number.isFinite(padToGap) && within(padToGap, BOUNDS.padToGap),
-      detail: { padH: +padH.toFixed(2), gap: +effectiveVerticalGap.toFixed(2), lineHeightIsLength },
-    },
-    {
-      criterion: 'c5w',
-      name: 'label width / border-box width',
-      measured: +widthRatio.toFixed(3),
-      ok: within(widthRatio, BOUNDS.widthRatio),
-      detail: { labelWidthPx: +labelWidthPx.toFixed(2), borderBoxWidthPx: +borderBoxWidthPx.toFixed(2) },
-    },
-    {
-      criterion: 'c5h',
-      name: 'line box height / border-box height',
-      measured: +heightRatio.toFixed(3),
-      ok: within(heightRatio, BOUNDS.heightRatio),
-      detail: { lineBoxPx: +lineBoxPx.toFixed(2), borderBoxHeightPx: +borderBoxHeightPx.toFixed(2) },
-    },
-    {
-      criterion: 'c7',
-      name: 'effective min box height >= line box + padding + borders',
-      measured: +effectiveMinPx.toFixed(2),
-      ok: effectiveMinPx >= requiredMinPx - 0.01,
-      detail: { requiredPx: +requiredMinPx.toFixed(2), requiredRem: +(requiredMinPx / rootPx).toFixed(3) },
-    },
-  ];
-
-  return {
-    selector,
-    label,
-    viewport,
-    declared: {
-      fontSize: decl['font-size'],
-      height: decl.height,
-      minHeight: decl['min-height'],
-      lineHeight: rawLineHeight,
-      lineHeightIsLength,
-      padding: decl.padding,
-    },
     results,
     ok: results.every((r) => r.ok),
   };
@@ -547,38 +405,6 @@ async function main() {
       );
     }
   }
-
-  console.log('\n  declared-value arm (the wider-context geometry has NO rendered instance):');
-  const css = (await import('node:fs')).readFileSync(repoPath('assets', 'css', 'main.css'), 'utf8');
-  const declaredBreaches = [];
-  for (const [selector, labels] of [
-    // Label widths in em at weight 800, measured from the shipped binary by
-    // advance-widths.py (Layer 1). The narrowest and widest labels in current content.
-    ['body.home #main .button.skills, body.home #main .actions .button', [['WATERJET FABRICATION', 14.096], ['C++', 2.105]]],
-  ]) {
-    for (const [label, em] of labels) {
-      for (const viewport of VIEWPORTS) {
-        const d = evaluateDeclaredGeometry(css, {
-          selector,
-          label,
-          labelWidthEm: em,
-          rootPx: ROOT_PX_BY_VIEWPORT[viewport],
-          viewport,
-        });
-        const bad = d.results.filter((r) => !r.ok);
-        if (viewport === 1440) {
-          console.log(
-            `    ${label.padEnd(22)} declared line-height=${d.declared.lineHeight} (${d.declared.lineHeightIsLength ? 'LENGTH' : 'ratio'}) ` +
-              `height=${d.declared.height} -> ` +
-              d.results.map((r) => `${r.criterion}=${r.measured}${r.ok ? '' : ' FAIL'}`).join(' '),
-          );
-        }
-        if (bad.length) declaredBreaches.push(...bad.map((r) => `${selector} "${label}"@${viewport} ${r.criterion}=${r.measured}`));
-      }
-    }
-  }
-  console.log(`    declared-arm breaches: ${declaredBreaches.length ? declaredBreaches.length : 'none'}`);
-  for (const b of [...new Set(declaredBreaches.map((s) => s.replace(/@\d+ /, ' ')))]) console.log(`      ${b}`);
 
   console.log('\n  Requirement 12 verdict (rendered arm):');
   const breaches = printBreaches(measurements);
