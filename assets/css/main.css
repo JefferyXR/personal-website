@@ -3829,6 +3829,11 @@ input, select, textarea {
 						background-color: rgba(255, 255, 255, 0.1);
 					}
 
+				#nav ul.links li a.icon:before {
+					/* Home glyph before the Projects label; em-based, inherits color. */
+					margin-right: 0.5em;
+				}
+
 				#nav ul.links li.active {
 					background-color: #ffffff;
 				}
@@ -5332,4 +5337,9 @@ input, select, textarea {
 			font-size: 0.8rem;
 		}
 
+	}
+
+	/* Same home-glyph gap as #nav; these anchors are reparented into #navPanel at <=medium. */
+	#navPanel .links li a.icon:before {
+		margin-right: 0.5em;
 	}

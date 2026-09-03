@@ -56,6 +56,13 @@
 						outline: none;
 						padding: 0 2rem;
 
+						// Home glyph before the Projects label. em-based so it tracks the
+						// 0.8rem link size, and the glyph inherits `color`, so it flips with
+						// the .active and :hover states without a second declaration.
+						&.icon:before {
+							margin-right: 0.5em;
+						}
+
 						&:hover {
 							color: inherit !important;
 							background-color: transparentize(_palette(invert, fg), 0.9);
