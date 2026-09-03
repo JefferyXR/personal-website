@@ -473,6 +473,20 @@ const ALLOWED_CHANGED_PATHS = [
   'README.md',
   'docs/stylesheet-sync.md',
   '.github/workflows/static.yml',
+  // The code-quality cleanup pass touches these too. It changes no declaration that
+  // renders — the comment volume, the dead `--project-image` block and one duplicated
+  // declaration go, and the SASS gains the `body.home #main .actions .button` rule the
+  // compiled sheet already shipped. Rendering equivalence is checked separately; this list
+  // only says "an edit here is in scope", not "an edit here is unchecked".
+  'assets/sass/layout/_main.scss',
+  'assets/sass/layout/_intro.scss',
+  'assets/sass/base/_page.scss',
+  'assets/sass/base/_typography.scss',
+  'assets/sass/components/_button.scss',
+  'assets/sass/libs/_vars.scss',
+  'assets/sass/main.scss',
+  'assets/js/main.js',
+  'assets/js/waterParticles.js',
 ];
 // `docs/` appears as a bare directory in `git status --porcelain` while it is untracked,
 // which is why the prefix and not just the file path is listed.
@@ -850,12 +864,12 @@ test('unit: §6.2 moves exactly two weight declarations and leaves their neighbo
   assert.match(scss, /font-size:\s*0\.9rem;/, 'the 0.9rem nav panel font-size is gone — Req 16 c5');
   assert.match(scss, /font-size:\s*0\.8rem;/, 'the <=small 0.8rem toggle font-size is gone — Req 16 c5');
 
-  // The duplicate font-size at :85–86 is asserted STILL PRESENT. It is the live example behind
-  // Req 7 c12's last-declaration-wins caveat — a parity checker reading the first match rather
-  // than the last reports a false failure here — and a well-meant cleanup would delete the
-  // illustration along with the duplicate.
-  // The duplicate is asserted by ADJACENCY rather than at lines 85-86, which shifted.
-  assert.match(scss, /font-size:\s*0\.9rem;\s*\n\s*font-size:\s*0\.9rem;/, 'the duplicate 0.9rem font-size is gone — it is the last-declaration-wins illustration behind Req 7 c12');
+  // The `#navPanel .links li a` rule used to declare `font-size: 0.9rem` TWICE, kept as the
+  // live illustration behind Req 7 c12's last-declaration-wins caveat. The duplicate has been
+  // removed: keeping a redundant declaration to demonstrate a hazard is not a reason to ship
+  // it, and the caveat now cites the `#footer` / `#copyright` double `color`, which is genuine
+  // `color(alt)` mixin output and is staying. Asserted GONE so it is not reintroduced.
+  assert.doesNotMatch(scss, /font-size:\s*0\.9rem;\s*\n\s*font-size:\s*0\.9rem;/, 'the duplicate 0.9rem font-size is back — one declaration is enough');
 
   // The COMPILED side is asserted BY RULE, not by line number. The design records the mirrors
   // at main.css:4660, :4677, :4751–4752 and :4753, which were correct before this change set;
@@ -877,8 +891,9 @@ test('unit: §6.2 moves exactly two weight declarations and leaves their neighbo
 
   const linkRule = rule('#navPanel .links li a');
   assert.equal(lastDeclaration(linkRule, 'font-weight'), '800', 'the compiled #navPanel .links li a rule does not declare font-weight: 800 — Req 7 c3, Req 16 c19');
-  // last-declaration-wins in action: this rule declares font-size TWICE, and both must remain.
-  assert.equal((linkRule.match(/font-size:\s*0\.9rem;/g) || []).length, 2, 'the compiled duplicate font-size: 0.9rem was removed — it is the last-declaration-wins illustration');
+  // The mirror of the SASS de-duplication above: one declaration, not two.
+  assert.equal((linkRule.match(/font-size:\s*0\.9rem;/g) || []).length, 1, 'the compiled #navPanel link rule should declare font-size: 0.9rem exactly once');
+  assert.equal(lastDeclaration(linkRule, 'font-size'), '0.9rem', 'the compiled #navPanel link font-size moved — Req 16 c5');
 
   // The `#navPanelToggle:before` icon rule is Font Awesome's OWN family and weight 900. It is
   // not Chrome_Text, it is not part of the weight partition, and it sits seventeen lines below

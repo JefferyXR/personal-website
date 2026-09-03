@@ -7,9 +7,8 @@
 /* Nav Panel */
 
 	#navPanelToggle {
-		// Doubled in size, anchored at its top-right corner so that corner stays put.
-		// A single scale() keeps every part in proportion -- label, icon, padding,
-		// border-radius and the .alt box-shadow -- which editing each value could not.
+		// Doubled in size, anchored at its top-right corner so that corner stays put. One
+		// scale() keeps label, icon, padding and the .alt shadow in proportion.
 		transform: scale(2);
 		transform-origin: top right;
 		@include icon(false, solid);
@@ -26,7 +25,7 @@
 		color: _palette(invert, fg-bold);
 		font-family: _font(family);
 		font-size: 0.9rem;
-		font-weight: _font(weight-bold);	// Req 16 c1/c3 (§6.2) -- was _font(weight)
+		font-weight: _font(weight-bold);
 		letter-spacing: _font(letter-spacing-heading);
 		padding: 0.375rem 1.25rem;
 		text-transform: uppercase;
@@ -88,8 +87,9 @@
 					display: block;
 					font-family: _font(family);
 					font-size: 0.9rem;
-					font-size: 0.9rem;
-					font-weight: _font(weight-bold);	// Req 16 c2/c3 -- SAME anchors as #nav ul.links: main.js reparents #nav children into #navPanel at <=medium, so these two links rendered 800 above 980px and 400 below it until now (c17)
+					// The same anchors as #nav ul.links: main.js reparents them into #navPanel
+					// at <=medium, so both rules have to declare the same weight.
+					font-weight: _font(weight-bold);
 					letter-spacing: _font(letter-spacing-heading);
 					padding: 0.75rem 0;
 					text-transform: uppercase;

@@ -18,14 +18,11 @@
 	);
 
 // Font.
-	// Every typeface decision is expressed through this map and nowhere else (Req 7 c4).
-	// Fallback stacks: family-heading is ordered widest-first, because Horizon is an
-	// extra-wide face and naming the widest installed substitutes first minimises the
-	// layout shift when the webfont swaps in (Req 6 c1, c8).
-	// weight-heading 700 and weight-bold 800 are the MEASURED usWeightClass values of
-	// the shipped faces, not conventions — see assets/webfonts/FONT-PROVENANCE.md.
-	// Declaring a weight with no matching face on disk would invite synthesis, which
-	// Req 3 c4 forbids for headings and Req 5 c2 forbids for small chrome.
+	// Every typeface decision is expressed through this map and nowhere else.
+	// family-heading is ordered widest-first so the substitutes narrow the layout shift
+	// when the extra-wide Horizon swaps in. Each weight is the shipped face's real
+	// usWeightClass -- see assets/webfonts/FONT-PROVENANCE.md -- because a weight with no
+	// face on disk invites a synthesized one.
 	$font: (
 		family:				('PP Telegraf', 'Helvetica Neue', 'Segoe UI', Roboto, sans-serif),
 		family-heading:		('Horizon', 'Arial Black', Verdana, 'Trebuchet MS', sans-serif),
@@ -52,15 +49,9 @@
 			bg:				#f5f5f5,
 			fg:				#717981,
 			fg-bold:		#717981,
-			// ADDITIVE key — the footer email link only (Req 1 c12, Req 8 c7).
-			// Deliberately NOT an edit to fg / fg-bold: #717981 resolves at 15 sites in
-			// the compiled CSS, so editing it would recolour the footer h3, the social
-			// icons, table th and pagination links, violating Req 1 c10 and c11.
-			// Change Set 2 (§5.1) darkened this to #3a4148: 9.49:1 on #f5f5f5, up from
-			// 7.38:1. The Req 1 c1 threshold did NOT move -- it is still >=7.0:1 and the
-			// superseded value already cleared it, so this buys margin against a stricter
-			// future target rather than fixing a failure. Req 1 c13 makes the superseded
-			// value a ZERO-OCCURRENCE rule, which is why it is not named here.
+			// Additive key, for the footer email link only. Editing fg / fg-bold instead
+			// would recolour the footer h3, the social icons, table th and pagination,
+			// which all resolve the same value.
 			fg-link:		#3a4148,
 			fg-light:		mix(#717981, #f5f5f5, 50%),
 			border:			mix(#dcdcdc, #f5f5f5, 75%),

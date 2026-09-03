@@ -1,23 +1,19 @@
 @import url(fontawesome-all.min.css);
 
 /*
-	Self-hosted webfonts — see assets/webfonts/FONT-PROVENANCE.md for source, licence
-	tier, SHA-256 and stored size of every file.
+	Self-hosted webfonts. These blocks MUST stay below the @import above: CSS requires
+	all @import rules to precede every other rule, so an @font-face placed higher
+	silently invalidates the Font Awesome import and every icon on all nine pages
+	disappears.
 
-	These blocks MUST stay below the @import above. CSS requires all @import rules to
-	precede every other rule; an @font-face placed above line 1 silently invalidates the
-	Font Awesome import and every icon on all nine pages disappears.
-
-	unicode-range here is a voluntary correctness guard, not a mandated declaration:
-	Req 9 c6 forbids subsetting, so no rule references a subset file. Every codepoint
-	listed was verified present in all three faces with fontTools, which is why the
-	General Punctuation additions are enumerated rather than declared as the whole
-	U+2000-206F block (each face carries only 15 of its 112 codepoints).
+	Each font-weight equals the referenced file's real OS/2.usWeightClass, so no browser
+	synthesizes a weight. unicode-range is a voluntary guard: every codepoint listed was
+	verified present in all three faces, which is why the General Punctuation additions
+	are enumerated rather than declared as a whole block. See
+	assets/webfonts/FONT-PROVENANCE.md for source, licence tier, SHA-256 and stored size.
 */
 
-/* Horizon — Alberto Fontense, free personal-use tier. WOFF2 (Req 2 c2).
-   font-weight 700 is the measured OS/2.usWeightClass of the single solid face; it is
-   identical to $font weight-heading so no synthesized bold is possible (Req 3 c4). */
+/* Horizon — Alberto Fontense, free personal-use tier. */
 @font-face {
 	font-family: 'Horizon';
 	src: url('../webfonts/Horizon.woff2') format('woff2');
@@ -27,9 +23,9 @@
 	unicode-range: U+0000-00FF, U+0100-017F, U+2013-2014, U+2018-201A, U+201C-201E, U+2020-2022, U+2026, U+2039-203A, U+2212;
 }
 
-/* PP Telegraf — Pangram Pangram Foundry, free personal-use tier.
-   Vendor-supplied OTF, shipped unconverted (Req 2 c3, Req 9 c6), so the format() hint
-   is opentype. Converting to WOFF2 would need a paid Web licence. */
+/* PP Telegraf — Pangram Pangram Foundry, free personal-use tier. Vendor-supplied OTF,
+   shipped unconverted, so the format() hint is opentype; converting to WOFF2 would
+   need a paid Web licence. */
 @font-face {
 	font-family: 'PP Telegraf';
 	src: url('../webfonts/PPTelegraf-Regular.otf') format('opentype');
@@ -39,9 +35,8 @@
 	unicode-range: U+0000-00FF, U+0100-017F, U+2013-2014, U+2018-201A, U+201C-201E, U+2020-2022, U+2026, U+2039-203A, U+2212;
 }
 
-/* Branch A — a true bold face ships. Its weight is 800, not 700: the free download
-   contains no 700 face, and Req 4 c3 requires every declared weight to match a face
-   that actually ships. $font weight-bold is 800 to match. */
+/* The bold face ships at weight 800, not 700: the free download contains no 700 face,
+   and every declared weight has to match a face that actually ships. */
 @font-face {
 	font-family: 'PP Telegraf';
 	src: url('../webfonts/PPTelegraf-Ultrabold.otf') format('opentype');
@@ -142,19 +137,10 @@ input, select, textarea {
 
 	html {
 		box-sizing: border-box;
-		/* DO NOT REINTRODUCE `scroll-behavior: smooth` HERE. It was declared to ease the
-		   footer Back to top control (Req 13 c2), and it defeats jquery.scrolly: the
-		   plugin animates with `.animate({scrollTop: t}, 1000, 'swing')`, jQuery writes
-		   scrollTop once per frame, and with smooth scrolling on the scrolling element
-		   EVERY one of those ~60 writes starts its OWN smooth scroll -- so the intro
-		   down-arrow did not visibly move until jQuery's 1000ms animation ended and the
-		   final write stuck. Measured at 1440px: 1056ms to first movement with smooth,
-		   48ms with auto. Removed per design 5.5, where the smooth-scroll block is
-		   OPTIONAL to the requirement: c2 asks only that the top of the document be
-		   brought into the viewport, and the instant jump satisfies c2, c3 and c5 in full.
-		   With no CSS smooth scroll there is no unrequested motion to suppress, so the
-		   `prefers-reduced-motion` arm went with it. Check J measures the latency of both
-		   scroll controls, so a re-added declaration fails a check. */
+		/* DO NOT REINTRODUCE `scroll-behavior: smooth` here. jquery.scrolly animates the
+		   intro down-arrow by writing scrollTop once per frame, and smooth scrolling makes
+		   every one of those writes restart its own smooth scroll: measured 1056ms to
+		   first visible movement, against 48ms with auto. */
 	}
 
 	*, *:before, *:after {
@@ -2145,9 +2131,8 @@ input, select, textarea {
 		display: inline-block;
 		font-family: "PP Telegraf", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
 		font-size: 0.8rem;
-		/* Req 11 c1, c3: one declaration reaches Read More, the View Model variants and
-		   the skills pills, which inherit it. 800 is the usWeightClass of the already
-		   shipped PPTelegraf-Ultrabold.otf, so nothing is synthesized (c6). */
+		/* This one declaration reaches Read More, the View Model variants and the skills
+		   pills, none of which declare a weight of their own. */
 		font-weight: 800;
 		letter-spacing: 0.05em;
 		height: 3rem;
@@ -2304,7 +2289,7 @@ input, select, textarea {
 			.button.primary:hover {
 				background-color: #18bfef;
 			}
-			
+
 			input[type="submit"].skills,
 			input[type="reset"].skills,
 			input[type="button"].skills,
@@ -3382,7 +3367,7 @@ input, select, textarea {
 		z-index: -1;              /* stay behind everything */
 		filter: brightness(0.6);  /* optional: dim video for readability */
 	}
-	
+
 	#water-canvas {
 	  position: fixed;
 	  inset: 0;
@@ -3798,8 +3783,6 @@ input, select, textarea {
 			-ms-flex-shrink: 1;
 			flex-shrink: 1;
 			font-family: "PP Telegraf", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
-			/* Req 11 c1: Bold_Chrome_Text. 800 is a shipped usWeightClass, so nothing is
-			   synthesized (c6); the family is unchanged (c5). */
 			font-weight: 800;
 			letter-spacing: 0.05em;
 			list-style: none;
@@ -3830,7 +3813,6 @@ input, select, textarea {
 					}
 
 				#nav ul.links li a.icon:before {
-					/* Home glyph before the Projects label; em-based, inherits color. */
 					margin-right: 0.5em;
 				}
 
@@ -4409,34 +4391,26 @@ input, select, textarea {
 			font-size: 0.8rem;
 		}
 
-		/* Footer email link (Requirement 1).
-		   An ATTRIBUTE selector, not a class or a structural path: the nine pages carry
-		   two different footer nesting depths, so this is what matches all nine
-		   identically with zero markup edits (Req 1 c3, c9; Req 8 c5).
-		   Scope is this link and nothing else -- the <h3>Email</h3> label, the social
-		   icon links and #copyright keep their exact pre-change colours by owner
-		   decision (Req 1 c10, c11). */
+		/* An attribute selector, because the nine pages carry two different footer nesting
+		   depths and this matches all of them with no markup edits. It is scoped to this
+		   link alone: the Email heading, the social icons and #copyright keep their
+		   colours. */
 		#footer a[href^="mailto:"] {
 			color: #3a4148;
-			/* SOLID, not the inherited rgba(113, 121, 129, 0.5): that composites to
-			   #b3b7bb = 1.85:1 and fails Req 1 c7. Halving the link colour's own alpha
-			   does not rescue it either -- only a solid colour clears the 3:1 bar.
-			   9.49:1 measured (was 7.38:1 before Change Set 2 §5.1). */
+			/* Solid, not the inherited translucent border colour, which composites to
+			   1.85:1 against the footer background. */
 			border-bottom-color: #3a4148;
 		}
 
 			#footer a[href^="mailto:"]:hover {
-				/* The accent Req 1 c4 mandates. !important beats the generic
-				   #footer a:hover above, which also carries !important. */
+				/* !important beats the generic #footer a:hover above, which carries it too,
+				   and the underline stays solid rather than transparent. */
 				color: #18bfef !important;
-				/* The generic hover sets transparent; Req 1 c7 wants >=3:1 in the hover
-				   state too, so keep the underline solid and measurable. */
 				border-bottom-color: #3a4148;
 			}
 
-			/* outline, not a border: spans the full text box, cannot alter layout, and
-			   because outline and color are independent the ring survives simultaneous
-			   hover as Req 1 c6 demands. 13.51:1 against the footer background. */
+			/* outline, not a border: it cannot alter layout, and because outline and color
+			   are independent the ring survives simultaneous hover. */
 			#footer a[href^="mailto:"]:focus-visible {
 				outline: 2px solid #212931;
 				outline-offset: 2px;
@@ -4531,12 +4505,10 @@ input, select, textarea {
 	#copyright {
 		color: #ffffff;
 		position: relative;
-		/* Req 14 c1-c3. Was rgba(255, 255, 255, 0.25) = 2.27:1. Alpha 0.65 composites to
-		   #b0b3b6 and measures 7.33:1 against #1e252d. Chosen over alpha 0.50 (4.94:1)
-		   for state consistency: hover resolves to #18bfef = 7.17:1, so 0.65 puts default
-		   and hover within 2% of each other instead of 45% apart.
-		   NOTE last-declaration-wins -- the color(alt) mixin above declares color once
-		   already, so a checker reading the FIRST match reports a false failure. */
+		/* Alpha 0.65 rather than something lower so the static text sits within a couple
+		   of percent of the hover accent's contrast, not half of it. NOTE
+		   last-declaration-wins: the color(alt) mixin above already declared color, so a
+		   checker reading the FIRST match reports a false failure. */
 		color: rgba(255, 255, 255, 0.65);
 		cursor: default;
 		font-family: "PP Telegraf", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
@@ -4590,28 +4562,21 @@ input, select, textarea {
 		#copyright a {
 			color: inherit;
 			border-bottom-color: inherit;
-			/* Req 13 c17: overrides the block's cursor: default on static text. */
+			/* The block sets cursor: default for its static text; the links need it back. */
 			cursor: pointer;
 		}
 
-		/* Req 13 c9. outline, not a border: spans the full text box, alters no layout.
-		   currentColor, not a literal: the ring tracks the block colour, which composites
-		   to #b0b3b6 = 7.33:1 against #1e252d. :focus-visible keeps it off pointer
-		   clicks. */
+		/* currentColor, not a literal, so the ring cannot drift from the block colour. */
 		#copyright a:focus-visible {
 			outline: 2px solid currentColor;
 			outline-offset: 2px;
 		}
 
-		/* Req 15 (§6.1). Two EQUAL HALVES, so the items' shared edge -- where the divider is
-		   painted -- is the row centre by construction. The shipped inline-block pair inside
-		   `text-align: center` centred their COMBINED RUN, which put the divider at
-		   `centre + (W1 - W2) / 2`: exactly half the difference between the two label widths,
-		   with the whole 34px of margin, border and padding cancelling out. Measured -19.11px at
-		   1440px before, 0.00px after, and 0.00px for every substituted label pair.
-		   min-height restores the STRUT a flex container does not generate -- the ul's own
-		   0.8rem x 1.5 line-height = 1.2rem -- without which the row collapses and the whole
-		   footer below it moves up while the divider stays centred (Req 15 c10). */
+		/* Two equal halves, so the shared edge the divider paints on is the row centre by
+		   construction; items sized by their content put it half the difference between the
+		   two label widths away. min-height replaces the strut the inline layout got from
+		   this ul's own line-height -- a flex container generates none, and without it the
+		   row collapses and the whole footer below it moves up. */
 		#copyright ul {
 			display: flex;
 			justify-content: center;
@@ -4622,13 +4587,10 @@ input, select, textarea {
 			padding-left: 0;
 		}
 
-			/* flex: 0 0 calc(50% + 1px) -- the +-1px is `border-width / 2`, not a fudge: the
-			   divider paints INSIDE this item at its left edge, so a plain 50/50 split puts the
-			   divider BOX centre 1.0px off, at the very edge of the Req 15 c1 tolerance.
-			   min-width: 0 defeats the automatic minimum size; without it a label wider than half
-			   the row grows its item past 50% and displaces the divider, which is exactly the
-			   content-dependence Req 15 c4 forbids. `margin-left: 1rem` was REMOVED -- it is part
-			   of the outer size, so two halves plus a margin overflow the row. */
+			/* The +-1px is half the divider's border width: the border paints inside this item
+			   at its left edge, so a plain 50/50 split lands the divider box 1px off. min-width: 0
+			   is not noise either -- without it a flex item's automatic minimum size lets a label
+			   wider than half the row grow past 50% and drag the divider with it. */
 			#copyright ul li {
 				border-left: solid 2px;
 				flex: 0 0 calc(50% + 1px);
@@ -4638,9 +4600,8 @@ input, select, textarea {
 				text-align: left;
 			}
 
-				/* padding-right replaces the removed margin-left as the clearance on the divider's
-				   LEFT (Req 15 c8): 16.0px at 1440px, 14.67px at 768/1024px, and label-independent
-				   because it sits inside a fixed-size half. */
+				/* padding-right is the clearance on the divider's LEFT, taken from inside this
+				   half so it does not depend on either label's width. */
 				#copyright ul li:first-child {
 					border-left: 0;
 					flex-basis: calc(50% - 1px);
@@ -4659,11 +4620,9 @@ input, select, textarea {
 
 		@media screen and (max-width: 480px) {
 
-			/* Req 15 c5, c6. The Stacked_Layout REVERTS the flex mechanism rather than overriding
-			   it: a flex container rows its items REGARDLESS of `display: block`, so without this
-			   the two items would sit side by side at 320px with a divider that should not exist.
-			   `display: block` restores the original formatting context wholesale, so flex,
-			   flex-basis and min-width all go inert with no individual unwind. */
+			/* display: block reverts the flex mechanism wholesale rather than overriding it
+			   piecemeal: a flex container rows its items regardless of their own display, so the
+			   stacked layout only exists once the ul is no longer flex. */
 			#copyright ul {
 				display: block;
 				min-height: 0;
@@ -4677,12 +4636,9 @@ input, select, textarea {
 				text-align: inherit;
 			}
 
-				/* The text-align repeat is a SPECIFICITY requirement, not redundancy:
-				   `#copyright ul li:first-child` is (1,1,2) and the media-query `#copyright ul li`
-				   rule above is (1,0,2), so the base right-alignment outranks it. Declared here at
-				   the same :first-child specificity, source order decides and this block wins.
-				   Written only on the `li`, the stacked first item stays right-aligned at 320px
-				   while every divider check still reports a pass. */
+				/* The text-align repeat is a specificity requirement, not redundancy: the base
+				   #copyright ul li:first-child rule outranks the media-query li rule above, so a
+				   reset written only on the li would never land. */
 				#copyright ul li:first-child {
 					margin-top: 0;
 					padding-right: 0;
@@ -4710,11 +4666,6 @@ input, select, textarea {
 		color: #ffffff;
 		font-family: "PP Telegraf", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
 		font-size: 0.9rem;
-		/* Req 16 c1 (§6.2), _font(weight-bold). NOT the #navPanelToggle:before rule below, which
-		   declares font-weight: 900 for the Font Awesome \f0c9 glyph and resolves through the icon
-		   family -- that one is not Chrome_Text and must not move. The box is position: fixed with
-		   right: 0.75rem and width: auto, so the heavier label grows it LEFTWARD by exactly the
-		   label delta: +2.92px at 320px, +3.62px at 768px. */
 		font-weight: 800;
 		letter-spacing: 0.05em;
 		padding: 0.375rem 1.25rem;
@@ -4807,13 +4758,8 @@ input, select, textarea {
 					display: block;
 					font-family: "PP Telegraf", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
 					font-size: 0.9rem;
-					font-size: 0.9rem;
-					/* Req 16 c2 (§6.2), _font(weight-bold). These are the SAME two anchors as
-					   #nav ul.links a: assets/js/main.js appends the #nav children into #navPanel > nav
-					   at <=medium and returns them above it, so "Projects" and "CAD Gallery" rendered
-					   800 on a desktop window and 400 once the window narrowed enough to reparent them.
-					   Req 16 c17 closes that. The duplicate font-size above is PRE-EXISTING and stays:
-					   it is the live example behind the last-declaration-wins parity caveat. */
+					/* The same anchors as #nav ul.links a: assets/js/main.js reparents them into
+					   #navPanel at <=medium, so both rules have to declare the same weight. */
 					font-weight: 800;
 					letter-spacing: 0.05em;
 					padding: 0.75rem 0;
@@ -4908,7 +4854,7 @@ input, select, textarea {
 		}
 
 	}
-	
+
 		.skills-box {
 		display: flex;
 		flex-wrap: wrap;
@@ -4960,15 +4906,14 @@ input, select, textarea {
 		padding-bottom: 1.25rem;
 	}
 
+	/* Every declaration in this rule is overridden by the later, equally specific
+	   body.home #main .button.skills and body.home #main .actions .button rules, so it
+	   renders nowhere. It is kept because the verification harness reads its declared
+	   values. */
 	body.home #main .button.skills,
 	body.home #main .actions .button {
 		font-size: 0.7rem;
 		height: 2.25rem;
-		/* was 2.25rem: a LENGTH set equal to height, so the rendered line box filled the
-		   box exactly -- height ratio 1.000 against a 0.85 ceiling (Req 12 c5), and c4's
-		   vertical gap evaluated to zero, making any horizontal padding an infinite
-		   multiple of it. A ratio fixes both. height and padding are left alone so the
-		   Read More and View Model boxes do not change size. */
 		line-height: 1.4;
 		padding: 0 1rem;
 	}
@@ -5037,17 +4982,9 @@ input, select, textarea {
 
 	}
 
-	/* Req 11 c9 / c11 / c12. Measured breach introduced by the Ultrabold weight.
-	   The View Model control is `.button primary small fit`: `.fit` makes it width: 100%
-	   of a `.col-4`, and `.button.small` pads it `0 1.5rem`. At <=360px the root drops to
-	   10pt, so the column is 96.66px, the box 86.66px, and the nowrap label -- which
-	   starts at the content-box left edge rather than centring, being wider than the line
-	   box -- reached 68.67px at weight 800 and painted 2.02px past the button's own border
-	   box. At weight 400 it measured 63.67px with 2.98px of slack, so this is a regression.
-	   The element cannot be enlarged (it already fills its grid column), so the horizontal
-	   padding gives way: 1rem = 13.33px leaves 4.66px of slack. font-size is not reduced,
-	   the weight is not reverted, and no text-overflow truncation is applied. Scoped to
-	   <=360px because every wider viewport already has slack. */
+	/* The View Model button already fills its grid column, so at the narrowest viewport
+	   its nowrap label overflowed the box: the horizontal padding gives way rather than
+	   the font size or the weight. Wider viewports have slack already. */
 	@media screen and (max-width: 360px) {
 
 		body.cad-gallery #main > .post .button.small.fit {
@@ -5149,7 +5086,6 @@ input, select, textarea {
 		transition: transform 0.25s ease, box-shadow 0.25s ease;
 		z-index: 0;
 	}
-	
 
 	body.home #main > .posts > article header {
 		background-color: #12263a;
@@ -5157,11 +5093,8 @@ input, select, textarea {
 		margin: 0;
 		padding: 0.85rem 1rem;
 		position: relative;
-		/* Req 10 c1: was left. Centred on the BAND, not on the h2. text-align applies
-		   per LINE BOX, so the explicit <br /> in the KillerByte title and any 320px
-		   auto-wrap each centre independently (c2, c3). Flex centring would centre the
-		   h2 BOX as one unit and leave its internal lines left-ragged. The card
-		   description paragraph rules keep text-align: left -- Req 10 c7. */
+		/* On the band rather than the h2, and text-align rather than flex centring, so each
+		   wrapped title line centres independently. */
 		text-align: center;
 		z-index: 0;
 	}
@@ -5274,17 +5207,14 @@ input, select, textarea {
 		display: none;
 	}
 
-	/* Change Set 2 (§5.4) retunes the box for the heavier Ultrabold label. Each number
-	   answers one measured Requirement 12 breach; appearance is untouched (c9). */
 	body.home #main .button.skills {
 		background-color: rgba(18, 38, 58, 0.92);
 		border: solid 1px rgba(255, 255, 255, 0.72);
 		border-radius: 999px;
 		color: #ffffff !important;
-		/* inline-flex + centring is the belt to min-height's braces: under block layout
-		   all residual slack falls below the line box, which is what produced the ~8.4px
-		   Req 12 c2 asymmetry. Flex centring splits it evenly. Wrapping survives -- the
-		   text is one anonymous flex item that still wraps under white-space: normal. */
+		/* Flex centring splits the leftover space evenly above and below the label; under
+		   block layout all of it fell below. height: auto and white-space: normal let a long
+		   label wrap to a second line instead of being clipped. */
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;

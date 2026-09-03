@@ -121,10 +121,9 @@
 		$('.scrolly').scrolly();
 
 	// Intro down-arrow target.
-		// Desktop lands on the nav bar; mobile goes straight to the projects grid,
-		// because at <=medium main.js moves the nav links into the slide-out panel and
-		// #nav is left with nothing to land on. scrolly captures the href when it binds,
-		// so changing the attribute alone would do nothing -- it has to rebind.
+		// At <=medium the nav links move into the slide-out panel, leaving #nav with
+		// nothing to land on; scrolly caches the href when it binds, so retargeting the
+		// arrow means rebinding it.
 			var $introScrolly = $('#intro .actions a.scrolly');
 
 			if ($introScrolly.length) {
@@ -148,8 +147,8 @@
 				.appendTo($wrapper);
 
 			// Change toggle styling once we've scrolled past the header.
-				// index.html has no #header -- it uses #intro -- so this scrollex never bound
-				// there and the toggle never got its .alt background. Fall back to #intro.
+				// index.html has no #header, only #intro, so fall back to it -- otherwise the
+				// toggle never gets its .alt background there.
 				($header.length ? $header : $('#intro')).scrollex({
 					bottom: '5vh',
 					enter: function() {

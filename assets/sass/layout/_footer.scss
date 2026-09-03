@@ -95,47 +95,29 @@
 			font-size: 0.8rem;
 		}
 
-		// Footer email link (Requirement 1).
-		//
-		// An ATTRIBUTE selector, not a class or a structural path: the nine pages carry
-		// two different footer nesting depths (index/arduino/cad/calculator/church/
-		// fluid_sim nest one level deeper than killerbyte/launchtoy/vexlego), so this is
-		// what matches all nine identically with zero markup edits (Req 1 c3, c9; Req 8 c5).
-		//
-		// Scope is deliberately this link and nothing else. The <h3>Email</h3> label, the
-		// social icon links and #copyright keep their exact pre-change colours by owner
-		// decision (Req 1 c10, c11) -- which is also why fg-link was ADDED to the alt
-		// palette rather than fg/fg-bold being edited.
+		// An attribute selector, because the nine pages carry two different footer nesting
+		// depths and this matches all of them with no markup edits. It is scoped to this
+		// link alone: the Email heading, the social icons and #copyright keep their colours.
 		a[href^="mailto:"] {
-			// alt.fg-link resolves to #3a4148 (§5.1), measured 9.49:1 on #f5f5f5.
 			color: _palette(alt, fg-link);
-			// SOLID, not the inherited rgba(113,121,129,0.5): that composites to #b3b7bb
-			// = 1.85:1 and fails Req 1 c7. Halving the link colour's own alpha does not
-			// rescue it either -- only a solid colour clears the 3:1 bar.
+			// Solid, not the inherited translucent border colour, which composites to
+			// 1.85:1 against the footer background.
 			border-bottom-color: _palette(alt, fg-link);
 
 			&:hover {
-				// The accent Req 1 c4 mandates. !important is required to beat the
-				// generic `#footer a:hover` from the color-typography mixin, which also
-				// carries !important.
+				// !important beats the generic `#footer a:hover` from the mixin, which
+				// carries it too, and the underline stays solid rather than transparent.
 				color: _palette(alt, accent) !important;
-				// The generic hover sets border-bottom-color: transparent. Req 1 c7 wants
-				// >=3:1 in the hover state too, so keep the underline solid and measurable.
 				border-bottom-color: _palette(alt, fg-link);
 			}
 
-			// outline, not a border: it spans the full text box and cannot alter layout.
-			// Because outline and color are independent properties, the ring survives
-			// simultaneous hover, which is what Req 1 c6 demands.
+			// outline, not a border: it cannot alter layout, and because outline and color
+			// are independent the ring survives simultaneous hover.
 			&:focus-visible {
 				outline: 2px solid _palette(fg-bold);
 				outline-offset: 2px;
 			}
 		}
-
-		// No new transition: the inherited `a` transition is already 0.2s on color and
-		// border-color, inside the Req 1 c4/c5 200ms bound. The existing 0.8rem sizing
-		// above satisfies Req 1 c8 unchanged.
 
 		@include breakpoint('<=medium') {
 			display: block;
@@ -225,17 +207,9 @@
 	#copyright {
 		@include color-typography(invert);
 		position: relative;
-		// Req 14 c1-c3 (§5.6). transparentize SUBTRACTS its amount, so the target alpha
-		// 0.65 is written as 0.35 (was 0.75, i.e. alpha 0.25 = 2.27:1). Alpha 0.65
-		// composites to #b0b3b6 and measures 7.33:1 against #1e252d.
-		//
-		// 0.65 rather than 0.50, even though c1 only asks for 4.5:1: the deciding factor
-		// is the HOVER state. The block now hosts an interactive control, and hover
-		// resolves to the invert accent #18bfef = 7.17:1. At alpha 0.50 the default
-		// measures 4.94:1 -- 45% weaker than its own hover, an odd signal for a control
-		// that should be discoverable BEFORE being hovered. At 0.65 the two sit within
-		// 2% of each other. Only the transparentize amount changes: invert.fg stays
-		// #ffffff and the block background stays #1e252d (Req 14 c4, c5).
+		// transparentize SUBTRACTS its amount, so the target alpha 0.65 is written as 0.35.
+		// 0.65 rather than something lower so the static text sits within a couple of
+		// percent of the hover accent's contrast, not half of it.
 		color: transparentize(_palette(invert, fg), 0.35);
 		cursor: default;
 		font-family: _font(family);
@@ -253,90 +227,52 @@
 		a {
 			color: inherit;
 			border-bottom-color: inherit;
-			// Req 13 c17: the block sets `cursor: default` for its static text, which
-			// the Back to top control and the design credit both need overridden.
+			// The block sets `cursor: default` for its static text; the two links need it back.
 			cursor: pointer;
 		}
 
-		// Req 13 c9. `outline`, not a border: it spans the full text box and alters no
-		// layout. `currentColor`, not a literal: the ring tracks the block colour §5.6
-		// sets (composited #b0b3b6, 7.33:1 against #1e252d), so the two rules cannot
-		// drift apart. `:focus-visible` keeps the ring off pointer clicks.
+		// currentColor, not a literal, so the ring cannot drift from the block colour.
 		a:focus-visible {
 			outline: 2px solid currentColor;
 			outline-offset: 2px;
 		}
 
-		// Req 15 (§6.1). The Copyright_Row becomes a flex container of two EQUAL HALVES, so
-		// the items' shared edge -- where the divider is painted -- is the row centre by
-		// construction rather than by arithmetic coincidence.
-		//
-		// The shipped mechanism was two `inline-block` items inside `text-align: center`, which
-		// centres their COMBINED RUN. Writing W1 and W2 for the two rendered label widths, the
-		// whole 34px of margin, border and padding cancels out of the arithmetic and the divider
-		// lands at `centre + (W1 - W2) / 2` -- exactly half the difference between the two
-		// labels, and nothing else. Two consequences, and both are why this is a restructure and
-		// not a tuned value:
-		//   - No margin, padding or letter-spacing adjustment can fix it. Those terms are not
-		//     in the result; changing them moves the gaps and leaves the offset where it is.
-		//   - Any mechanism that leaves the items sized by their CONTENT reproduces the fault at
-		//     a different magnitude the moment either label changes length, which is exactly
-		//     what Req 15 c4 exists to prevent.
-		// Measured at 1440px: -19.11px before, 0.00px after -- and 0.00px for every substituted
-		// label pair, which is the signature of a mechanism in which label widths do not appear.
+		// Two equal halves, so the shared edge the divider paints on is the row centre by
+		// construction. Sizing the items by their content instead puts the divider half the
+		// difference between the two label widths away from centre.
 		ul {
 			display: flex;
 			justify-content: center;
 			align-items: center;
-			// The STRUT that a flex container does not generate. In the shipped inline layout the
-			// row's line box was floored by this ul's own inherited 0.8rem font-size times its 1.5
-			// line-height = 1.2rem, taller than the `line-height: 1` items inside it. A flex
-			// container has no strut, so without this the row collapses and every footer element
-			// below it moves up -- while the divider stays perfectly centred, so nothing about the
-			// fix would look wrong (Req 15 c10). Declared in rem so it tracks the root steps at
-			// every breakpoint exactly as the strut did. `align-items: center` places the items
-			// within it and keeps the divider's rendered height at the item's own line box.
+			// Replaces the strut the inline layout got from this ul's own line-height. A flex
+			// container generates none, so without it the row collapses and the whole footer
+			// below it moves up while the divider stays centred.
 			min-height: 1.2rem;
-			list-style: none;			// UNCHANGED
-			margin: 0;					// UNCHANGED
-			padding-left: 0;			// UNCHANGED
+			list-style: none;
+			margin: 0;
+			padding-left: 0;
 
 			li {
-				border-left: solid 2px;	// UNCHANGED -- this IS the Copyright_Divider (Req 15 c9)
-				// Half the row, plus HALF THE DIVIDER'S OWN WIDTH. Not a fudge: the border paints
-				// INSIDE this item, starting at its left edge, so a plain 50/50 split puts the
-				// divider BOX centre 1.0px off -- satisfying c1's "within 1 CSS pixel" only on an
-				// inclusive reading and with no margin for measurement noise. The constant is
-				// `border-width / 2`, and it changes if that width ever does.
+				// This border IS the divider; the colour is omitted so it tracks currentColor.
+				border-left: solid 2px;
+				// The 1px is half the divider's border width: the border paints inside this
+				// item at its left edge, so a plain 50/50 split lands the divider box 1px off.
 				flex: 0 0 calc(50% + 1px);
-				line-height: 1;			// UNCHANGED
-				// THE MOST IMPORTANT DECLARATION IN THIS BLOCK. Flex items default to
-				// `min-width: auto`, whose automatic minimum size floors the used main size at the
-				// item's min-content width -- so a label wider than half the row would grow its
-				// item past 50% and take the divider with it, reintroducing precisely the
-				// content-dependence this change removes, and only in the long-label case that
-				// Req 15 c4 exists to cover. With `min-width: 0` an over-long label wraps inside
-				// its own half and the divider does not move. Do not delete it as noise.
+				line-height: 1;
+				// Not noise: without it a flex item's automatic minimum size lets a label
+				// wider than half the row grow past 50% and drag the divider with it.
 				min-width: 0;
-				padding-left: 1rem;		// UNCHANGED -- clearance on the divider's RIGHT
+				padding-left: 1rem;		// clearance right of the divider
 				text-align: left;		// sit the label against the divider
-				// `margin-left: 1rem` REMOVED: it is part of the items' outer sizes, so two 50%
-				// halves plus a 16px margin exceed the container and the shared edge lands 8px
-				// right of centre -- the same class of fault, smaller.
 
 				&:first-child {
-					border-left: 0;		// UNCHANGED
+					border-left: 0;
 					flex-basis: calc(50% - 1px);
-					padding-left: 0;	// UNCHANGED
-					// Clearance on the divider's LEFT. Right-aligning this label pushes its text
-					// toward the centre, so the gap the removed `margin-left` used to supply now
-					// comes from inside this half: 16.0px at 1440px, 14.67px at 768/1024px, both
-					// clear of the 8px floor in Req 15 c8 -- and label-independent, because the
-					// padding sits inside a fixed-size half rather than between two content boxes.
+					padding-left: 0;
+					// Clearance on the divider's left, taken from inside this half so it does
+					// not depend on either label's width.
 					padding-right: 1rem;
 					text-align: right;
-					// The `margin-left: 0` reset is dropped: redundant now that the base rule
-					// declares no margin at all.
 				}
 			}
 		}
@@ -345,42 +281,27 @@
 			margin: (_size(padding) * 2) auto;
 		}
 
-		// Req 15 c5, c6 (§6.1). The Stacked_Layout must REVERT the flex mechanism, not merely
-		// override it, and this is the most likely way to break 320px because it breaks
-		// SILENTLY: a flex container lays its items out in a row REGARDLESS of their `display`
-		// value, so the `display: block` below would stop stacking them the moment the ul above
-		// became a flex container -- two items side by side with a divider that should not exist.
-		//
-		// `display: block` rather than `flex-direction: column`, because it restores the original
-		// formatting context wholesale: `flex`, `flex-basis` and `min-width` all become inert
-		// with no individual unwind, and the five declarations Req 15 c5 pins keep their
-		// pre-amendment meaning exactly. Under `flex-direction: column` the 50% bases would
-		// instead resolve against the container's HEIGHT.
+		// `display: block` reverts the flex mechanism wholesale rather than overriding it
+		// piecemeal: a flex container rows its items regardless of their own `display`, so
+		// the stacked layout only exists once the ul is no longer flex.
 		@include breakpoint('<=xsmall') {
 			ul {
 				display: block;
-				// Belt-and-braces: the stacked items are far taller than 1.2rem so the floor
-				// cannot bind, and declaring it removes the question rather than leaving it to be
-				// re-derived by the next reader.
 				min-height: 0;
 
 				li {
-					border-left: 0;			// UNCHANGED (Req 15 c5)
-					margin: 1rem 0 0 0;		// UNCHANGED (Req 15 c5)
-					padding-left: 0;		// UNCHANGED (Req 15 c5)
-					display: block;			// UNCHANGED (Req 15 c5)
-					text-align: inherit;	// undo the Side_By_Side left alignment
+					border-left: 0;
+					margin: 1rem 0 0 0;
+					padding-left: 0;
+					display: block;
+					text-align: inherit;	// undo the side-by-side left alignment
 
 					&:first-child {
-						margin-top: 0;		// UNCHANGED (Req 15 c5)
-						padding-right: 0;	// no divider left to clear once border-left: 0 removes it
-						// THE REPEAT IS A SPECIFICITY REQUIREMENT, NOT REDUNDANCY. The base
-						// `#copyright ul li:first-child { text-align: right }` is (1,1,2) and the
-						// media-query `#copyright ul li` rule above is (1,0,2), so the base rule
-						// OUTRANKS it: the reset only lands when declared at this same :first-child
-						// specificity, where source order decides and this later block wins. Written
-						// only on the `li`, the stacked first item stays right-aligned at 320px while
-						// every check that looks at the divider reports a pass.
+						margin-top: 0;
+						padding-right: 0;	// no divider left to clear
+						// Repeated at :first-child specificity on purpose: the base
+						// `#copyright ul li:first-child` rule outranks the media-query `li`
+						// rule, so a reset written only on the `li` would never land.
 						text-align: inherit;
 					}
 				}
