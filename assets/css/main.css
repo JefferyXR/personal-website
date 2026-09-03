@@ -4598,24 +4598,50 @@ input, select, textarea {
 			outline-offset: 2px;
 		}
 
+		/* Req 15 (§6.1). Two EQUAL HALVES, so the items' shared edge -- where the divider is
+		   painted -- is the row centre by construction. The shipped inline-block pair inside
+		   `text-align: center` centred their COMBINED RUN, which put the divider at
+		   `centre + (W1 - W2) / 2`: exactly half the difference between the two label widths,
+		   with the whole 34px of margin, border and padding cancelling out. Measured -19.11px at
+		   1440px before, 0.00px after, and 0.00px for every substituted label pair.
+		   min-height restores the STRUT a flex container does not generate -- the ul's own
+		   0.8rem x 1.5 line-height = 1.2rem -- without which the row collapses and the whole
+		   footer below it moves up while the divider stays centred (Req 15 c10). */
 		#copyright ul {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			min-height: 1.2rem;
 			list-style: none;
 			margin: 0;
 			padding-left: 0;
 		}
 
+			/* flex: 0 0 calc(50% + 1px) -- the +-1px is `border-width / 2`, not a fudge: the
+			   divider paints INSIDE this item at its left edge, so a plain 50/50 split puts the
+			   divider BOX centre 1.0px off, at the very edge of the Req 15 c1 tolerance.
+			   min-width: 0 defeats the automatic minimum size; without it a label wider than half
+			   the row grows its item past 50% and displaces the divider, which is exactly the
+			   content-dependence Req 15 c4 forbids. `margin-left: 1rem` was REMOVED -- it is part
+			   of the outer size, so two halves plus a margin overflow the row. */
 			#copyright ul li {
 				border-left: solid 2px;
-				display: inline-block;
+				flex: 0 0 calc(50% + 1px);
 				line-height: 1;
-				margin-left: 1rem;
+				min-width: 0;
 				padding-left: 1rem;
+				text-align: left;
 			}
 
+				/* padding-right replaces the removed margin-left as the clearance on the divider's
+				   LEFT (Req 15 c8): 16.0px at 1440px, 14.67px at 768/1024px, and label-independent
+				   because it sits inside a fixed-size half. */
 				#copyright ul li:first-child {
 					border-left: 0;
-					margin-left: 0;
+					flex-basis: calc(50% - 1px);
 					padding-left: 0;
+					padding-right: 1rem;
+					text-align: right;
 				}
 
 		@media screen and (max-width: 1280px) {
@@ -4628,15 +4654,34 @@ input, select, textarea {
 
 		@media screen and (max-width: 480px) {
 
+			/* Req 15 c5, c6. The Stacked_Layout REVERTS the flex mechanism rather than overriding
+			   it: a flex container rows its items REGARDLESS of `display: block`, so without this
+			   the two items would sit side by side at 320px with a divider that should not exist.
+			   `display: block` restores the original formatting context wholesale, so flex,
+			   flex-basis and min-width all go inert with no individual unwind. */
+			#copyright ul {
+				display: block;
+				min-height: 0;
+			}
+
 			#copyright ul li {
 				border-left: 0;
 				margin: 1rem 0 0 0;
 				padding-left: 0;
 				display: block;
+				text-align: inherit;
 			}
 
+				/* The text-align repeat is a SPECIFICITY requirement, not redundancy:
+				   `#copyright ul li:first-child` is (1,1,2) and the media-query `#copyright ul li`
+				   rule above is (1,0,2), so the base right-alignment outranks it. Declared here at
+				   the same :first-child specificity, source order decides and this block wins.
+				   Written only on the `li`, the stacked first item stays right-aligned at 320px
+				   while every divider check still reports a pass. */
 				#copyright ul li:first-child {
 					margin-top: 0;
+					padding-right: 0;
+					text-align: inherit;
 				}
 
 		}
@@ -4657,7 +4702,12 @@ input, select, textarea {
 		color: #ffffff;
 		font-family: "PP Telegraf", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
 		font-size: 0.9rem;
-		font-weight: 400;
+		/* Req 16 c1 (§6.2), _font(weight-bold). NOT the #navPanelToggle:before rule below, which
+		   declares font-weight: 900 for the Font Awesome \f0c9 glyph and resolves through the icon
+		   family -- that one is not Chrome_Text and must not move. The box is position: fixed with
+		   right: 0.75rem and width: auto, so the heavier label grows it LEFTWARD by exactly the
+		   label delta: +2.92px at 320px, +3.62px at 768px. */
+		font-weight: 800;
 		letter-spacing: 0.05em;
 		padding: 0.375rem 1.25rem;
 		text-transform: uppercase;
@@ -4750,7 +4800,13 @@ input, select, textarea {
 					font-family: "PP Telegraf", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
 					font-size: 0.9rem;
 					font-size: 0.9rem;
-					font-weight: 400;
+					/* Req 16 c2 (§6.2), _font(weight-bold). These are the SAME two anchors as
+					   #nav ul.links a: assets/js/main.js appends the #nav children into #navPanel > nav
+					   at <=medium and returns them above it, so "Projects" and "CAD Gallery" rendered
+					   800 on a desktop window and 400 once the window narrowed enough to reparent them.
+					   Req 16 c17 closes that. The duplicate font-size above is PRE-EXISTING and stays:
+					   it is the live example behind the last-declaration-wins parity caveat. */
+					font-weight: 800;
 					letter-spacing: 0.05em;
 					padding: 0.75rem 0;
 					text-transform: uppercase;

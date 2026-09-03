@@ -373,16 +373,36 @@ test('Req 9 c11: the Horizon provenance record carries the sentinel, not a TODO'
   assert.ok(fs.existsSync(repoPath('assets', 'webfonts', named)), `${named} is named but absent`);
 });
 
-test('Req 7 c5 / Req 9 c3: README records the credit, step 7, and the token list', () => {
+test('Req 7 c5 / Req 9 c3: the credits stay in the README, the procedure moves to the Sync_Document', () => {
+  // AMENDED BY CHANGE SET 3, and the amendment is the point of the test rather than a
+  // concession to it. Req 7 c5 previously required the regeneration procedure to live in
+  // `README.md`; as amended it permits the Sync_Document, Req 17 c7 requires the README to link
+  // it in one line, and Req 7 c12/c13 pin the procedure's contents THERE. So the clauses split:
+  // the attributions are still asserted against the README, and every procedure clause is now
+  // asserted against `docs/stylesheet-sync.md`. Property 18 owns the full version of both
+  // halves; these are the single fixed facts.
   const readme = fs.readFileSync(repoPath('README.md'), 'utf8');
+  const sync = fs.readFileSync(repoPath('docs', 'stylesheet-sync.md'), 'utf8');
+
+  // Req 17 c3, c5 — the attributions, which the compaction does not reach.
   assert.match(readme, /html5up\.net\/massively/, 'the Massively credit link is gone');
-  assert.match(readme, /html5up\.net\/license|Creative Commons Attribution 3\.0/, 'the licence basis is not recorded');
+  assert.match(readme, /\]\(https:\/\/html5up\.net\)/, 'the HTML5 UP link is gone — it is the CC BY 3.0 attribution condition');
   assert.match(readme, /Alberto Fontense/);
   assert.match(readme, /Pangram Pangram/);
-  assert.match(readme, /seven steps/, 'the sync procedure still claims six steps');
-  assert.match(readme, /byte-identical/, 'step 7 does not state the byte-identity check');
-  assert.match(readme, /#4a5158/, 'step 6 does not name the superseded colour as a zero-occurrence token');
-  assert.match(readme, /last-declaration-wins/);
+  // Req 17 c7 / Req 7 c11 — one line of body text reaching the procedure.
+  assert.match(readme, /\]\(docs\/stylesheet-sync\.md\)/, 'the README no longer links the Sync_Document');
+
+  // Req 7 c12 — the procedure clauses, at their new address.
+  assert.match(sync, /byte-identical/, 'the Sync_Document does not state the Copyright_Block byte-identity check');
+  assert.match(sync, /#4a5158/, 'the Sync_Document does not name the superseded colour as a zero-occurrence token');
+  assert.match(sync, /last-declaration-wins/, 'the Sync_Document lost the last-declaration-wins caveat');
+  assert.match(sync, /#ffffff/, "the caveat lost its detail that #copyright's FIRST colour is the mixin's opaque white");
+  assert.match(sync, /fontawesome-all\.min\.css/, 'the Sync_Document lost the @import ordering step');
+  // The eight steps, by heading, in order — the count is not asserted as prose ("seven steps")
+  // because the procedure now carries eight and a sentence saying otherwise is the kind of
+  // stale claim this test exists to catch.
+  const headings = [...sync.matchAll(/^## (\d+)\./gm)].map((m) => Number(m[1]));
+  assert.deepEqual(headings, [1, 2, 3, 4, 5, 6, 7, 8], `the Sync_Document declares steps ${headings.join(', ')} — Req 7 c12 wants all eight, in order`);
 });
 
 test('the intro h1 declared size is at or below 4rem — Req 3 c6', () => {

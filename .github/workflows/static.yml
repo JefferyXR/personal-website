@@ -32,10 +32,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       # The upload step below takes path: '.', so anything in the repository is published.
-      # Prune the verification tooling and the spec documents from the ephemeral CI
-      # checkout — neither is part of the site. This never touches the repository itself.
+      # Prune the verification tooling, the spec documents and the maintainer docs from the
+      # ephemeral CI checkout — none is part of the site. This never touches the repository
+      # itself. `docs` was added by Change Set 3 (Req 17 c11) and belongs to the same class:
+      # docs/stylesheet-sync.md is repository content, so the README link to it resolves on
+      # GitHub, where the README is read, and deliberately not on the deployed origin.
       - name: Prune non-site files
-        run: rm -rf tools .kiro
+        run: rm -rf tools .kiro docs
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

@@ -267,22 +267,76 @@
 			outline-offset: 2px;
 		}
 
+		// Req 15 (§6.1). The Copyright_Row becomes a flex container of two EQUAL HALVES, so
+		// the items' shared edge -- where the divider is painted -- is the row centre by
+		// construction rather than by arithmetic coincidence.
+		//
+		// The shipped mechanism was two `inline-block` items inside `text-align: center`, which
+		// centres their COMBINED RUN. Writing W1 and W2 for the two rendered label widths, the
+		// whole 34px of margin, border and padding cancels out of the arithmetic and the divider
+		// lands at `centre + (W1 - W2) / 2` -- exactly half the difference between the two
+		// labels, and nothing else. Two consequences, and both are why this is a restructure and
+		// not a tuned value:
+		//   - No margin, padding or letter-spacing adjustment can fix it. Those terms are not
+		//     in the result; changing them moves the gaps and leaves the offset where it is.
+		//   - Any mechanism that leaves the items sized by their CONTENT reproduces the fault at
+		//     a different magnitude the moment either label changes length, which is exactly
+		//     what Req 15 c4 exists to prevent.
+		// Measured at 1440px: -19.11px before, 0.00px after -- and 0.00px for every substituted
+		// label pair, which is the signature of a mechanism in which label widths do not appear.
 		ul {
-			list-style: none;
-			margin: 0;
-			padding-left: 0;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			// The STRUT that a flex container does not generate. In the shipped inline layout the
+			// row's line box was floored by this ul's own inherited 0.8rem font-size times its 1.5
+			// line-height = 1.2rem, taller than the `line-height: 1` items inside it. A flex
+			// container has no strut, so without this the row collapses and every footer element
+			// below it moves up -- while the divider stays perfectly centred, so nothing about the
+			// fix would look wrong (Req 15 c10). Declared in rem so it tracks the root steps at
+			// every breakpoint exactly as the strut did. `align-items: center` places the items
+			// within it and keeps the divider's rendered height at the item's own line box.
+			min-height: 1.2rem;
+			list-style: none;			// UNCHANGED
+			margin: 0;					// UNCHANGED
+			padding-left: 0;			// UNCHANGED
 
 			li {
-				border-left: solid 2px;
-				display: inline-block;
-				line-height: 1;
-				margin-left: 1rem;
-				padding-left: 1rem;
+				border-left: solid 2px;	// UNCHANGED -- this IS the Copyright_Divider (Req 15 c9)
+				// Half the row, plus HALF THE DIVIDER'S OWN WIDTH. Not a fudge: the border paints
+				// INSIDE this item, starting at its left edge, so a plain 50/50 split puts the
+				// divider BOX centre 1.0px off -- satisfying c1's "within 1 CSS pixel" only on an
+				// inclusive reading and with no margin for measurement noise. The constant is
+				// `border-width / 2`, and it changes if that width ever does.
+				flex: 0 0 calc(50% + 1px);
+				line-height: 1;			// UNCHANGED
+				// THE MOST IMPORTANT DECLARATION IN THIS BLOCK. Flex items default to
+				// `min-width: auto`, whose automatic minimum size floors the used main size at the
+				// item's min-content width -- so a label wider than half the row would grow its
+				// item past 50% and take the divider with it, reintroducing precisely the
+				// content-dependence this change removes, and only in the long-label case that
+				// Req 15 c4 exists to cover. With `min-width: 0` an over-long label wraps inside
+				// its own half and the divider does not move. Do not delete it as noise.
+				min-width: 0;
+				padding-left: 1rem;		// UNCHANGED -- clearance on the divider's RIGHT
+				text-align: left;		// sit the label against the divider
+				// `margin-left: 1rem` REMOVED: it is part of the items' outer sizes, so two 50%
+				// halves plus a 16px margin exceed the container and the shared edge lands 8px
+				// right of centre -- the same class of fault, smaller.
 
 				&:first-child {
-					border-left: 0;
-					margin-left: 0;
-					padding-left: 0;
+					border-left: 0;		// UNCHANGED
+					flex-basis: calc(50% - 1px);
+					padding-left: 0;	// UNCHANGED
+					// Clearance on the divider's LEFT. Right-aligning this label pushes its text
+					// toward the centre, so the gap the removed `margin-left` used to supply now
+					// comes from inside this half: 16.0px at 1440px, 14.67px at 768/1024px, both
+					// clear of the 8px floor in Req 15 c8 -- and label-independent, because the
+					// padding sits inside a fixed-size half rather than between two content boxes.
+					padding-right: 1rem;
+					text-align: right;
+					// The `margin-left: 0` reset is dropped: redundant now that the base rule
+					// declares no margin at all.
 				}
 			}
 		}
@@ -291,16 +345,43 @@
 			margin: (_size(padding) * 2) auto;
 		}
 
+		// Req 15 c5, c6 (§6.1). The Stacked_Layout must REVERT the flex mechanism, not merely
+		// override it, and this is the most likely way to break 320px because it breaks
+		// SILENTLY: a flex container lays its items out in a row REGARDLESS of their `display`
+		// value, so the `display: block` below would stop stacking them the moment the ul above
+		// became a flex container -- two items side by side with a divider that should not exist.
+		//
+		// `display: block` rather than `flex-direction: column`, because it restores the original
+		// formatting context wholesale: `flex`, `flex-basis` and `min-width` all become inert
+		// with no individual unwind, and the five declarations Req 15 c5 pins keep their
+		// pre-amendment meaning exactly. Under `flex-direction: column` the 50% bases would
+		// instead resolve against the container's HEIGHT.
 		@include breakpoint('<=xsmall') {
 			ul {
+				display: block;
+				// Belt-and-braces: the stacked items are far taller than 1.2rem so the floor
+				// cannot bind, and declaring it removes the question rather than leaving it to be
+				// re-derived by the next reader.
+				min-height: 0;
+
 				li {
-					border-left: 0;
-					margin: 1rem 0 0 0;
-					padding-left: 0;
-					display: block;
+					border-left: 0;			// UNCHANGED (Req 15 c5)
+					margin: 1rem 0 0 0;		// UNCHANGED (Req 15 c5)
+					padding-left: 0;		// UNCHANGED (Req 15 c5)
+					display: block;			// UNCHANGED (Req 15 c5)
+					text-align: inherit;	// undo the Side_By_Side left alignment
 
 					&:first-child {
-						margin-top: 0;
+						margin-top: 0;		// UNCHANGED (Req 15 c5)
+						padding-right: 0;	// no divider left to clear once border-left: 0 removes it
+						// THE REPEAT IS A SPECIFICITY REQUIREMENT, NOT REDUNDANCY. The base
+						// `#copyright ul li:first-child { text-align: right }` is (1,1,2) and the
+						// media-query `#copyright ul li` rule above is (1,0,2), so the base rule
+						// OUTRANKS it: the reset only lands when declared at this same :first-child
+						// specificity, where source order decides and this later block wins. Written
+						// only on the `li`, the stacked first item stays right-aligned at 320px while
+						// every check that looks at the divider reports a pass.
+						text-align: inherit;
 					}
 				}
 			}
