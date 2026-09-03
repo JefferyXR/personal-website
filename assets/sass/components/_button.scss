@@ -23,12 +23,8 @@
 		display: inline-block;
 		font-family: _font(family);
 		font-size: 0.8rem;
-		// Req 11 c1 and c3: ONE declaration reaches all three Bold_Chrome_Text button
-		// groups -- Read More (.button), View Model (.button.primary[.small][.fit]) and
-		// the skills pills (.button.skills), because the pill rule declares no weight of
-		// its own and inherits from here. Do NOT add a per-rule weight to the pill: a
-		// literal weight number outside the $font map would breach c2, and a third
-		// declaration would defeat the single-rule requirement of c3.
+		// This one declaration reaches Read More, the View Model variants and the skills
+		// pills, none of which declare a weight of their own. Do not add a per-rule weight.
 		font-weight: _font(weight-bold);
 		letter-spacing: _font(letter-spacing-heading);
 		height: 3rem;

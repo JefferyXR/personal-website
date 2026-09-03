@@ -9,13 +9,14 @@ const padding = 20;
 let mouse = { x: 0, y: 0, active: false };
 
 canvas.addEventListener('mousemove', e => {
-const rect = canvas.getBoundingClientRect();
-
-mouse.x = e.clientX - rect.left;
-mouse.y = e.clientY - rect.top;
-
+	const rect = canvas.getBoundingClientRect();
+	mouse.x = e.clientX - rect.left;
+	mouse.y = e.clientY - rect.top;
 });
 
+// NOTE: this sits OUTSIDE the handler above, so it runs once at load and is never
+// reset -- mouse repulsion is always on, and before the first mousemove it repels
+// from {0,0}. Left as-is because moving it would change how the canvas behaves.
 mouse.active = true;
 
 // ==================================================
@@ -268,8 +269,8 @@ window.addEventListener(
             ) /
             p.mass;
     });
-}
-
+},
+{ passive: true }
 );
 
 // ==================================================

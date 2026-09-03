@@ -79,14 +79,13 @@ cd tools/typography-check && npm ci && npx playwright install chromium && npm te
 
 **When comparing, apply last-declaration-wins within each rule.** The compiled CSS
 legitimately carries the same property twice in one rule, and a checker that reads the *first*
-match reports a false failure. Three live instances, all pre-existing, all harmless, all
-identical in both artifacts, and **all left exactly as they are**:
+match reports a false failure. Two live instances, both genuine `color(alt)` mixin output, both
+identical in both artifacts, and **both left exactly as they are**:
 
 | Rule | Duplicate | Why it matters |
 |---|---|---|
 | `#footer` | `color: #717981` then `color: #909498` | an artifact of the `color(alt)` mixin |
-| `#copyright` | `color` twice, also from `color(alt)` | **the first value is the mixin's opaque `#ffffff`, not the value that renders.** The block paints the *second* declaration, `rgba(255, 255, 255, 0.65)`. A maintainer who trusts the first `color` here will conclude the copyright bar is opaque white and compute a contrast ratio for a colour that is never painted |
-| `#navPanel .links li a` | `font-size: 0.9rem` twice (`_navPanel.scss:85–86`, mirrored in `main.css`) | added by Change Set 3's neighbourhood; this is the rule where a maintainer will actually meet the behaviour |
+| `#copyright` | `color` twice, also from `color(alt)` | **the first value is the mixin's opaque `#ffffff`, not the value that renders.** The block paints the *second* declaration, `rgba(255, 255, 255, 0.65)`. A maintainer who trusts the first `color` here will conclude the copyright bar is opaque white and compute a contrast ratio for a colour that is never painted. This is the rule where a maintainer actually meets the behaviour |
 
 **Skills pill geometry is measured in a browser *before* it is mirrored, not after.** The pill
 box depends on layout — the card's content width, the skills-row flex gap, how many pills share
@@ -136,8 +135,8 @@ byte-identical to their pre-change state and are checked that way.
 ## 8. Do not re-add the CSS smooth scroll
 
 Carried forward, and guarded at the line where someone would re-add it: the
-`DO-NOT-REINTRODUCE` comments at `assets/sass/base/_page.scss:31–41` and
-`assets/css/main.css:145–155`. A global `scroll-behavior: smooth` on the scrolling element
+`DO-NOT-REINTRODUCE` comments at `assets/sass/base/_page.scss:31–34` and
+`assets/css/main.css:140–143`. A global `scroll-behavior: smooth` on the scrolling element
 defeats `jquery.scrolly`, which animates with `.animate({scrollTop}, 1000)`: jQuery writes
 `scrollTop` once per frame and every write starts its own smooth scroll, so the intro
 down-arrow does not visibly move until the 1000 ms animation ends. Measured at 1440px:

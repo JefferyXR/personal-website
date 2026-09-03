@@ -31,10 +31,6 @@
 				@include vendor('flex-grow', '1');
 				@include vendor('flex-shrink', '1');
 				font-family: _font(family);
-				// Req 11 c1: Bold_Chrome_Text. weight-bold is 800, the usWeightClass of
-				// the already-shipped PPTelegraf-Ultrabold.otf, so nothing is synthesized
-				// (c6) and no font file is added (c4). Family stays _font(family) (c5)
-				// and the tracking below is now a FLOOR, not a lever (c8).
 				font-weight: _font(weight-bold);
 				letter-spacing: _font(letter-spacing-heading);
 				list-style: none;
@@ -56,9 +52,8 @@
 						outline: none;
 						padding: 0 2rem;
 
-						// Home glyph before the Projects label. em-based so it tracks the
-						// 0.8rem link size, and the glyph inherits `color`, so it flips with
-						// the .active and :hover states without a second declaration.
+						// em-based so the gap tracks the link size; the glyph inherits `color`,
+						// so it follows the .active and :hover states on its own.
 						&.icon:before {
 							margin-right: 0.5em;
 						}

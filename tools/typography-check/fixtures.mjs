@@ -1620,7 +1620,10 @@ export const SYNC_REQUIRED_ITEMS = [
       /rgba\(255,\s*255,\s*255,\s*0\.65\)/,
       /pill/i,
       /browser/i,
-      /_navPanel\.scss:85/,
+      // The concrete site the caveat cites used to be the `#navPanel .links li a` duplicate
+      // `font-size`. That duplicate has been removed as dead code, so the caveat now cites
+      // the `#footer` / `#copyright` double `color` — genuine `color(alt)` mixin output,
+      // already pinned by the `#footer`, `#copyright` and `#ffffff` patterns above.
     ],
     what: 'the parity-verification step with the last-declaration-wins caveat and the browser-measured pill instruction',
   },
@@ -1642,7 +1645,7 @@ export const SYNC_REQUIRED_ITEMS = [
     n: 8,
     id: 'scroll-behaviour-guard',
     anchor: /_page\.scss:31/,
-    patterns: [/main\.css:145/, /re-?add/i],
+    patterns: [/main\.css:140/, /re-?add/i],
     what: 'the carried-forward scroll-behavior guard note at the line where someone would re-add it',
   },
 ];

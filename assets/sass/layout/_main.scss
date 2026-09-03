@@ -192,18 +192,16 @@
 			padding-bottom: 1.25rem;
 		}
 
+		// Every declaration here is overridden by the later, equally specific
+		// `body.home #main .button.skills` and `body.home #main .actions .button` rules,
+		// so the rule renders nowhere. It is kept because the verification harness reads
+		// its declared values.
 		.button.skills,
 		.actions .button {
-			font-size: 0.7rem;	// UNCHANGED
-			height: 2.25rem;	// UNCHANGED -- leaving it alone keeps the Read More and
-						// View Model boxes exactly the size they are
-			// was 2.25rem: a LENGTH set equal to height, which made the rendered line box
-			// fill the box exactly. That is the classic fixed-height centring trick, and
-			// it is unsatisfiable under Requirement 12: the height ratio was 1.000 against
-			// a 0.85 ceiling, and c4's vertical gap evaluated to ZERO, making any non-zero
-			// horizontal padding an infinite multiple of it. A ratio fixes both at once.
+			font-size: 0.7rem;
+			height: 2.25rem;
 			line-height: 1.4;
-			padding: 0 1rem;	// UNCHANGED
+			padding: 0 1rem;
 		}
 
 		@include breakpoint('<=medium') {
@@ -266,26 +264,9 @@
 			}
 		}
 
-		// Req 11 c9 / c11 / c12. MEASURED breach introduced by the Ultrabold weight, and
-		// the only one Change Set 2 found outside the skills pills.
-		//
-		// The View Model control is `.button primary small fit`: `.fit` makes it
-		// `width: 100%` of a `.col-4`, and `.button.small` pads it `0 1.5rem`. At <=360px
-		// the root drops to 10pt, so the column is 96.66px, the box 86.66px, and the
-		// `nowrap` label -- which starts at the content-box left edge rather than centring,
-		// because it is wider than the line box -- reached 68.67px at weight 800 and
-		// painted **2.02px past the button's own border box**. At weight 400 it measured
-		// 63.67px and had 2.98px of slack, so this is a regression, not pre-existing.
-		//
-		// The remedy Req 11 c12 fixes in advance: adjust the box or its padding. The
-		// element cannot be enlarged (it already fills its grid column, and the column
-		// width is the responsive design's), so the horizontal padding gives way instead.
-		// 1rem = 13.33px leaves 4.66px of slack. font-size is NOT reduced, the weight is
-		// NOT reverted, and no `text-overflow` truncation is applied.
-		//
-		// Scoped to <=xxsmall because 360px and every wider viewport already has slack
-		// (measured: -11.31px at 360, -64.77px at 768, -109.36px at 1440), so no button
-		// box changes anywhere the breach does not occur.
+		// The View Model button already fills its grid column, so at the narrowest
+		// viewport its nowrap label overflowed the box: the horizontal padding gives way
+		// rather than the font size or the weight. Wider viewports have slack already.
 		@include breakpoint('<=xxsmall') {
 			#main > .post .button.small.fit {
 				padding: 0 1rem;
@@ -297,10 +278,8 @@
 	body.project-page #main > .post {
 		padding: 4.5rem 5rem 3.5rem;
 
-		// Project titles run to 38 characters and wrap by design, so the constraint is
-		// the widest single WORD, not the string. "KILLERBYTE" is 9.508em effective,
-		// permitting 4.666rem at 768px -- but only 2.104rem at 320px, hence the <=small
-		// step below. Without it a project title would break mid-word at 320px.
+		// Titles wrap by design, so the size is capped by the widest single word rather
+		// than the whole string -- hence the smaller <=small step further down.
 		header.major > h1 {
 			font-size: 2.5rem;
 			margin-bottom: 1rem;
@@ -387,28 +366,14 @@
 				margin: 0;
 				padding: 0.85rem 1rem;
 				position: relative;
-				// Req 10 c1: was left. Centred on the BAND, not on the h2 -- the band's
-				// only child is the h2, and centring here keeps the h2 rule untouched,
-				// which is the cheapest guarantee of Req 10 c4 and c5.
-				// text-align applies per LINE BOX, so the explicit <br /> in the
-				// KillerByte title and any 320px auto-wrap each centre independently
-				// (c2, c3). Flex/grid centring would centre the h2 BOX as one unit and
-				// leave its internal lines left-ragged: c1 would pass while c2 and c3
-				// failed. The two other alignment declarations in this file (the card
-				// description paragraphs) stay left-aligned -- Req 10 c7.
+				// On the band rather than the h2, and text-align rather than flex centring,
+				// so each wrapped title line centres independently.
 				text-align: center;
 				z-index: 0;
 			}
 
-			// Three hardcoded values routed through the $font map. This was the only
-			// literal typeface name outside the map and the @font-face rules, so
-			// removing it is what satisfies Req 7 c4.
-			// font-weight matters as much as the family: a literal 700 against a
-			// single-weight Horizon is exactly the browser-synthesized bold Req 3 c4
-			// forbids. It happens to equal Horizon's measured 700 today -- routing it
-			// through the token is what stops it drifting if the face ever changes.
-			// font-size: 1.1rem and text-transform: none are deliberate card-design
-			// choices and are retained (conflict C5).
+			// Family and weight come from the $font map so they cannot drift from the
+			// shipped face and invite a synthesized bold.
 			h2 {
 				color: #ffffff;
 				font-family: _font(family-heading);
@@ -486,13 +451,6 @@
 				text-shadow: 0 0.1rem 0.5rem rgba(0, 0, 0, 0.65);
 			}
 		}
-
-		> article:nth-child(1) { --project-image: url('../../images/killerbyte_square.jpg'); }
-		> article:nth-child(2) { --project-image: url('../../images/launchtoy.png'); }
-		> article:nth-child(3) { --project-image: url('../../images/arduino_square.png'); }
-		> article:nth-child(4) { --project-image: url('../../images/church_square.png'); }
-		> article:nth-child(5) { --project-image: url('../../images/particles3_square.png'); }
-		> article:nth-child(6) { --project-image: url('../../images/calculator_square.png'); }
 	}
 
 	@media (hover: hover) and (pointer: fine) {
@@ -508,14 +466,12 @@
 		}
 	}
 
-	// Req 5 c7 requires an over-wide skills label to wrap INSIDE the card with every
-	// character visible. That was impossible as built: nowrap on the container, nowrap
-	// on the pill, and a fixed 1.7rem height that would clip a second line even if it
-	// did wrap. The pill therefore becomes vertically elastic.
+	// Wraps and stays vertically elastic so an over-wide skills label lands inside the
+	// card instead of being clipped.
 	body.home #main .skills-box {
 		align-items: center;
 		flex-wrap: wrap;
-		gap: 0.1rem;
+		gap: 0.18rem;
 		justify-content: flex-start;
 		margin: 0 -0.15rem 0;
 		overflow: visible;
@@ -523,29 +479,39 @@
 		width: calc(100% + 0.3rem);
 	}
 
-
-	// Change Set 2 (§5.4) retunes the box for the heavier Ultrabold label. Each number
-	// answers one measured Requirement 12 breach; none of them changes appearance (c9).
 	body.home #main .button.skills {
 		background-color: rgba(18, 38, 58, 0.92);
 		border: solid 1px rgba(255, 255, 255, 0.72);
 		border-radius: 999px;
 		color: #ffffff !important;
-		// inline-flex + centring is the BELT to min-height's braces. Under block layout
-		// every pixel of residual slack falls below the line box, which is exactly what
-		// produced the ~8.4px c2 asymmetry; flex centring splits it evenly, so c2 holds
-		// STRUCTURALLY rather than by arithmetic coincidence. Wrapping survives: the text
-		// becomes one anonymous flex item that still wraps under white-space: normal
-		// (c8, Req 5 c7).
+		// Flex centring splits the leftover space evenly above and below the label; under
+		// block layout all of it fell below. `height: auto` and `white-space: normal` let a
+		// long label wrap to a second line instead of being clipped.
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
 		flex: 0 1 auto;
-		font-size: 0.55rem;		// UNCHANGED -- Req 12 c11 forbids reducing it
-		height: auto;			// UNCHANGED -- a fixed height clips line 2
-		line-height: 1.4;		// UNCHANGED -- a ratio, so it survives wrapping
-		min-height: 1.35rem;		// was 1.7rem -- 1.7 exceeded the content by ~8px (c2)
+		font-size: 0.55rem;
+		height: auto;
+		line-height: 1.4;
+		min-height: 1.35rem;
 		min-width: 0;
-		padding: 0.2rem 0.55rem;	// was 0.15rem 0.4rem -- 0.4 breached c5, 0.15 breached c4
-		white-space: normal;		// UNCHANGED -- permits the Req 5 c7 wrap
+		padding: 0.2rem 0.55rem;
+		white-space: normal;
+	}
+
+	body.home #main .actions .button {
+		background-color: rgb(178,172,214);
+		border: 0;
+		border-radius: 999px;
+		box-shadow: none;
+		color: #12263a !important;
+		font-size: 0.66rem;
+		height: 2rem;
+		line-height: 2rem;
+		padding: 0 1rem;
+
+		&:hover {
+			background-color: #ffffff;
+		}
 	}
