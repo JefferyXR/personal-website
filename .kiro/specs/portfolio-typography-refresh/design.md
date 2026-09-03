@@ -21,6 +21,16 @@ This design implements the outcomes of `requirements.md` against a static, build
 
 Change Set 2 adds **no font file**, changes **no `@font-face` rule**, and changes **no palette value** beyond the single `alt.fg-link` token that Change Set 1 already introduced. Every other Change Set 2 effect is a per-rule declaration change.
 
+**Change Set 3** is a third amendment against the Change Set 2 tree (branch `spec/typography-refresh-change-set-2`, PR #2, plus the follow-up that removed the global `scroll-behavior` declaration). It is specified in Requirements 15–17 plus amendments to Requirements 4 c4, 7 c5/c11–c13, 9 c3 and 11 c15, and to the **Chrome_Text** and **Bold_Chrome_Text** glossary entries. Its three changes:
+
+| # | Change | Requirement | Design section |
+|---|---|---|---|
+| 1 | The Copyright_Divider sits at the exact horizontal centre of the row, for **any** label pair | Req 15 | **§6.1**, and §5.5 revised |
+| 2 | Nav_Panel_Toggle and Nav_Panel_Link move to Ultrabold (800) | Req 16, Req 11 c15 | **§6.2**, and §3.5 / §5.3 revised |
+| 3 | `README.md` returns to a short form; the regeneration procedure moves to `docs/stylesheet-sync.md`, linked in one line | Req 17, Req 7 c5/c11–c13, Req 9 c3, Req 4 c4 | **§6.3**, and the Compiled Stylesheet Sync Procedure section revised |
+
+Change Set 3 adds no font file, changes no `@font-face` rule, changes no palette value, and changes **no markup inside any of the nine Content_Pages** — which makes it the first change set since Change Set 1 to leave all nine pages byte-identical. Changes 1 and 2 are stylesheet-only. Change 3 touches `README.md`, the new `docs/stylesheet-sync.md`, and the prune step of `.github/workflows/static.yml`.
+
 ### What research established
 
 All numbers below were measured against the repository during design, not assumed. Six findings materially shaped the design:
@@ -301,11 +311,14 @@ Chrome_Text currently inherits `family-heading` at sizes down to **0.55rem** (`b
 | `components/_form.scss:73` | `label` | inherits |
 | `components/_pagination.scss:26` | pagination links | 0.8rem |
 | `components/_table.scss:31` | `th` | 0.8rem |
-| `layout/_navPanel.scss:22,84` | nav panel links | 0.9rem |
+| `layout/_navPanel.scss:22` | Nav_Panel_Toggle | 0.9rem (0.8 at `<=small`) |
+| `layout/_navPanel.scss:84` | Nav_Panel_Link | 0.9rem |
 | `layout/_footer.scss:224` | `#copyright` | 0.8rem |
 | `layout/_nav.scss:33` | `#nav ul.links` (conflict C6) | 0.8rem |
 
-**Change Set 2 splits this table in two.** Requirement 11 moves three of these groups — the nav links, every `.button` label, and the skills pill labels — from `_font(weight)` to `_font(weight-bold)`, making them **Bold_Chrome_Text** (§5.3). The family stays `_font(family)` for all of them, so the Req 5 c1 routing above is unchanged; only the weight differs. Form labels, pagination links, table headers, nav-panel links and `#copyright` stay at 400 (Req 11 c15).
+*(The two `_navPanel.scss` sites were one row in the Change Set 1 draft. They are split here because Change Set 3 treats them as two named elements — see the Nav_Panel_Toggle and Nav_Panel_Link glossary entries — and because the toggle carries a second, `<=small` size that the combined row hid. The `<=0.9rem` size bound of the Chrome_Text glossary entry was also amended in Change Set 3 from a strict to a non-strict inequality: both of these declarations are *exactly* 0.9rem, so the original wording excluded by accident the two elements the same entry already listed by file.)*
+
+**Change Set 2 splits this table in two, and Change Set 3 moves two more rows across.** Requirement 11 moved three groups — the nav links, every `.button` label, and the skills pill labels — from `_font(weight)` to `_font(weight-bold)`, making them **Bold_Chrome_Text** (§5.3). Requirement 16 moves the **Nav_Panel_Toggle and the Nav_Panel_Link** across as well (§6.2). The family stays `_font(family)` for all five, so the Req 5 c1 routing above is unchanged; only the weight differs. Form labels, pagination links, table headers and `#copyright` are what remain at 400 — that four-group list is the amended text of Req 11 c15, and it is the authority for the 400 half of Property 4's partition.
 
 **Chrome_Text letter-spacing: `0.05em`**, down from `0.075em` (Req 5 c8 range 0.025–0.075em; both comply). Reduced deliberately: the longest skills label is exactly **20 characters** ("Waterjet fabrication"), precisely at the Req 5 c4 single-line boundary, and it must fit inside a card pill at 0.55rem. Dropping tracking by 0.025em buys ~0.5 characters of width at zero visual cost. Centralised as `letter-spacing-heading` in the `$font` map (§3.1) so all seven sites stay consistent (Req 8 c3).
 
@@ -549,7 +562,7 @@ Three things this does *not* change, all pinned by Req 11:
 
 **No new font file, and the bundle budget is untouched — stated explicitly because it is easy to assume otherwise.** `PPTelegraf-Ultrabold.otf` (44,664 bytes, `usWeightClass` 800) already ships and is already declared at `font-weight: 800` under the `PP Telegraf` CSS family, because Change Set 1 needed it for `<strong>`. Requirement 11 adds a second consumer of a face that is already downloaded on every page load. The bundle stays at **103,324 bytes (≈101 KB), 17% of the 600 KB budget**, and Req 11 c4 (add no file, remove no file, change no `@font-face` rule) is satisfied by doing nothing. Req 11 c6 likewise: 800 is a shipped `usWeightClass`, so no weight is synthesized or interpolated.
 
-**Two incidental reaches of the `.button` rule, both benign.** The compiled `.button` rule at `main.css:2120` is a grouped selector that also covers `input[type="submit"|"reset"|"button"]` and bare `button` elements. A content audit finds **zero forms and zero such inputs** across all nine pages, so those selectors match nothing today. The one non-anchor match is the intro down-arrow, `class="button icon solid solo fa-arrow-down scrolly"` — an icon-only control with no text node, whose glyph is painted by a Font Awesome `:before` rule that sets its own `font-family` and `font-weight`, so the change has no visible effect on it. Neither reach touches anything Req 11 c15 pins at 400 (form labels, pagination links, table headers, nav-panel links, Copyright_Block), because none of those resolves through `.button`.
+**Two incidental reaches of the `.button` rule, both benign.** The compiled `.button` rule at `main.css:2120` is a grouped selector that also covers `input[type="submit"|"reset"|"button"]` and bare `button` elements. A content audit finds **zero forms and zero such inputs** across all nine pages, so those selectors match nothing today. The one non-anchor match is the intro down-arrow, `class="button icon solid solo fa-arrow-down scrolly"` — an icon-only control with no text node, whose glyph is painted by a Font Awesome `:before` rule that sets its own `font-family` and `font-weight`, so the change has no visible effect on it. Neither reach touches anything Req 11 c15 pins at 400, because none of those resolves through `.button`. *(As amended in Change Set 3, that pinned list is form labels, pagination links, table headers and the Copyright_Block. The nav-panel links left it under Requirement 16 — §6.2 — which is a change of weight for those anchors, not a change to the reach of this `.button` rule.)*
 
 #### The real risk: Ultrabold is wider than Regular
 
@@ -723,6 +736,8 @@ Replacement:
 
 Two `<li>` elements, matching the two-element structure Req 13 c12 requires. This slots into the existing `#copyright ul li` styling with no CSS work: those items are `inline-block` with `border-left: solid 2px` and `:first-child { border-left: 0 }`, so the second item automatically gets the template's divider rule — and at `<=xsmall` they stack, which the existing breakpoint already handles.
 
+> **Superseded in part by Change Set 3 (§6.1).** "No CSS work" was true and is the reason the divider is now measurably off centre: reusing the template's two-`inline-block` arrangement inside a `text-align: center` block centres the *combined run* of the two items, so the join between them — and therefore the divider drawn on the second item's left border — lands wherever the unequal label widths put it. At 1440px that is **20.1px left of centre**. The markup above is **unchanged** by Change Set 3 (Req 15 c12 forbids touching it); §6.1 replaces the `#copyright ul` layout mechanism instead. Everything else in this section — the `#top` decision, the no-JavaScript reasoning, the removed smooth-scroll block, the accessibility table, and the retained design credit — stands exactly as written.
+
 **Page-by-page application (Req 13 c13, c14).** Six pages write `#copyright` across multiple source lines and three — `killerbyte.html`, `launchtoy.html`, `vexlego.html` — write the whole div on one line; the replacement respects each page's existing line layout while emitting **identical inner markup structure and identical text**. `vexlego.html` currently differs from the other eight by writing the ampersand as `&amp;` where they use a bare `&`. The new wording contains **no ampersand at all**, which retires that divergence: after this change all nine pages carry a byte-identical `<ul>…</ul>`, and Req 13 c14's escaping rule is satisfied vacuously rather than by nine careful edits. Property 16 asserts the byte-identity so a future single-page edit cannot drift.
 
 #### `#top` versus `#wrapper`
@@ -874,7 +889,355 @@ Three properties of this edit are deliberate:
 - **No file is invented.** Req 9 c11 forbids fabricating or paraphrasing a licence file in place of the real one, so Property 11 must also fail if a `Horizon-LICENSE.txt` appears whose provenance is not the designer. The safe check is presence-of-sentinel, not presence-of-file.
 - **The four recorded fields are already non-empty**, so this is a note edit rather than a data-gathering exercise. Nothing blocks it.
 
-Req 9 c3's `README.md` credits (Horizon → Alberto Fontense, PP Telegraf → Pangram Pangram Foundry, each with its licence tier) are unaffected and stay as shipped.
+Req 9 c3's `README.md` credits (Horizon → Alberto Fontense, PP Telegraf → Pangram Pangram Foundry, each with its licence tier) are unaffected and stay as shipped. **Change Set 3 keeps both credits and only compacts their form** — see §6.3.
+
+---
+
+## Change Set 3 — Design
+
+Three follow-up changes against the Change Set 2 tree. Two are stylesheet-only; the third touches no stylesheet, no page and no font file at all. The total delta, stated up front to bound the review surface:
+
+| Change | SASS | Compiled CSS | HTML pages | Other files |
+|---|---|---|---|---|
+| §6.1 divider centring | `#copyright ul` + its `li` rule restructured, `<=xsmall` block extended | `main.css:4601–4620` and the `max-width: 480px` block at `:4630–4641` | **0** | — |
+| §6.2 nav panel weights | 2 declarations (`_navPanel.scss:24`, `:87`) | 2 declarations (`main.css:4660`, `:4753`) | **0** | — |
+| §6.3 short README | 0 | 0 | **0** | `README.md` rewritten, `docs/stylesheet-sync.md` added, `static.yml` prune step |
+
+Change Set 3 is the first amendment since Change Set 1 that leaves all nine Content_Pages byte-identical: Req 15 c12 forbids touching the Copyright_Block markup, Req 16's elements are script-injected or reparented rather than authored, and Req 17 c13 restricts change 3 to three files. Property 8's page-markup clause therefore holds across this change set with **no** allowlist entry added for HTML.
+
+### 6.1 Centring the Copyright_Divider (Req 15)
+
+Assumptions and Open Questions item 13 leaves the mechanism open. **This section closes it.**
+
+#### The offset is a function of the label widths, and the arithmetic says so exactly
+
+Measured at 1440px: the Copyright_Row content box spans **x 144 → x 1296** (width 1152, centre **x 720**) while the Copyright_Divider renders at **x 699.9** — **20.1px left of centre**.
+
+The shipped mechanism is the template's: `#copyright` declares `text-align: center`, the `ul` is an ordinary block filling that content box, and the two `li` are `display: inline-block`. So the two items form **one line box** which `text-align: center` centres as a unit. Writing `W₁` and `W₂` for the two rendered label widths, and with 1rem = 16px at 1440px:
+
+```
+run width      R  = W₁ + margin-left 16 + border 2 + padding-left 16 + W₂
+run start         = 720 − R/2
+divider centre    = run start + W₁ + 16 + 1
+                  = 720 − (W₁ + W₂ + 34)/2 + W₁ + 17
+                  = 720 + (W₁ − W₂)/2
+```
+
+**The whole 34px of margin, border and padding cancels.** The residual offset is *exactly half the difference between the two label widths*, and nothing else. Two consequences follow directly, and both are load-bearing:
+
+- **No adjustment to `margin`, `padding` or `letter-spacing` can fix this.** Those terms are not in the result. Tuning them changes the gaps around the divider and leaves the offset where it is.
+- **Any fix that leaves the two items sized by their content will reproduce the fault** at a different magnitude the moment either label's text changes length. This is why Req 15 c4 is written as label-width independence and why c14 demands a second measurement under a substituted label pair.
+
+The measured offset back-solves to `W₂ − W₁ = 40.2px`. Reading the two labels' advances straight out of `PPTelegraf-Regular.otf` (the same `fontTools` method §5.4 Layer 1 uses, `hmtx` advances over `unitsPerEm` plus the declared 0.05em tracking) gives `BACK TO TOP` = **88.70px** and `DESIGN: HTML5 UP` = **125.95px** at 0.8rem/16px root — a difference of **37.25px**, predicting an offset of **−18.6px** against the **−20.1px** the browser reports. The 1.5px residual is subpixel layout and hinting, outside the arithmetic. That agreement is the point: the causal model is confirmed, so the fix can be designed against the model rather than against the one number.
+
+#### The four candidates
+
+| # | Candidate | Verdict |
+|---|---|---|
+| a | `ul { display: flex; justify-content: center }`, each `li` an equal half | **CHOSEN** — the shared edge is the row centre by construction; label widths do not enter the computation |
+| b | `ul { display: grid; grid-template-columns: 1fr auto 1fr }` | Rejected — the middle track has no element to occupy it |
+| c | Divider absolutely positioned at `left: 50%` | Rejected — moves the divider but not the labels; breaks c8 |
+| d | Inline-block items with equalised widths | Rejected — correct, but depends on inter-item markup whitespace |
+
+**(b) grid `1fr auto 1fr`.** The middle track is meant to hold the divider, but the Copyright_Row contains exactly two `li` and Req 15 c12 forbids adding a third element. With only two items the `auto` track collapses to zero width and the mechanism degenerates into two equal columns — that is, into candidate (a) with extra syntax. It also inherits (a)'s subtleties without simplifying any of them: `1fr` is `minmax(auto, 1fr)`, so a long label's min-content size can push its track past 50% exactly as an unconstrained flex item can, and `minmax(0, 1fr)` would be needed for the same reason `min-width: 0` is needed below. No advantage, one more concept.
+
+**(c) absolute `left: 50%`.** This is the only candidate that positions the divider *directly*, and `#copyright` already declares `position: relative`, so the containing block exists. It is rejected on two independent grounds. First, it requires the divider to stop being a border: it would become a pseudo-element with `width: 2px; left: 50%; margin-left: -1px`, and the Copyright_Divider is *defined* as the `border-left: solid 2px` on the second Copyright_Item, whose declared width and inherited colour Req 15 c9 pins unchanged. Second and worse, **it fixes the divider and leaves the labels where they were.** The two inline-block items would still be centred as a combined run, so under a label pair with a large width difference the join would sit tens of pixels away from the divider — the divider would pass *through* a glyph of the wider label. That fails Req 15 c8 (≥8px clearance, no glyph overlapping the divider box) while passing c1, which is the worst possible failure shape: a check on the divider's position alone would report success.
+
+**(d) equalised inline-block widths.** Genuinely competitive, and it has two real advantages over (a) that are worth recording because they are the risks (a) has to manage: it keeps the inline formatting context, so the row's line box height is unchanged (see *row height* below), and it leaves the `<=xsmall` `display: block` stacking untouched. It is rejected for one reason: **an inline-block layout is sensitive to whitespace between the items.** Today the markup is `…</li><li>…` with no inter-item whitespace, so the arithmetic above holds; reformat the `<ul>` onto separate source lines — which is exactly the kind of tidy-up hand-edited markup attracts, and these nine pages have already diverged once over an `&amp;` — and a word space appears between the items, displacing the divider by its width and silently breaking c1. Flex and grid containers discard inter-item whitespace, so (a) cannot be broken by reformatting. Given that Req 15 c12 pins the markup and Property 8 pins its byte-identity, a mechanism whose correctness depends on that markup's *whitespace* is a mechanism with an invisible tripwire in it.
+
+#### The chosen mechanism
+
+```scss
+// assets/sass/layout/_footer.scss — inside #copyright
+ul {
+    display: flex;                  // was an ordinary block with two inline-block children
+    justify-content: center;
+    align-items: center;
+    min-height: 1.2rem;             // = 1.5 line-height x 0.8rem font-size — see "row height"
+    list-style: none;               // UNCHANGED
+    margin: 0;                      // UNCHANGED
+    padding-left: 0;                // UNCHANGED
+
+    li {
+        border-left: solid 2px;     // UNCHANGED — this IS the Copyright_Divider (Req 15 c9)
+        flex: 0 0 calc(50% + 1px);  // half the row, plus half the divider's own 2px
+        line-height: 1;             // UNCHANGED
+        min-width: 0;               // NEW — defeats the automatic minimum size (Req 15 c4)
+        padding-left: 1rem;         // UNCHANGED — clearance on the divider's right
+        text-align: left;           // NEW — sit the label against the divider
+        // margin-left: 1rem  REMOVED — it displaces the shared edge off centre
+
+        &:first-child {
+            border-left: 0;         // UNCHANGED
+            flex-basis: calc(50% - 1px);
+            padding-left: 0;        // UNCHANGED
+            padding-right: 1rem;    // NEW — clearance on the divider's left
+            text-align: right;      // NEW
+        }
+    }
+}
+```
+
+At 1440px this computes to: first item **144 → 719**, second item **719 → 1296**, its `border-left` painting **719 → 721** for a divider box centre of **x 720.0** — the row centre, offset **0.0px**. The five decisions inside that block each carry a specific criterion:
+
+- **Equal halves, so the shared edge *is* the centre.** `flex: 0 0 …` fixes each item's main size to its basis, with no grow and no shrink, and a percentage `flex-basis` resolves against the flex container's inner main size — the row content box — and nothing else. `box-sizing: border-box` is inherited globally (`_page.scss:29`, `main.css:144`), so the basis is a border-box size and the two items tile the row exactly. **No term in the item sizing derives from a label.** That is Req 15 c4 satisfied structurally rather than by arithmetic coincidence, which is the distinction the requirement is built around.
+- **The ±1px is half the divider's own width, and it is not a fudge.** The divider is painted *inside* the second item, starting at its left edge. A plain 50/50 split therefore puts the divider box centre at `centre + 1px` — exactly 1.0px off, which satisfies c1's "within 1 CSS pixel" only on an inclusive reading and with zero margin for measurement noise. Biasing the halves by 1px each way puts the *divider box*, not the item boundary, on the centre line. Should the declared border width ever change, this constant changes with it: it is `border-width / 2` and the comment says so.
+- **The `margin-left: 1rem` has to go.** Left in place it is part of the items' outer sizes, so two 50% items plus a 16px margin exceed the container and the shared edge lands 8px right of centre — the same class of fault, smaller. The `:first-child { margin-left: 0 }` reset becomes redundant once the base rule declares no margin, and is dropped with it.
+- **`min-width: 0` is what makes c4 hold for *any* label.** Flex items default to `min-width: auto`, whose automatic minimum size floors the used main size at the item's min-content size. Without this declaration a label wider than half the row would grow its item past 50% and displace the divider — reintroducing the exact content-dependence this change removes, and doing so only for the long-label case that c4 exists to cover. With `min-width: 0` an over-long label wraps inside its own half instead, and the divider does not move. This is one declaration and it is the most important one in the block.
+- **`text-align: right` / `left`, and where the first item's clearance comes from.** Right-aligning the first label pushes its text toward the centre, so the gap that `margin-left: 1rem` used to supply on the divider's left has to be supplied from inside the first item: `padding-right: 1rem`. The second item's `padding-left: 1rem` already supplies the gap on the other side and is unchanged. The result is symmetric by declaration rather than by accident.
+
+**Clearance (Req 15 c8, ≥8 CSS px).** 1rem resolves to 16px at 1440px and 14.67px at 768px and 1024px, so both gaps clear the 8px floor at every viewport where the Side_By_Side_Layout applies — including the 481px lower edge of that layout, where the root step is still 11pt. Since the paddings are inside the fixed-size halves, the clearance is also label-independent: a longer label consumes the free space in its half or wraps, it does not encroach on the padding.
+
+| Side | Supplied by | 1440px | 768 / 1024px |
+|---|---|---|---|
+| divider ← first label | `padding-right: 1rem` on `:first-child` (**new**; replaces the removed `margin-left`) | 16.0px | 14.67px |
+| divider → second label | `padding-left: 1rem` on the base `li` (**unchanged**) | 16.0px | 14.67px |
+
+**Row height, and the strut that a flex container does not generate.** This is the one way the chosen mechanism changes something the requirement did not ask to change, so it is handled deliberately. In the shipped inline layout the `ul` establishes an inline formatting context whose line box is floored by the **strut** — the `ul`'s own inherited `font-size: 0.8rem` and `line-height: 1.5`, i.e. 1.2rem — which is taller than the `line-height: 1` inline-blocks it contains. A flex container generates no strut, so the row would collapse toward 0.8rem and everything below it in the footer would move up, contradicting Req 15 c10 ("changes no other footer geometry and no footer element's height"). `min-height: 1.2rem` restores that floor in the same rem terms the strut used, so it tracks the root steps identically at every breakpoint, and `align-items: center` places the items within it. Keeping `align-items: center` rather than the default `stretch` also keeps the divider's rendered *height* at the item's `line-height: 1` box, as today, instead of stretching it to the full row. The pre-change and post-change row border-box heights are both recorded in the c14 table below, because this is an argument that should be checked rather than believed.
+
+#### The Stacked_Layout at `<=xsmall` (Req 15 c5)
+
+This is the most likely way to break 320px, and it breaks silently: a flex container lays its items out in a row **regardless of their `display` value**, so the existing `display: block` on the `li` would stop stacking them the moment the `ul` becomes a flex container. The Side_By_Side mechanism must therefore be reverted, not merely overridden:
+
+```scss
+@include breakpoint('<=xsmall') {
+    ul {
+        display: block;             // NEW — reverts the flex container so that the
+        min-height: 0;              //       `display: block` below stacks again
+        li {
+            border-left: 0;         // UNCHANGED (Req 15 c5)
+            margin: 1rem 0 0 0;     // UNCHANGED (Req 15 c5)
+            padding-left: 0;        // UNCHANGED (Req 15 c5)
+            display: block;         // UNCHANGED (Req 15 c5)
+            text-align: inherit;    // NEW — undo the Side_By_Side left alignment
+
+            &:first-child {
+                margin-top: 0;      // UNCHANGED (Req 15 c5)
+                padding-right: 0;   // NEW — undo the first item's clearance padding
+                text-align: inherit;// NEW — see the specificity note
+            }
+        }
+    }
+}
+```
+
+Reverting the `ul` to `display: block` is preferred over `flex-direction: column` because it restores the original formatting context wholesale: every flex-specific declaration on the items — `flex`, `flex-basis`, `min-width` — becomes inert without needing an individual reset, and the five declarations Req 15 c5 pins keep their pre-amendment meaning exactly. Under `flex-direction: column` the 50% bases would instead resolve against the container's *height*, and each item would need its own unwind. Three resets are still required, because the Side_By_Side rule adds three things the stacked items must not inherit:
+
+- `text-align: inherit` returns both items to the `center` that `#copyright` declares and the Stacked_Layout has always used.
+- **`text-align: inherit` must be repeated on `:first-child`.** The base `#copyright ul li:first-child { text-align: right }` outranks a media-query `#copyright ul li { text-align: inherit }` on specificity — `(1,1,2)` against `(1,0,2)` — so the reset only lands if it is declared at the same `:first-child` specificity, where source order decides and the later media block wins. A reset written only on the `li` rule would leave the stacked first item right-aligned at 320px while every check that looks at the divider reported a pass.
+- `padding-right: 0` on `:first-child` removes the clearance padding, which has no divider to clear once `border-left: 0` has removed it.
+
+`min-height: 0` on the `ul` is belt-and-braces: the two stacked items are far taller than 1.2rem, so the floor cannot bind, and declaring it removes the question rather than leaving it to be re-derived.
+
+#### Measurements (Req 15 c14) — to be recorded from a browser, not from this table
+
+Everything below the horizontal rule in this subsection is **derived**: the label widths come from the shipped binaries and the box positions from the declared CSS and the root steps. They are predictions with a measured input, in the same status as §5.4's chosen values, and **Req 15 c14 is discharged only by the rendered numbers.** Implementation runs the measurement first and records into the empty table; if a bound is missed, the adjustment is a change to this mechanism, not a change to the recorded number.
+
+*Derived, for orientation only.* Signed offset means divider-box centre minus row-content-box centre, positive to the right:
+
+| Label pair (rendered, uppercase) | Δ chars | offset **today** (derived) | offset **after §6.1** (derived) |
+|---|---|---|---|
+| `BACK TO TOP` / `DESIGN: HTML5 UP` — shipped | 5 | −18.6px *(browser: **−20.1px**)* | 0.0px |
+| **S1** `TOP` / `DESIGN: HTML5 UP` | **13** | −49.6px | 0.0px |
+| **S2** `BACK TO THE TOP OF THIS PAGE` / `DESIGN: HTML5 UP` | **12** | **+45.4px** | 0.0px |
+| **S3** `RETURN TO TOP` / `DESIGN: HTML5` — control | **0** | −0.1px | 0.0px |
+
+Three things this table is chosen to show. **S1 and S2 have opposite signs**, so they distinguish "centred" from "biased consistently in one direction" — a mechanism that merely shifted the run by a constant would pass one and fail the other. **S3 is a control that the shipped, broken mechanism already passes** at −0.1px, because its two labels happen to be 0.17px apart in width; c4 names the equal-count case, and it must not be the *only* substitution exercised or the check has no discrimination at all. And every substituted pair predicts **0.0px** after the change, which is the signature of a mechanism in which label widths do not appear.
+
+---
+
+**Record to be filled during implementation**, from Playwright with the real faces confirmed loaded (`document.fonts.check('0.8rem "PP Telegraf"')` before any measurement — a measurement taken in the fallback window measures Helvetica). Row content box from `getBoundingClientRect()` on the `ul`, adjusted for its resolved padding; divider centre from the second `li`'s `left` plus half its resolved `border-left-width`:
+
+**RECORDED.** Measured with Playwright/headless Chromium at `deviceScaleFactor: 1`, fonts confirmed loaded via `document.fonts.check('0.8rem "PP Telegraf"')` before every reading, by `tools/typography-check/divider-geometry.mjs`. Row content box from `getBoundingClientRect()` on the `ul` adjusted for its resolved padding; divider centre from the second `li`'s `left` plus half its resolved `border-left-width`. Substitutions applied at runtime by the fixtures helper; **no page was edited**. The full 9-page × 3-viewport × 4-pair sweep (108 readings) is uniform — every page returns identical figures, so one row per (viewport, pair) is the whole record.
+
+Signed offset = divider-box centre − row-content-box centre, positive to the right:
+
+| Viewport | Label pair | row left x | row right x | row centre x | divider centre x **before** | offset **before** | divider centre x **after** | offset **after** | row height **before** | row height **after** |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 768px | shipped | 29.33 | 738.66 | 383.99 | 368.02 | **−15.98** | 383.98 | **−0.01** | 17.59 | 17.59 |
+| 1024px | shipped | 29.33 | 994.66 | 511.99 | 496.02 | **−15.98** | 511.98 | **−0.01** | 17.59 | 17.59 |
+| 1440px | shipped | 144.00 | 1296.00 | 720.00 | 700.89 | **−19.11** | 720.00 | **0.00** | 19.19 | 19.19 |
+| 768px | S1 (Δ13) | 29.33 | 738.66 | 383.99 | 338.67 | **−45.32** | 383.98 | **−0.01** | 17.59 | 17.59 |
+| 1024px | S1 (Δ13) | 29.33 | 994.66 | 511.99 | 466.67 | **−45.32** | 511.98 | **−0.01** | 17.59 | 17.59 |
+| 1440px | S1 (Δ13) | 144.00 | 1296.00 | 720.00 | 670.33 | **−49.67** | 720.00 | **0.00** | 19.19 | 19.19 |
+| 768px | S2 (Δ12) | 29.33 | 738.66 | 383.99 | 427.00 | **+43.01** | 383.98 | **−0.01** | 17.59 | 17.59 |
+| 1024px | S2 (Δ12) | 29.33 | 994.66 | 511.99 | 555.00 | **+43.01** | 511.98 | **−0.01** | 17.59 | 17.59 |
+| 1440px | S2 (Δ12) | 144.00 | 1296.00 | 720.00 | 765.83 | **+45.83** | 720.00 | **0.00** | 19.19 | 19.19 |
+| 768px | S3 (Δ0, control) | 29.33 | 738.66 | 383.99 | 384.48 | **+0.49** | 383.98 | **−0.01** | 17.59 | 17.59 |
+| 1024px | S3 (Δ0, control) | 29.33 | 994.66 | 511.99 | 512.48 | **+0.49** | 511.98 | **−0.01** | 17.59 | 17.59 |
+| 1440px | S3 (Δ0, control) | 144.00 | 1296.00 | 720.00 | 720.00 | **0.00** | 720.00 | **0.00** | 19.19 | 19.19 |
+| 320px | all four pairs | *(Stacked_Layout)* | — | — | *no divider box, before or after* | n/a | — | n/a | — | — |
+
+**320px, before and after, for all four pairs:** two `display: block` items of **266.66px** each — the full Copyright_Row content width — one rendered line each, `border-left-width: 0` so **no divider box exists**, and the `ul` computing to `display: block`. Identical on all nine pages.
+
+Row centre versus Copyright_Block centre (c3) measures **0.00px** at every viewport, before and after. Clearances (c8) are **14.66px** on both sides at 768/1024px and **16.00px** at 1440px, before and after, and no label glyph intersects the divider box in any of the 108 readings.
+
+Four things this record establishes beyond c1.
+
+- **The predictions hold, and the one discrepancy is the oracle, not the mechanism.** S1 measured −49.67 against a derived −49.6, S2 +45.83 against +45.4, S3 0.00 against −0.1. The shipped pair measured **−19.11px at 1440px against the −20.1px recorded above** — a 1.0px difference that is exactly `border-width / 2`. The earlier figure was read at the *item boundary* (x 699.89); this one is the **divider box centre** (x 700.89), which is the quantity c1 is written against and the one the ±1px bias exists to place. The two numbers describe the same layout; the record uses the box centre throughout.
+- **Label-width independence is measured, not inferred.** All four pairs return the same post-change offset to within 0.01px, and the sampled arm of Property 17 adds 100 further random pairs per run. The residual −0.01px at 768/1024px is subpixel rounding of `calc(50% ± 1px)` against a fractional root step, an order of magnitude inside the 1px tolerance.
+- **The strut argument is confirmed.** Post-change row heights equal pre-change heights exactly at every viewport: 17.59px at 768/1024px and 19.19px at 1440px, which is 1.2rem at each root step (14.667 × 1.2 = 17.6; 16 × 1.2 = 19.2). `min-height: 1.2rem` restores what the lost strut supplied, so no footer element moved.
+- **S3 passed before the change**, at +0.49px and 0.00px, exactly as the table above predicts. That is the required observation: it is the case a broken mechanism already satisfies, and seeing it pass alongside three failures is what shows the generator discriminates.
+
+**481px, the layout's own lower edge, measured as well** — nothing in Requirement 15 asserts anything there (c2 names 768/1024/1440 and c7 names 320), so it is only a reviewer instruction, but it is where the two fixed halves are narrowest relative to the labels. All four pairs return **−0.01px** with 14.66px clearances on both sides, no glyph overlap and no horizontal overflow, and the same holds at 736px and 737px, the two sides of the `<=small` root step.
+
+**The `min-width: 0` argument is confirmed empirically at that width, and by the one case that exercises it.** At 481px, S2's 28-character first label no longer fits in its half and **wraps inside it**: the row grows to 23.47px (two line boxes in the first item, one in the second) and the divider stays at −0.01px. That is the designed behaviour and the reason `min-width: 0` is in the block — without it the item's automatic minimum size would have expanded the half instead, taking the divider with it. The shipped labels never reach this case at any viewport; only a substitution does, which is precisely why Req 15 c4 quantifies over label pairs rather than trusting the two strings in the markup.
+
+**How the substitution is performed** matters, and it is not by editing the nine pages: Req 15 c12 and Req 17 c13 both forbid that, and a substitution baked into markup would have to be reverted before push. The label text is replaced **at runtime**, in the page under test, by assigning to the two items' text nodes before measuring. Details are in the Testing Strategy.
+
+### 6.2 Ultrabold for the Nav_Panel_Toggle and the Nav_Panel_Links (Req 16)
+
+**Two declarations, both in `assets/sass/layout/_navPanel.scss`.**
+
+```scss
+// :24 — the #navPanelToggle rule (the fixed "Menu" control)
+font-weight: _font(weight-bold);    // was _font(weight)
+
+// :87 — the #navPanel .links li a rule (the slide-out panel's links)
+font-weight: _font(weight-bold);    // was _font(weight)
+```
+
+Their compiled mirrors are `main.css:4660` and `main.css:4753`. **Line numbers as implemented:** the two SASS lines are still exactly 24 and 87 — the rationale comments were written as *trailing* comments precisely so that neither moved, since Req 16 c3 names both by number. Every compiled line number in this section and in §6.1, however, shifted by roughly +45 once §6.1's mirror gained its comment block: the toggle weight now sits at `main.css:4710`, the nav panel link weight at `:4809`, the Font Awesome `font-weight: 900` at `:4727`, and the duplicate `font-size: 0.9rem` at `:4801–4802`. The unit assertions locate the compiled rules **by selector** for this reason; a line-indexed check would fail on a correct file and, worse, would pass again once someone "fixed" it by deleting the comments. `font-family: _font(family)` is unchanged at both sites (`:22` and `:84`), as are both declared `font-size` values — 0.9rem, reducing to 0.8rem at `<=small` for the toggle only (Req 16 c4, c5). **No font file is added:** `PPTelegraf-Ultrabold.otf` already ships at `usWeightClass` 800 and is already declared at `font-weight: 800` under the `PP Telegraf` family, so the bundle stays at 103,324 bytes and Req 16 c6 is satisfied by doing nothing — the same position §5.3 records for Requirement 11.
+
+**Do not touch `main.css:4677`.** The `#navPanelToggle:before` rule declares `font-weight: 900` for the Font Awesome `\f0c9` glyph and resolves through the icon family, not the `$font` map. It is not Chrome_Text, it is not Bold_Chrome_Text, and Property 8 carries it against its baseline. Two `font-weight` declarations in one rule block is exactly the shape a careless mirror gets wrong.
+
+**Leave the duplicate `font-size` at `_navPanel.scss:85–86` alone.** The Nav_Panel_Link rule declares `font-size: 0.9rem` twice, and the compiled CSS mirrors the duplicate at `main.css:4751–4752`. It is pre-existing, harmless and identical in both artifacts, so removing it would be an unrelated edit to a rule this change set is already touching. It is also the live example behind Req 7 c12's last-declaration-wins caveat: a parity checker that reads the first match rather than the last would report a false failure here, and this rule is where a maintainer will meet that behaviour.
+
+#### The rationale: this closes a Change Set 2 inconsistency rather than adding a style
+
+`assets/js/main.js:130` injects the toggle, and the same file appends the children of `#nav` into `#navPanel > nav` at the `<=medium` breakpoint and returns them above it. **The Nav_Panel_Link elements and the top navigation links are therefore the same two anchors** — "Projects" and "CAD Gallery" — under two different parents, not two independent pairs.
+
+Change Set 2 set `#nav ul.links a` to 800 (§5.3) and left `#navPanel .links li a` at 400. The observable result is that **those two anchors changed weight as the viewport crossed 980px**: the same link rendered Ultrabold on a desktop window and Regular once the window narrowed enough to reparent it into the panel. That is what Req 16 c17 names and what this change fixes. Recording it this way matters for review: the change is not "make the mobile nav bolder to match a taste", it is "make one pair of anchors carry one weight on both sides of a reparenting that a script performs", and the Bold_Chrome_Text glossary entry was amended in the same amendment to say so.
+
+#### The layout risk: a fixed-position box that grows leftward
+
+Advance widths read from the two shipped binaries by the §5.4 Layer 1 method (`hmtx` over `unitsPerEm`, plus the declared 0.05em tracking), then scaled by the declared root steps. Both elements render `display: none` above `<=medium`, so only 320px and 768px are layout-relevant; note the toggle is 0.8rem at 320px (inside `<=small`, ≤736px) and 0.9rem at 768px:
+
+| Label | Element | Size | 320px (10pt) | 768px (11pt) |
+|---|---|---|---|---|
+| `MENU` | Nav_Panel_Toggle | 0.8rem @320, 0.9rem @768 | 32.29 → **35.21** (+2.92) | 39.97 → **43.59** (+3.62) |
+| `PROJECTS` | Nav_Panel_Link | 0.9rem | 64.52 → **67.89** (+3.37) | 70.99 → **74.70** (+3.71) |
+| `CAD GALLERY` | Nav_Panel_Link | 0.9rem | 85.21 → **91.01** (+5.79) | 93.76 → **100.14** (+6.38) |
+
+*(px, 400 → 800. `MENU` widens by **+9.05%**, the largest relative increase measured anywhere in this spec — a four-character word gains proportionally more from Ultrabold than the longer labels do, so the smallest label carries the biggest percentage.)*
+
+**The toggle (Req 16 c9–c11).** It is `position: fixed` with `right: 0.75rem`, `top: 0.75rem`, `padding: 0.375rem 1.25rem` and an automatic width, so a wider label cannot move or overflow the box — the right edge is pinned and the box **grows leftward, toward the `#header` title.** The growth is bounded and small: the `:before` icon is Font Awesome at its own `font-weight: 900` and does not change width, and the `margin-right: 0.5rem` and the horizontal padding are unchanged, so the border-box width increases by *exactly* the label delta — **+2.92px at 320px and +3.62px at 768px**. The clearance in Req 16 c11 therefore shrinks by at most 3.7px. Whether that is enough depends on where the `#header` title actually sits at each width, which this arithmetic does not model, so c21 requires the toggle's border-box width **and the x-coordinate of its left border-box edge** to be measured at both viewports rather than inferred. Req 16 c13 fixes the remedy in advance if the clearance fails: enlarge the box or reduce its horizontal padding — never shrink the type below the Req 5 c3 floor, never revert the weight, never truncate.
+
+**The panel links (Req 16 c12) — ample room.** `#navPanel` is `width: 20rem; max-width: 80%; padding: 3rem 2rem`. At 320px the 80% cap binds at 256px, giving a 202.7px content box against `CAD GALLERY` at 91.0px; at 768px the 20rem width binds at 293.3px, giving a 234.7px content box against 100.1px. The widest label occupies **43–45%** of the available width at weight 800, and each link is `display: block` with `padding: 0.75rem 0` in a vertical list, so there is no horizontal neighbour to collide with and the `.close` control sits in its own absolutely positioned box. This is the low-risk half of the change.
+
+**Contrast (Req 16 c16) inherits, and the reason is worth stating.** Req 16 c15 preserves both elements' default and hover `color`, `background-color`, `border` and `box-shadow`, including the `#navPanelToggle.alt` scrolled state — so no colour pair changes. Font weight does not enter the WCAG contrast formula, and at 0.9rem and 0.8rem neither element approaches the 18.66px large-text boundary in either state, so the applicable threshold stays 4.5:1 exactly as before. Nothing is re-derived; both states are nonetheless generated by Property 1 so that the claim is checked rather than asserted.
+
+**Req 16 c18 has no property, deliberately.** Whether two adjacent glyph outlines touch and whether counters stay open at 0.9rem/800 is a rendering judgement rather than a bounding-box computation — the same reasoning that put Req 11 c7 in the visual-review step of the pre-push gate, and c18 joins it there, at 320px and 768px with the panel open.
+
+#### Measurements (Req 16 c21) — to be recorded from a browser
+
+The table above is **derived from the font binaries**, not measured in a browser. Req 16 c21 additionally requires the rendered label widths, the toggle's border-box width and its left border-box edge x, and it is discharged only by the rendered figures:
+
+**RECORDED.** Measured by `tools/typography-check/navpanel-geometry.mjs` with the panel open, fonts confirmed loaded, at `deviceScaleFactor: 1`. Label widths are rendered glyph extents from a `Range` over the element's text — so `MENU` excludes the `:before` icon, which is a pseudo-element a Range never sees, while the toggle's border-box width below carries the icon's cost. The `#header` title columns are read from `#header .logo` on the eight project pages; all nine pages return identical figures within each variant.
+
+| Viewport | Item | width @400 | width @800 | Δ | toggle border-box width | toggle left edge x | `#header` title right edge x | clearance |
+|---|---|---|---|---|---|---|---|---|
+| 320px | `MENU` | 32.14 | **35.14** | +3.00 | 75.00 → **78.00** | 235.00 → **232.00** | 185.25 | 49.75 → **46.75** |
+| 768px | `MENU` | 39.64 | **42.64** | +3.00 | 96.30 → **99.30** | 660.70 → **657.70** | 419.97 | 240.73 → **237.73** |
+| 320px | `CAD GALLERY` (widest link) | 85.61 | **92.61** | +7.00 | *(n/a)* | *(n/a)* | *(n/a)* | 209.33px panel content box → **44.24%** occupancy |
+| 768px | `CAD GALLERY` (widest link) | 94.27 | **99.27** | +5.00 | *(n/a)* | *(n/a)* | *(n/a)* | 234.66px panel content box → **42.30%** occupancy |
+
+The last two columns are not named by c21 but are what make c11 checkable: a clearance is a difference between two edges, and recording only the toggle's edge would leave the criterion unverifiable from the record.
+
+Five findings, one of which corrects the derivation.
+
+- **The border box grew by exactly the label delta and only leftward** (c10): +3.00px at both viewports, with the right and top gaps still 10px at 320px and 11px at 768px, i.e. 0.75rem at each root step. The icon does not change width and the padding is untouched, exactly as derived.
+- **The rendered delta is +3.00px at both viewports, against the derived +2.92px and +3.62px.** The direction and order of magnitude are right and the *relative* increase is confirmed by the `fontTools` layer (+9.05%, the largest in this spec), but Chromium's rendered advance for a four-character string at 10.67px and 13.20px lands on the same 3px both times — subpixel quantisation of the fixed-position box, which the em-space arithmetic does not model. This is the same class of residual as §6.1's 1.5px and it is why c21 asks for rendered figures.
+- **Clearance is ample and shrank by exactly the delta**: 46.75px at 320px and 237.73px at 768px, so Req 16 c13's remedy is not needed. No page shows any glyph overlap between the toggle and the title.
+- **`index.html` has no `#header`.** It carries `#intro h1` instead, whose right glyph edge is 285.22px at 320px and 684.20px at 768px, so the *horizontal* clearance there reads −53.22px and −26.50px. That is not a c11 failure: overlap is two-dimensional, and the full-width centred intro heading sits 656px (320px) and 483px (768px) *below* a toggle pinned 0.75rem from the top. Property 5's c11 clause therefore tests rect intersection rather than the horizontal figure — a horizontal-only oracle would report a non-defect on the one page with no `#header` title at all.
+- **The panel links are the low-risk half, as predicted**: 44.24% and 42.30% occupancy at weight 800, inside the 43–45% estimate, one line each, and every link computing to 800 on all nine pages at both viewports.
+
+### 6.3 A short README, and the Sync_Document (Req 17)
+
+`README.md` is 134 lines. Requirement 17 returns it to roughly its pre-Change-Set-1 shape and caps it at 40 lines (c2), while keeping every attribution that a licence actually requires (c3, c5, c6) and relocating rather than deleting everything else (c9).
+
+#### The target `README.md`
+
+Twenty-one lines, against a 40-line ceiling:
+
+```markdown
+# Personal Website
+
+You can visit my website [here](https://jefferyxr.github.io/personal-website/index.html)
+
+Maintainers: the compiled-stylesheet regeneration and parity procedure is in [`docs/stylesheet-sync.md`](docs/stylesheet-sync.md).
+
+---
+
+## Credits
+
+- **Site design:** Built on the [Massively](https://html5up.net/massively) template by
+  [HTML5 UP](https://html5up.net) | @ajlkn, used under
+  [Creative Commons Attribution 3.0](https://html5up.net/license). This credit is a licence
+  condition, not an acknowledgement; it also appears in the footer of all nine pages.
+- **Icons:** [Font Awesome](https://fontawesome.io)
+- **Libraries:** [jQuery](https://jquery.com), [Scrollex](https://github.com/ajlkn/jquery.scrollex),
+  [Responsive Tools](https://github.com/ajlkn/responsive-tools)
+- **Fonts:** **Horizon** (headings) by **Alberto Fontense**, free personal-use tier;
+  **Telegraf** (`PP Telegraf`, body and interface text) by **Pangram Pangram Foundry**, free
+  personal / non-commercial tier. Per-file provenance, licence tiers and hashes:
+  [`assets/webfonts/FONT-PROVENANCE.md`](assets/webfonts/FONT-PROVENANCE.md).
+```
+
+How that satisfies each criterion:
+
+| Criterion | Satisfied by |
+|---|---|
+| c1 — H1, one line linking the deployed site, `## Credits` | Lines 1, 3, 9 |
+| c2 — ≤40 lines | 21 |
+| c3 — template, icons, libraries and fonts credits | The four bullets, each naming what c3 enumerates, with the required Markdown links |
+| c4 / Req 9 c3 — fonts credit as one bullet of ≤4 lines | The `**Fonts:**` bullet, 4 lines, carrying all four facts per typeface: name, what it renders, designer/foundry, licence tier |
+| c7 / Req 7 c11 — the Sync_Document linked in one line of body text | Line 5 |
+| c10 — a reference to the Provenance_Record | The closing link of the `**Fonts:**` bullet |
+| c12 — every Markdown link resolves | Two relative links (`docs/stylesheet-sync.md`, `assets/webfonts/FONT-PROVENANCE.md`) and five absolute ones |
+
+The template credit is retained on exactly the grounds §5.5 records — CC BY 3.0 attaches attribution to adaptations, HTML5 UP sells attribution-free usage separately through Pixelarity, and the repository is still substantially template-derived. Req 17 c5 makes that independent of the length reduction, and Req 17 c6 makes a missing attribution a reportable defect rather than a style note. **The compaction reaches the prose around the credits, never the credits themselves.**
+
+#### What moves to `docs/stylesheet-sync.md`
+
+The Sync_Document carries the full seven-step regeneration procedure. Req 7 c12 enumerates what must survive the move, and c13 makes any omitted step, file name or verification instruction a reportable defect — so the move is a **relocation with no editorial reduction**. The eight items c12 pins, each in its execution position:
+
+| # | Retained item | Why it is load-bearing |
+|---|---|---|
+| 1 | The SASS edit step naming `libs/_vars.scss` first, then every rule-level file | Map values must be settled before the rules that read them |
+| 2 | The by-hand map-resolution step | There is no compiler; `_font(family)` has to be expanded by a person |
+| 3 | "Apply the change at **every** location in `assets/css/main.css`" | `family-heading` resolves at 11 sites; changing the first is the default mistake |
+| 4 | The `@import` / `@font-face` ordering step | An `@font-face` above line 1 invalidates the Font Awesome `@import` and every icon on all nine pages disappears (Req 7 c6) |
+| 5 | The parity-verification step, with the last-declaration-wins caveat **and** the browser-measured Skills_Pill geometry instruction | See below |
+| 6 | The zero-occurrence check for `Merriweather`, `Source Sans Pro` and `#4a5158` | Req 7 c9 and Req 1 c13 are zero-occurrence rules, not replacement rules |
+| 7 | The per-page Copyright_Block markup step | `div#copyright` is hand-written per page; three pages write it on one source line |
+| 8 | *(carried forward)* the `scroll-behavior` / `prefers-reduced-motion` zero-occurrence scan, comments stripped | §5.5's removal, guarded at the line where someone would re-add it |
+
+Item 5's caveat is the one most easily lost in a move, and it must survive **in full**: `#footer` and `#copyright` each declare `color` twice, an artifact of the `color(alt)` mixin, so a checker reading the first match reports a false failure — and for `#copyright` specifically **the first value is the mixin's opaque `#ffffff`, not the value that renders**. The value the block actually paints is the second declaration, the `rgba(255,255,255,0.65)` of §5.6. A maintainer who trusts the first `color` in that rule will conclude the copyright bar is opaque white and measure a contrast ratio that does not exist. §6.2's duplicate `font-size` at `_navPanel.scss:85–86` is the same hazard in a rule this change set touches.
+
+**The non-commercial standing-obligation statement moves here too** (Req 17 c9). The README's current paragraph — both grants hold only while the site stays a personal job-application showcase, and adding paid services, rates, sponsorship or any other monetisation lapses them and requires paid licences including a Pangram Pangram Web licence scoped to the domain and pageview tier — is broader than the Horizon-scoped sentence already in the Provenance_Record, so it is carried into the Sync_Document rather than assumed to be covered.
+
+#### What is already in the Provenance_Record, and why it is not edited
+
+Req 17 c9 permits relocation into the Sync_Document **or** the Provenance_Record, and Req 17 c13 requires the Provenance_Record to be left **unchanged**. Both hold simultaneously, because the two remaining relocated statements are already there:
+
+| Relocated statement | Where it already lives |
+|---|---|
+| The declared-weights table (`weight-heading` 700, `weight` 400, `weight-bold` 800, each against its file) | `FONT-PROVENANCE.md` — the intake findings, including the per-file `usWeightClass` inventory and the "no 700 face" deviation note |
+| The no-italic-face note | `FONT-PROVENANCE.md` — "Italics: none shipped", with the Oblique/Slanted inventory, the zero-`<em>` content audit and the ~302 KB figure |
+
+So the README's copies of both are **deletions of duplicates, not losses**, which is what c9 asks to be established. This is the reason the Provenance_Record appears in c13's unchanged list and in c9's permitted-destinations list without contradiction, and it is checkable: the relocation check reads the Provenance_Record rather than writing to it.
+
+#### `docs` must be pruned from the deployed artifact (Req 17 c11)
+
+`.github/workflows/static.yml` uploads `path: '.'` and prunes only `tools` and `.kiro` from the ephemeral CI checkout, so a new `docs/` directory would otherwise be published. One token changes:
+
+```yaml
+      - name: Prune non-site files
+        run: rm -rf tools .kiro docs
+```
+
+**The consequence is intended and is recorded so it is not later read as a broken link.** The README link to `docs/stylesheet-sync.md` resolves on GitHub, which is where the README is actually read, and does not resolve on the deployed Pages origin, where nothing links to the README at all. This follows the precedent the workflow already sets: `tools` and `.kiro` are repository content that is not site content, and `docs` is the third of the same kind. Property 18's link-resolution clause therefore resolves links **against the repository**, not against the deployed origin — a checker pointed at the live site would report a false failure on a file that is deliberately absent from it.
 
 ---
 
@@ -884,7 +1247,9 @@ Req 9 c3's `README.md` credits (Horizon → Alberto Fontense, PP Telegraf → Pa
 
 This project is a good fit for property-based testing despite there being no application code, because the acceptance criteria quantify over an input space far too large to enumerate by hand: **9 pages × 4 viewports × 2 font states × ~40 in-scope elements per page**, plus every colour pair, every selector, and every font file. The oracles are all computable — the WCAG luminance formula, string equality of resolved declarations, bounding-box containment, `cmap` membership, SHA-256 equality. What PBT is *not* used for is recorded in the Testing Strategy: GitHub Pages' compression and same-origin behaviour, Font Awesome icon rendering, and the water-particle canvas are integration concerns whose behaviour does not vary with input.
 
-Prework classified ~70 of the 106 criteria as property-shaped and then consolidated them: many criteria are the same universal quantification seen through different requirements. The 16 properties below are the result, and no two share both an oracle and a generator. Properties 1–13 come from Change Set 1 and several are **extended** by Change Set 2; Properties 14–16 are new and cover Requirements 10, 12 and 13. Requirement 11 and Requirement 14 deliberately add **no** new property — they are absorbed by the existing weight clause of Property 4 and the threshold clause of Property 1 respectively, because inventing near-duplicates of those oracles would add checks without adding discrimination.
+Prework classified ~70 of the 106 criteria as property-shaped and then consolidated them: many criteria are the same universal quantification seen through different requirements. The 18 properties below are the result, and no two share both an oracle and a generator. Properties 1–13 come from Change Set 1 and several are **extended** by later change sets; Properties 14–16 were added by Change Set 2 for Requirements 10, 12 and 13. Requirement 11 and Requirement 14 deliberately add **no** new property — they are absorbed by the existing weight clause of Property 4 and the threshold clause of Property 1 respectively, because inventing near-duplicates of those oracles would add checks without adding discrimination.
+
+**Change Set 3 adds two properties and extends five.** Requirement 15 gets a property of its own (**17**) because its oracle is new — a distance between two box centres, quantified over *substituted label pairs*, which no existing generator produces. Requirement 17 gets one (**18**) for the same reason: attribution presence and Markdown link resolution are quantified over a set that changes whenever the file is edited. **Requirement 16 gets none**, exactly as Requirement 11 got none: it moves two elements from one side of Property 4's weight partition to the other, its containment criteria are Property 5's existing oracle at two more viewports, its contrast criteria are Property 1's, and its preservation criteria are Property 8's. A "the nav panel is bold" property would duplicate three generators to catch a strict subset of what those clauses already catch.
 
 ### Property 1: Every declared colour pair meets its contrast threshold
 
@@ -908,7 +1273,9 @@ The exception set is what stops an accepted shortfall from producing a red failu
 
 **The set is a deliberate, reviewed exception list, and adding an entry to it requires an explicit owner decision.** Its sole member exists because Req 1 c11 was ruled to win over Req 3 c14; nothing else qualifies, and Req 14 c8 keeps that ruling in force for the footer `h3` even while reversing it for the Copyright_Block. Silently appending an entry to make a failing check pass would turn this list into a place to hide real defects, which is precisely the failure mode it must not enable — so a change to the set is reviewed as a scope decision, not as a test fix. The hover accent of conflict C4 is deliberately **not** an entry: Req 1 c4 mandates that colour, so the property scopes the mandated transient hover state out of the ≥4.5:1 Body_Text clause instead of admitting it as an exception. Note that the Copyright_Block links need no such carve-out — their hover accent `#18bfef` measures **7.17:1** against the dark `#1e252d` and passes outright.
 
-**Validates: Requirements 1.1, 1.2, 1.6, 1.7, 3.14, 4.7, 5.6, 11.14, 13.9, 14.1, 14.2, 14.3, 14.7**
+**Extended by Change Set 3 for Requirement 16.** The generator gains the Nav_Panel_Toggle in both its plain and its `.alt` scrolled states and the Nav_Panel_Link elements, each in default and hover, against the background each resolves over. No colour pair changes — Req 16 c15 preserves every colour, background, border and box shadow at both sites, and font weight is not a term in the WCAG formula — so this extension is a check on a claim rather than a new measurement, which is the point: §6.2 argues the contrast is inherited, and the property is what stops that argument being taken on trust. Both declared sizes (0.9rem, and 0.8rem for the toggle at `<=small`) sit below the large-text boundary, so the applicable threshold is the ordinary 4.5:1 and no new exception arises.
+
+**Validates: Requirements 1.1, 1.2, 1.6, 1.7, 3.14, 4.7, 5.6, 11.14, 13.9, 14.1, 14.2, 14.3, 14.7, 16.16**
 
 ### Property 2: Compiled CSS is value-identical to the resolved SASS source
 
@@ -932,11 +1299,18 @@ Two scoping rules, both forced by measurement: roles are compared **per role, no
 
 The weight clause is the high-value one: it fails on the card `h2`'s hardcoded `font-weight: 700` against a single-weight Horizon — the exact synthesized bold that Req 3 c4 forbids.
 
-**Extended by Change Set 2 for Requirement 11.** The weight clause is refined from "a member of the shipped-face weight set" to a *partition* over Chrome_Text: every **Bold_Chrome_Text** element — the `#nav ul.links` anchors, every `.button` label including the `.button.primary` / `.button.primary.small.fit` View Model variants, and every `a.button.skills` — computes to exactly **800**, and every other Chrome_Text element — form labels, pagination links, table headers, nav-panel links and the Copyright_Block — computes to exactly **400**. Both values must be present in the shipped-face weight set `{400, 800}`, so no synthesized or interpolated weight can satisfy either side. The family clause covers Req 11 c5 unchanged: Bold_Chrome_Text still resolves to a stack headed by `PP Telegraf`, so a weight change that accidentally alters the family fails here.
+**Extended by Change Set 2 for Requirement 11, and again by Change Set 3 for Requirement 16.** The weight clause is refined from "a member of the shipped-face weight set" to a *partition* over Chrome_Text. Every **Bold_Chrome_Text** element computes to exactly **800**:
 
-This is why Requirement 11 gets no property of its own. The partition is the *same* oracle — computed weight against the shipped `usWeightClass` set — read at a finer grain, and the two halves fail each other's mistakes: bolding too much trips the 400 clause, bolding too little trips the 800 clause. A separate "Bold_Chrome_Text is bold" property would duplicate the generator and the oracle while catching a strict subset of what this clause catches.
+- the `#nav ul.links` anchors, every `.button` label including the `.button.primary` / `.button.primary.small.fit` View Model variants, and every `a.button.skills` *(Requirement 11)*;
+- the **Nav_Panel_Toggle** `#navPanelToggle` and every **Nav_Panel_Link** `#navPanel .links li a` *(Requirement 16)*.
 
-**Validates: Requirements 3.2, 3.3, 3.4, 3.5, 3.7, 3.8, 3.10, 4.2, 4.5, 4.6, 4.11, 4.12, 5.1, 5.2, 5.8, 6.3, 11.1, 11.2, 11.5, 11.6, 11.8, 11.15**
+Every other Chrome_Text element — form labels, pagination links, table headers and the Copyright_Block, which is the amended four-group list of Req 11 c15 — computes to exactly **400**. Both values must be present in the shipped-face weight set `{400, 800}`, so no synthesized or interpolated weight can satisfy either side. The family clause covers Req 11 c5 and Req 16 c4 unchanged: every Bold_Chrome_Text element still resolves to a stack headed by `PP Telegraf`, so a weight change that accidentally alters the family fails here, and the declared-size clause covers Req 16 c5 (0.9rem at both nav panel sites, 0.8rem for the toggle at `<=small`).
+
+This is why neither Requirement 11 nor Requirement 16 gets a property of its own. The partition is the *same* oracle — computed weight against the shipped `usWeightClass` set — read at a finer grain, and the two halves fail each other's mistakes: bolding too much trips the 400 clause, bolding too little trips the 800 clause. A separate "Bold_Chrome_Text is bold" property would duplicate the generator and the oracle while catching a strict subset of what this clause catches.
+
+**Requirement 16 c17 falls out of the partition for free, and is the clause worth naming.** Because `assets/js/main.js` reparents the same two anchors between `#nav` and `#navPanel` across the `<=medium` breakpoint, the generator's viewport dimension visits those anchors under *both* parents — at 320px and 768px inside `#navPanel`, at 1024px and 1440px inside `#nav`. The partition demands 800 in every case, so the pre-amendment behaviour, in which one pair of links changed weight as the viewport crossed 980px, is a failure of this clause at two of the four viewports. No cross-viewport comparison needs writing: requiring one value everywhere is strictly stronger than requiring two observations to be equal.
+
+**Validates: Requirements 3.2, 3.3, 3.4, 3.5, 3.7, 3.8, 3.10, 4.2, 4.5, 4.6, 4.11, 4.12, 5.1, 5.2, 5.8, 6.3, 11.1, 11.2, 11.5, 11.6, 11.8, 11.15, 16.1, 16.2, 16.3, 16.4, 16.5, 16.7, 16.8, 16.14, 16.17**
 
 ### Property 5: Nothing overflows, in either font state
 
@@ -946,7 +1320,9 @@ Font-state is a generator dimension rather than a separate property, which is wh
 
 **Extended by Change Set 2 for Requirement 11's containment criteria.** The containment clause now names the Bold_Chrome_Text groups explicitly: every `.button` and Skills_Pill label lies wholly inside its element's box with no clipped character and no `text-overflow` ellipsis applied; the "Read More" and "View Model" labels each occupy exactly one line inside their button's padding box; and the "Projects" and "CAD Gallery" nav labels each occupy one line inside the `#nav` content box with no two nav links overlapping. All of these run at weight 800, which is the state that makes them worth checking — §5.3 measures the labels 3.6%–8.5% wider than at 400, and the arithmetic there does not model the nav's logo and icon group or the actions row's wrap behaviour. Requirement 11 c7's glyph-collision criterion at 0.55rem is **not** in this property: overlapping outlines and filled counters are a rendering judgement, not a bounding-box computation, and it is recorded under the Testing Strategy's visual-review step instead.
 
-**Validates: Requirements 3.11, 3.12, 3.13, 4.9, 5.4, 5.7, 6.7, 6.8, 6.9, 6.10, 10.6, 11.9, 11.10, 11.11, 12.8, 13.16**
+**Extended by Change Set 3 for Requirement 16's containment criteria, at 320px and 768px.** Three clauses are added, all at weight 800 and all inside the `<=medium` breakpoint where the two elements are not `display: none`: the Nav_Panel_Toggle renders its `MENU` label together with its `\f0c9` icon glyph on one line wholly inside its padding box with no truncation indicator (c9); its border-box sits wholly inside the viewport with its right and top edges 0.75rem from the viewport edges, so the wider label extends the box leftward rather than moving or overflowing it (c10); and its box does not overlap any rendered glyph of the `#header` title (c11), which is the clause the §6.2 measurement exists to feed. Every Nav_Panel_Link label renders on one line inside the `#navPanel` content box, with no link overlapping another link or the `.close` control (c12). Requirement 16 c18's glyph-collision criterion is excluded for the same reason as Req 11 c7 and joins it in the visual-review step. Also added: both Copyright_Item labels render with every character visible inside the Copyright_Row content box at all four viewports, with no truncation indicator and no horizontal page scrollbar (Req 15 c7) — the divider's *position* is Property 17's business, the labels' containment is this one's.
+
+**Validates: Requirements 3.11, 3.12, 3.13, 4.9, 5.4, 5.7, 6.7, 6.8, 6.9, 6.10, 10.6, 11.9, 11.10, 11.11, 12.8, 13.16, 15.7, 16.9, 16.10, 16.11, 16.12**
 
 ### Property 6: No forbidden token, no off-origin font, no inline typography
 
@@ -956,7 +1332,9 @@ Two oracle details. The literal-name clause is what catches the hardcoded `Merri
 
 **Extended by Change Set 2.** Two additions. First, the forbidden-token set gains **`#4a5158`** as a link or underline colour: Req 1 c13 is a zero-occurrence rule, so the superseded value must appear nowhere in either artifact, and a partial replacement that leaves one of the three compiled mirrors behind fails here rather than shipping two different email colours across the site. Second, the inline-style clause is widened from the five typography properties to also cover **`text-align`** and **`color`** on the nine pages, because Req 10 c8 and Req 14 c9 both forbid achieving their effect through an inline attribute or an in-page `<style>` block — the centring and the copyright colour must live in the stylesheet where Property 2 can check parity. The `--project-image` carve-out is unaffected, since a custom property is neither of the added names.
 
-**Validates: Requirements 1.13, 2.7, 2.11, 2.14, 7.4, 7.9, 7.10, 8.4, 10.8, 14.9**
+**Extended by Change Set 3.** The inline-style clause gains `display`, `flex`, `flex-basis` and `min-height` on the nine pages, because Req 15 c13 and Req 16 c19 both require their effect to be achieved in the stylesheet pair and nowhere else — the divider centring in particular is a layout mechanism, and a page that reproduced it inline would pass Property 17's geometry check while sitting outside the reach of Property 2's parity check. The literal-typeface-name clause is unaffected: Change Set 3 adds no `font-family` declaration anywhere.
+
+**Validates: Requirements 1.13, 2.7, 2.11, 2.14, 7.4, 7.9, 7.10, 8.4, 10.8, 14.9, 15.13, 16.19**
 
 ### Property 7: Every character used is a character the font can render
 
@@ -980,7 +1358,15 @@ The allowlist *is* the specification of scope. This property is what makes "rest
 - Every Bold_Chrome_Text element's `text-transform`, `background-color`, `border`, `border-radius`, default and hover `color`, and hover transition timing (Req 11 c13), and each Skills_Pill's `border-radius: 999px`, background, border and label colour (Req 12 c9) — so the weight and geometry work cannot drift into a restyle.
 - The Copyright_Block typography — `PP Telegraf`, `0.8rem`, uppercase, declared letter-spacing, `1.5` line-height and centred alignment (Req 13 c15) — and the font bundle file set, so Req 11 c4's "add no file, remove no file, change no `@font-face` rule" is checked rather than assumed.
 
-**Validates: Requirements 1.9, 1.10, 1.11, 3.9, 5.5, 7.7, 8.5, 8.7, 8.8, 10.4, 10.5, 10.7, 10.9, 11.4, 11.13, 12.9, 13.15, 14.4, 14.5, 14.8**
+**Change Set 3 adds five more items to the baseline set and removes none.** This is the change set's most useful guard, because two of its three changes edit rules whose *appearance* must not move at all:
+
+- **All nine Content_Pages, whole-file.** Req 15 c12 and Req 17 c13 between them forbid any page edit, so for this change set the page clause tightens from "element set, count, order and nesting" to file-level identity, including the Copyright_Block inner markup that Change Set 2 had moved out of the baseline. Change Set 3 is the first amendment since Change Set 1 that can be checked this strictly, and doing so is free.
+- **The Copyright_Divider's declared width and inherited colour** — `border-left: solid 2px` on the second Copyright_Item, with the colour still omitted from the shorthand so it resolves to `currentColor` and therefore to the §5.6 block colour (Req 15 c9). The mechanism change of §6.1 must not become a restyle of the divider itself, and the omitted colour component is easy to "fix" into a literal by someone tidying the shorthand — which would silently unpin it from the block colour.
+- **The Copyright_Block `margin`, `width`, `max-width` and `<=large` margin override, and the Copyright_Row's border-box height** (Req 15 c10). The height entry is the one that matters: a flex container generates no strut, so the row can lose ~0.4rem of height without any other symptom (§6.1). This is the clause that turns that argument into a check.
+- **Both nav panel sites' `text-transform`, default and hover `color`, `background-color`, `border`, `box-shadow`, `padding` and transition timing, including the `#navPanelToggle.alt` scrolled state** (Req 16 c15) — plus the `#navPanelToggle:before` icon rule's own `font-family` and `font-weight: 900`, which is Font Awesome's and is not part of the weight partition. Two `font-weight` declarations in one rule block is precisely where a hand-mirrored edit goes wrong.
+- **The Stylesheet_Source, the Compiled_Stylesheet, the Webfont_Bundle and the Provenance_Record, against the state §6.1 and §6.2 leave them in, for the purposes of Requirement 17** (Req 17 c13). Change 3 is documentation and workflow only; a README rewrite that also "tidied" a stylesheet would fail here. The Provenance_Record entry does double duty, since §6.3 relies on two statements already being present in it rather than writing them there.
+
+**Validates: Requirements 1.9, 1.10, 1.11, 3.9, 5.5, 7.7, 8.5, 8.7, 8.8, 10.4, 10.5, 10.7, 10.9, 11.4, 11.13, 12.9, 13.15, 14.4, 14.5, 14.8, 15.9, 15.10, 15.12, 16.6, 16.15, 17.13**
 
 ### Property 9: Bundle and declarations agree, within budget
 
@@ -1050,7 +1436,46 @@ The no-JavaScript arm is the reason this property exists and is quantified over 
 
 Two clauses are stricter than they look. **Byte-identical inner markup** is what stops the nine pages drifting — three of them write the `#copyright` div on a single source line and one previously wrote `&amp;` where the others wrote `&`, so per-page hand editing has already produced divergence once. And the **two separate elements** clause encodes Req 13 c12: a single anchor doing both jobs would pass a naive "control exists" check and a naive "credit exists" check while making the credit unclickable or the control an external link.
 
-**Validates: Requirements 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8, 13.10, 13.11, 13.12, 13.13, 13.14**
+**Unchanged in substance by Change Set 3, and re-run for Req 15 c11.** The Copyright_Block markup is untouched (Req 15 c12), so every clause above holds verbatim; what Change Set 3 changes is the `ul`'s layout mechanism underneath it. Req 15 c11 requires the control's fragment navigation, the credit link's target, the focus indicator and the pointer cursor all to survive that change, and re-running this property together with Property 10's cursor and focus clauses is what establishes it. The one clause that could plausibly have been disturbed is keyboard reachability, since the items are now flex children: flex layout does not reorder the DOM unless `order` or `row-reverse` is declared, and §6.1 declares neither, so the tab order is unchanged — a claim this property's sequential-navigation clause checks directly rather than by reading the CSS.
+
+**Validates: Requirements 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7, 13.8, 13.10, 13.11, 13.12, 13.13, 13.14, 15.11**
+
+### Property 17: The Copyright_Divider is centred, whatever the labels say
+
+*For all* nine Content_Pages, all viewport widths in {768, 1024, 1440}, and **all label pairs** drawn from the generator described below: the horizontal centre of the Copyright_Divider box lies within 1 CSS pixel of the horizontal centre of the Copyright_Row content box; that row centre lies within 1 CSS pixel of the Copyright_Block content box centre; no rendered glyph of either label intersects the Copyright_Divider box; and the nearest rendered glyph edge of each label stands at least 8 CSS pixels from the nearer Copyright_Divider edge. *For all* nine pages at a viewport width of 320px, each Copyright_Item instead renders as a full-width block box on its own line, occupying the full Copyright_Row content-box width, with no Copyright_Divider box rendered at all.
+
+**The label-pair generator is the whole property.** A generator that only ever rendered the two shipped strings would pass any mechanism that happened to centre *those* strings, and Req 15 c4 exists precisely because such a mechanism is wrong. It therefore draws from four sources, with three required cases pinned alongside the sampled ones:
+
+| Case | Pair | Δ chars | Role |
+|---|---|---|---|
+| shipped | `Back to top` / `Design: HTML5 UP` | 5 | the state that must keep working |
+| **S1** | `Top` / `Design: HTML5 UP` | **13** | first label much shorter — Req 15 c4's ≥8 case |
+| **S2** | `Back to the top of this page` / `Design: HTML5 UP` | **12** | first label much **longer** — the opposite sign |
+| **S3** | `Return to top` / `Design: HTML5` | **0** | equal counts — Req 15 c4's equal case, and a **control** |
+| sampled | random strings, 1–40 chars, including single unbroken tokens | 0–39 | the general case |
+
+S1 and S2 have offsets of opposite sign under the shipped mechanism (§6.1 derives −49.6px and +45.4px), so between them they distinguish a genuinely centred divider from one displaced by a constant. **S3 is a control that the shipped, broken mechanism already passes**, at a derived −0.1px, because its two labels are 0.17px apart in width — which is exactly why an equal-length pair must never be the only substitution exercised. The sampled arm is what makes this a property rather than four examples: it reaches long unbreakable tokens, which is where the flex items' automatic minimum size would reassert content-dependence if `min-width: 0` were ever dropped.
+
+Three oracle details. The label's glyph extent comes from a `Range` over each item's text node via `getClientRects()`, not from the `li` rect — the `li` *is* the half, so measuring it would compare the container to itself and every clearance would read as the padding regardless of the text. The divider box is derived from the second item's `left` plus half its **resolved** `border-left-width`, so the check tracks the declared width rather than assuming 2px, and Req 15 c9's width pin lives in Property 8 where it belongs. And the 320px arm is a separate quantification rather than an exclusion: Req 15 c6 scopes c1–c4 out of the Stacked_Layout, but c5 makes positive demands there, and the most likely way to break this change is to leave the row a flex container at `<=xsmall` — where the items would sit side by side and this arm would fail on both the block-box and the no-divider clauses at once.
+
+This is the property that **fails on the shipped tree**, by 20.1px at 1440px on the pair that is actually in the markup. Its recorded output at the three viewports, for the shipped pair and for S1 and S2, is what discharges Req 15 c14.
+
+**Validates: Requirements 15.1, 15.2, 15.3, 15.4, 15.5, 15.6, 15.8, 15.14**
+
+### Property 18: Every required attribution is present and every documentation link resolves
+
+*For all* attributions that Requirement 17 c3 enumerates — the Massively / HTML5 UP template credit with a Markdown link to `https://html5up.net`, the Font Awesome icons credit, the jQuery / Scrollex / Responsive Tools libraries credit, and the fonts credit naming Horizon with Alberto Fontense and its free personal-use tier and Telegraf with Pangram Pangram Foundry and its free personal non-commercial tier — the attribution is present in `README.md`; *for all* Markdown links in `README.md`, the link target exists, with every relative target resolving to a file present **in the repository** and the Sync_Document link resolving to `docs/stylesheet-sync.md`; *for all* items that Requirement 7 c12 enumerates, the item is present in the Sync_Document in its execution position; and `README.md` is at most 40 lines with its fonts credit occupying at most four.
+
+Four oracle details, each guarding a specific way this check could be hollow:
+
+- **Relative links resolve against the repository, not the deployed origin.** Req 17 c11 adds `docs` to the workflow's prune step, so `docs/stylesheet-sync.md` is *deliberately* absent from GitHub Pages (§6.3). A checker pointed at the live site would report a false failure on a file whose absence is the intended design.
+- **Presence is checked; adequacy is not.** Whether the credits are *sufficient* attribution is a licence reading, recorded in §5.5 and R8, not something a test can decide. The oracle is the four enumerated facts per typeface and the named parties per credit — which is what Req 17 c6 makes a reportable defect, and it is more than a substring match on "HTML5 UP".
+- **The relocation clause reads the Provenance_Record rather than writing it.** Req 17 c9 requires each statement removed from the README to survive somewhere, and Req 17 c13 requires the Provenance_Record to be unchanged; the oracle therefore asserts that the declared-weights table and the no-italic-face note are *found* in `FONT-PROVENANCE.md` and that the non-commercial standing obligation is found in the Sync_Document. A statement present in neither location fails, naming the statement.
+- **The line bounds are checked at both ends of the move.** A README under 40 lines whose Sync_Document is missing a step satisfies Req 17 c2 and fails Req 7 c13, and that is the failure this amendment most plausibly produces: the length target is the visible goal, and the procedure is the thing that gets quietly shortened to hit it.
+
+The generator is the set of links and required items, which is what makes this property-shaped rather than a fixture: both sets change whenever either document is edited, and the check discovers them by parsing rather than by carrying a hardcoded list that would go stale in exactly the edit it is meant to guard.
+
+**Validates: Requirements 4.4, 7.5, 7.11, 7.12, 7.13, 9.3, 17.1, 17.2, 17.3, 17.4, 17.5, 17.6, 17.7, 17.8, 17.9, 17.10, 17.12**
 
 ---
 
@@ -1073,6 +1498,13 @@ Nothing here executes logic, so "error handling" means **degradation paths**: wh
 | **Visitor prefers reduced motion** | — | Nothing to degrade: the Back_To_Top_Control is an instant fragment jump for everyone, so the reduced-motion path and the default path are the same one. No CSS scroll animation exists to suppress, and no `prefers-reduced-motion` block is declared | Req 13 c2 |
 | **`scroll-behavior: smooth` interferes with the template's scroll plugins** | **Occurred.** Caught by Check J (scroll latency), *not* by Check F | The declaration is **removed** (§5.5). It applied to jQuery's own per-frame `scrollTop` writes in `jquery.scrolly.min.js`, each write restarting a smooth scroll, so the intro down-arrow did not move for 1056 ms. The instant jump still satisfies Req 13 c2, c3, c5. A re-added declaration now fails Check J and the static zero-occurrence assertion | Req 13 c2; Req 8 c6 |
 | **A Bold_Chrome_Text label will not fit its box at 800** | Property 5 containment arm; Property 15 ratios | Enlarge the element or its padding (§5.4). Never reduce `font-size` below the Req 5 c3 floor, never revert to weight 400, never apply `text-overflow` truncation | Req 11 c12; Req 12 c11 |
+| **The Copyright_Row is left a flex container at `<=xsmall`** | Property 17's 320px arm | Must not happen: a flex container lays its items in a row **regardless** of their `display` value, so `display: block` on the items would stop stacking them. The `<=xsmall` block reverts the `ul` to `display: block` (§6.1). The failure is visible — two items side by side at 320px, with a divider that should not exist — and fails two clauses of the same arm | Req 15 c5, c6 |
+| **A Copyright_Item label is wider than its half of the row** | Property 17's sampled and S2 arms | The label **wraps inside its own half**; the divider does not move, because the item's main size is `calc(50% ± 1px)` and no term in it derives from the label. `min-width: 0` is the declaration that permits this — without it the automatic minimum size would grow the item and displace the divider (§6.1) | Req 15 c4, c7 |
+| **A single unbreakable token exceeds half the row** | Property 17's sampled arm | The token overflows its half rather than wrapping. Bounded and recorded rather than mitigated: each half leaves 559px of room at 1440px against a widest current label of 126px — over 4× — so this is far from binding, and the substituted pairs of Req 15 c14 are breakable by construction. If a future label is a long unbroken token, `overflow-wrap: break-word` is the sanctioned remedy — the same one Change Set 1 applied to headings for finding F6 | Req 15 c7 |
+| **The Copyright_Row loses height when it becomes a flex container** | Property 8's row-height clause; the §6.1 c14 record | A flex container generates no **strut**, so the row would collapse from the inherited 1.2rem toward 0.8rem and every footer element below it would move up. `min-height: 1.2rem` restores the floor in the same rem terms, so it tracks the root steps. Silent without the height clause — nothing about the divider's position would change | Req 15 c10 |
+| **The wider `MENU` label pushes the toggle into the `#header` title** | Property 5's c11 clause; the §6.2 c21 record | The box is `position: fixed` with a pinned right edge, so it grows **leftward** by exactly the label delta — +2.92px at 320px, +3.62px at 768px, the icon being Font Awesome at its own weight and unchanged. If the clearance fails: enlarge the box or reduce its horizontal padding. Never reduce `font-size` below the Req 5 c3 floor, never revert to weight 400, never truncate | Req 16 c11, c13 |
+| **`docs/` reaches the deployed Pages artifact** | Static assertion on the prune step | Must not happen: `static.yml` uploads `path: '.'`, so `docs` joins `tools` and `.kiro` in the prune step (§6.3). The intended consequence is that the README's Sync_Document link resolves on GitHub, where the README is read, and **not** on the deployed origin, where nothing links to the README — recorded so it is not later mistaken for a broken link | Req 17 c11 |
+| **The Sync_Document is deleted, or the move drops a step** | Property 18's Req 7 c12 clause | Reported as a defect **naming the missing step, file name or verification instruction**. This is the realistic failure of Change Set 3: the 40-line README is the visible goal and the procedure is what gets quietly shortened to reach it, so c13 makes the omission a defect rather than a judgement call | Req 7 c13; Req 17 c8 |
 
 Two failures are silent and therefore the dangerous ones. A **missing glyph** looks like a slightly-off letter, not an error, so it is caught by the up-front glyph audit rather than by inspection. An **over-narrow `unicode-range`** diverts characters to the fallback with no console warning; §3.2 pins the range against measured page content for exactly this reason. Neither may surface an error message, empty run, or placeholder glyph to the visitor (Req 6 c10).
 
@@ -1091,6 +1523,8 @@ C2 and C4 are therefore marked **RESOLVED by owner decision** below, and C1, C5 
 > **Owner decision (Change Set 2): the copyright bar must be legible. Requirement 1 c11 is amended to exempt the Copyright_Block — and nothing else.**
 
 So C3 below is marked **RESOLVED BY FIXING IT** rather than "leave unchanged", while C2's identical-looking shortfall stays accepted. The distinguishing fact is interactivity, not the size of the contrast gap, and the two entries record that explicitly so the pairing does not read as inconsistent. Implementation follows every entry in this section as written.
+
+**Change Set 3 opens no new conflict and re-decides none of the six.** Its one open question was the divider mechanism — Assumptions and Open Questions item 13, which Requirement 15 deliberately left to design and which §6.1 closes. That is a design choice among candidates, not a pair of criteria that cannot both hold, so it does not belong in this section. Two near-conflicts are worth naming as *resolved by reading* rather than by ruling: Req 17 c9 permits relocation into the Provenance_Record while Req 17 c13 requires the Provenance_Record to be unchanged, which hold together only because the two statements concerned are already present there (§6.3); and Req 15 c9 pins the divider's declared width and inherited colour while §6.1 restructures the rule that declares them, which holds because the mechanism change touches the items' sizing and alignment and not the `border-left` shorthand itself.
 
 **C1 — "Palette change" vs. "email link only". ADOPTED.** Req 8 c7 describes the change as a palette value, but `#717981` is `alt.fg`/`alt.fg-bold`, used **15×** in the compiled CSS. Editing it would recolour the footer `h3`, social icons, table `th` and pagination links — violating Req 1 c10 and c11. *Adopted: add `alt.fg-link` (§4.2) and apply it through the targeted selector of §3.6. Every existing palette value is preserved, and the change reaches only the email link.* This is the same scoping rule the owner decision restates, so C1 and the C2/C3 rulings are one coherent position rather than three independent ones.
 
@@ -1132,11 +1566,15 @@ So C3 below is marked **RESOLVED BY FIXING IT** rather than "leave unchanged", w
 
 **R9 — A global `scroll-behavior: smooth` is re-added, and a final-position check passes it again. REALISED once; now guarded.** The declaration is cheap to type, reads as an improvement, and its damage is invisible to any assertion about where a scroll *ends up*: it defeats `jquery.scrolly`'s per-frame `scrollTop` writes, and the intro down-arrow sat motionless for 1056 ms while the Change Set 2 Check F extension reported a clean pass (§5.5). Mitigation is layered, because the faulty *reasoning* is the part that recurs: the block is deleted rather than reworded; the surviving comments in `_page.scss` and `main.css` name the real mechanism and carry the measured figures at the exact line where someone would re-add it; a static assertion requires zero `scroll-behavior` and zero `prefers-reduced-motion` occurrences in both artifacts; and **Check J** puts a 150 ms first-movement budget on both scroll controls, so the behaviour is guarded and not merely the wording. The general form of the risk is wider than one declaration: an interaction whose value depends on *when* it happens needs a timing clause, or a latency defect passes verification unseen.
 
+**R10 — The divider is "fixed" by a mechanism that only centres the current two labels.** *(highest Change Set 3 risk)* The offset is exactly half the difference between the two label widths (§6.1), so a great many edits move the divider to x 720 **for the shipped pair**: nudging `margin-left`, adding a compensating `padding`, tightening the second label's `letter-spacing`, or shortening the credit text. Every one of them passes a check that renders `Back to top` / `Design: HTML5 UP` and measures the result, and every one of them fails Req 15 c4 the moment either label changes length — which the credit wording has already done once, in Change Set 2. The equal-length control makes this trap worse rather than better: **S3 passes on the shipped, broken mechanism** at a derived −0.1px, so a substitution suite that exercised only the equal-count case would report a clean pass against a mechanism that is 20.1px off in production. Mitigation: the chosen mechanism removes label width from the item sizing entirely, so `min-width: 0` and the `calc(50% ± 1px)` bases are load-bearing rather than stylistic; Property 17 pins S1 and S2 as **required** cases with offsets of opposite sign and adds a sampled arm reaching 40-character and unbreakable labels; and Req 15 c14's record requires the substituted measurements, not only the shipped one. Residual exposure: a future editor who deletes `min-width: 0` as noise reintroduces content-dependence for long labels only — which S1 and S3 would both still pass. S2 and the sampled arm are what catch that.
+
+**R11 — Shortening the README quietly shortens the procedure.** Requirement 17's visible goal is a line count, and the seven-step regeneration procedure is the bulk of the 134 lines being reduced. The natural way to reach 40 lines is to compress the procedure into a summary, and a summary drops exactly the steps that look like trivia and are not: the `@import`/`@font-face` ordering step (an `@font-face` above line 1 invalidates the Font Awesome import and every icon on all nine pages disappears), the last-declaration-wins caveat with its detail that `#copyright`'s *first* `color` is the mixin's opaque `#ffffff` rather than the value that renders, the `#4a5158` zero-occurrence step, and the per-page Copyright_Block markup step. The damage is invisible at the time it is done: documentation produces no failing check when a step is dropped, only a wrong edit months later against two artifacts that can diverge silently (R4). Mitigation: the move is specified as a **relocation with no editorial reduction** (§6.3); Req 7 c12 enumerates the eight items that must survive in their execution positions and Req 7 c13 makes an omission a defect naming the missing item; and Property 18 checks the Sync_Document's contents as well as the README's length, because a 21-line README with a gutted procedure satisfies one requirement by breaking another.
+
 ---
 
 ## Compiled Stylesheet Sync Procedure
 
-Requirement 7 c5 requires this documented in `README.md`; it is reproduced here as the design's interface between the two artifacts. Every typography change follows it in order:
+**Amended by Change Set 3: the canonical location of this procedure is now `docs/stylesheet-sync.md`, the Sync_Document.** Req 7 c5 originally required it in `README.md`, and that is the main reason the README reached 134 lines; as amended, c5 permits either location, c11 requires `README.md` to link the Sync_Document in one line of body text, c12 enumerates what must survive the move, and c13 makes any omitted step, file name or verification instruction a reportable defect. **The obligation moves location and not substance** — see §6.3, which lists the eight c12 items against the steps below. It is reproduced here as the design's interface between the two artifacts. Every typography change follows it in order:
 
 1. **Edit the SASS source** — `_vars.scss` first (the `$font` map and the additive palette key), then the rule-level files (`base/_typography.scss`, `layout/_footer.scss`, `layout/_main.scss`, `layout/_intro.scss`, `layout/_navPanel.scss`, `components/_button.scss`, `_form.scss`, `_pagination.scss`, `_table.scss`).
 2. **Resolve each map reference by hand.** `_font(family)` → the full comma-separated stack, with family names quoted exactly as the compiler would emit them (`"PP Telegraf", "Helvetica Neue", "Segoe UI", Roboto, sans-serif`).
@@ -1145,9 +1583,9 @@ Requirement 7 c5 requires this documented in `README.md`; it is reproduced here 
 5. **Verify parity** by running the Testing Strategy checks. Property 2 is the authority: for every selector governing Heading_Text, Body_Text or Chrome_Text, the value resolved from SASS must equal the value declared in the CSS, with zero differing declarations.
 6. **Confirm zero occurrences** of `Merriweather` and `Source Sans Pro` in both artifacts (Req 7 c9).
 
-Note for step 3: the compiled CSS already contains duplicate declarations for the same property in one rule — `#footer` carries `color: #717981` followed by `color: #909498`, an artifact of the `color(alt)` mixin — so a parity checker must apply last-declaration-wins rather than reading the first match.
+Note for step 3: the compiled CSS already contains duplicate declarations for the same property in one rule, so a parity checker must apply last-declaration-wins rather than reading the first match. **This caveat has two live instances and both must survive into the Sync_Document (Req 7 c12).** `#footer` carries `color: #717981` followed by `color: #909498`, an artifact of the `color(alt)` mixin. `#copyright` carries `color` twice from the same mixin, and there **the first value is the mixin's opaque `#ffffff`, not the value that renders** — the block actually paints the second declaration, `rgba(255, 255, 255, 0.65)` (§5.6). A maintainer or checker reading the first `color` in that rule will conclude the copyright bar is opaque white and compute a contrast ratio for a colour that is never painted. Change Set 3 adds a third instance of the same hazard in a rule it touches: `#navPanel .links li a` declares `font-size: 0.9rem` twice, at `_navPanel.scss:85–86` and `main.css:4751–4752` (§6.2). All three are pre-existing, harmless and identical across the two artifacts, and all three are left as they are.
 
-`README.md` additionally gains: the Credits entries required by Req 9 c3 (Horizon → Alberto Fontense, PP Telegraf → Pangram Pangram Foundry, each with its licence tier). Branch A was selected at intake, so the Req 4 c4 missing-bold limitation note is **not** required.
+`README.md` retains the Credits entries required by Req 9 c3 (Horizon → Alberto Fontense, PP Telegraf → Pangram Pangram Foundry, each with its licence tier), in the compact single-bullet form that the Change Set 3 amendment to c3 permits — see §6.3 for the target file. Branch A was selected at intake, so the Req 4 c4 missing-bold limitation note is **not** required in either `README.md` or the Sync_Document; the amendment to c4 only names the two permitted locations for a note that is not needed.
 
 **Change Set 2 adds a step 7, because it is the first change set to touch HTML.** Steps 1–6 above cover the stylesheet pair; Change Set 2's §5.5 replaces markup inside `div#copyright` on all nine pages:
 
@@ -1156,6 +1594,12 @@ Note for step 3: the compiled CSS already contains duplicate declarations for th
 Step 6's zero-occurrence confirmation also covers **`scroll-behavior` and `prefers-reduced-motion`**, in both artifacts, with comments stripped before the scan — §5.5 removed that block and the surviving comment names the property deliberately, so the check must read declarations rather than text.
 
 Two further notes for Change Set 2. The §5.1 colour change is **one literal in `_vars.scss` and three resolved mirrors** in `main.css`; step 6's zero-occurrence confirmation extends to `#4a5158`, which Req 1 c13 requires to appear nowhere in either artifact as a link or underline colour — including in comments that document a value the source no longer sets. And the §5.4 pill geometry must be **measured in a browser before it is mirrored**, not after: the values in §5.4 are derived from font metrics and declared CSS, and Req 12 c13 is discharged only by the rendered numbers.
+
+**Three notes for Change Set 3.**
+
+- **Step 1's file list already names `layout/_footer.scss` and `layout/_navPanel.scss`**, which are the only two SASS files this change set touches, so no step gains a file. Step 3's "every location" instruction covers the four compiled sites: `main.css:4601–4620` and the `max-width: 480px` block at `:4630–4641` for §6.1, and `main.css:4660` and `:4753` for §6.2. The `#navPanelToggle:before` rule's `font-weight: 900` at `main.css:4677` is Font Awesome's and is **not** one of them.
+- **The §6.1 divider position must be measured in a browser before the mechanism is accepted**, on the same reasoning as the §5.4 pill geometry: the offsets in §6.1 are derived from the shipped binaries and the declared CSS, and Req 15 c14 is discharged only by the rendered numbers — including the row's border-box height, which is what detects the strut a flex container does not generate. The label substitution is performed at runtime, in the page under test, and never by editing the nine pages.
+- **The Sync_Document is now where steps 1–7 live**, so a change to this procedure is a change to `docs/stylesheet-sync.md` — and step 5's parity check gains one item for §6.3 itself: `README.md` at 40 lines or fewer with every Markdown link resolving against the repository, and `docs` present in the `static.yml` prune step. Property 18 is the authority for that item, as Property 16 is for step 7.
 
 
 ---
@@ -1184,12 +1628,12 @@ There is no test suite, no `package.json`, and no build tooling. Tooling must th
       - name: Checkout
         uses: actions/checkout@v4
       - name: Prune non-site files
-        run: rm -rf tools .kiro
+        run: rm -rf tools .kiro docs
       - name: Setup Pages
         uses: actions/configure-pages@v5
 ```
 
-This runs against the ephemeral CI checkout, never the repository. Pruning `.kiro` is a small, in-scope correctness improvement: spec documents are not part of the site, and Property 12 (commercial-use markers) should not have to reason about text in spec files that visitors can currently reach.
+This runs against the ephemeral CI checkout, never the repository. Pruning `.kiro` is a small, in-scope correctness improvement: spec documents are not part of the site, and Property 12 (commercial-use markers) should not have to reason about text in spec files that visitors can currently reach. **`docs` is the Change Set 3 addition** (Req 17 c11) and belongs to the same class — the Sync_Document is repository content, not site content. Its intended consequence is recorded in §6.3: the README's link to `docs/stylesheet-sync.md` resolves on GitHub and not on the deployed origin, so Property 18 resolves relative links against the repository rather than against the live site.
 
 ### Property test configuration
 
@@ -1217,9 +1661,9 @@ Webfont blocking for Properties 5 and 13 uses Playwright request interception, a
 | Check | What | Type | Gate |
 |---|---|---|---|
 | **A** | Files present at expected paths | Smoke | pre-push |
-| **B** | Static properties: 2, 6, 8, 9, 11, 12, **16** (markup clauses) | Property (fast-check) | pre-push |
-| **C** | Font-binary properties: 7, 9 (weights), **and the §5.3 advance-width table** | Property (fontTools + fast-check) | pre-push |
-| **D** | Rendered properties: 1, 3, 4, 5, 10, 13, **14, 15** | Property (Playwright + fast-check) | pre-push |
+| **B** | Static properties: 2, 6, 8, 9, 11, 12, **16** (markup clauses), **18** | Property (fast-check) | pre-push |
+| **C** | Font-binary properties: 7, 9 (weights), **and the §5.3 / §6.2 advance-width tables** | Property (fontTools + fast-check) | pre-push |
+| **D** | Rendered properties: 1, 3, 4, 5, 10, 13, **14, 15, 17** | Property (Playwright + fast-check) | pre-push |
 | **E** | Font Awesome icons render; no missing-glyph substitution | Integration, 1 run | pre-push |
 | **F** | Water canvas animates; card interactions respond; no console errors | Integration, 1 run | pre-push |
 | **G** | **Font intake gate** — see below | Manual + smoke | **before any CSS work** (passed in Change Set 1) |
@@ -1228,6 +1672,16 @@ Webfont blocking for Properties 5 and 13 uses Playwright request interception, a
 | **J** | **Scroll latency** — each same-document scroll control begins moving within 150 ms, and still lands correctly | Integration, 1 run per control | pre-push |
 
 **Change Set 2 adds two checks and extends two.** Check I is separated from D because it needs a *differently configured browser context* rather than a different generator — scripting off for the whole context, which cannot be mixed into a run that also exercises the card-interaction paths. Check J is described below; it replaces the Check F extension that Change Set 2 originally added. Check C gains the `fontTools` advance-width comparison that discharges Req 11 c16, which is deterministic and needs no browser. Check D gains the two geometric properties, and its Playwright helper needs one addition that is easy to get wrong: label boxes must be read from a `Range` over the text node via `getClientRects()`, not from the element rect, or Properties 14 and 15 measure the container against itself and report a vacuous pass.
+
+**Change Set 3 adds no check, and extends three.** Check B gains Property 18, which is a file-reading and link-resolving check with no browser and no font in it. Check C gains the §6.2 advance-width comparison for `MENU`, `PROJECTS` and `CAD GALLERY` at 0.8rem and 0.9rem, which is the same deterministic `fontTools` measurement that discharged Req 11 c16 and here discharges the label-width half of Req 16 c21. Check D gains Property 17 and, with it, the one new capability this change set needs from the Playwright helper:
+
+**How the label substitution works (Req 15 c4, c14).** The substituted pairs are applied **at runtime, in the page under test**, by assigning to the text content of the Back_To_Top_Control's anchor and of the second Copyright_Item — the anchor's text for the first item, and the item's leading text node plus its `HTML5 UP` anchor for the second — then awaiting `document.fonts.ready` and one layout flush before measuring. Three reasons this is not done by editing the nine pages:
+
+- Req 15 c12 and Req 17 c13 both forbid page edits, and a substitution baked into markup would have to be reverted before push — a manual step that Property 8's byte-identity clause would catch only if someone remembered to run it.
+- The substitution has to happen **nine times × three viewports × four pairs**, and editing markup for that is a combinatorial mess where a runtime assignment is three lines.
+- A runtime assignment tests the *mechanism* rather than a document: it changes only the text the layout consumes, which is exactly the variable Req 15 c4 quantifies over.
+
+The one trap is measuring before layout settles. `element.textContent = …` does not force a synchronous reflow, and reading `getBoundingClientRect()` in the same task can return either the old or the new geometry depending on what else touched layout — so the helper reads a layout-forcing property and awaits a frame before it measures. A stale read here would not error; it would silently measure the shipped labels and report that every substitution passes.
 
 **Check J exists because of a verification gap that let a plainly broken interaction pass.** Change Set 2's Check F extension exercised the intro down-arrow and asserted its **final position** (`landedNear: true`, y 900) plus a clean console. A scroll that did not begin for a full second satisfied both, so `scroll-behavior: smooth` shipped (§5.5) with a green check. The lesson generalises in one sentence: **an assertion about a final state cannot detect a latency defect, so any interaction whose value depends on *when* it happens needs a timing clause.**
 
@@ -1253,13 +1707,15 @@ Deliberately few, because the properties carry the general cases. Reserved for s
 
 Change Set 2 adds four literal assertions in the same spirit: the Card_Header_Band declares `text-align: center` while `_main.scss:179` and `:444` still declare `left`; both `_nav.scss:34` and `_button.scss:26` declare `_font(weight-bold)`; the `#copyright` rule declares `transparentize(_palette(invert, fg), 0.35)` and resolves to `rgba(255, 255, 255, 0.65)`; and the `Horizon.woff2` provenance record carries the "none — accepted" sentinel with **no** `TODO` marker anywhere in `FONT-PROVENANCE.md`. Each is a single fixed fact about a single line, which is precisely where a property would add cost without adding coverage.
 
+Change Set 3 adds four more of the same kind. `_navPanel.scss:24` and `:87` each declare `_font(weight-bold)` while `:22` and `:84` still declare `_font(family)` and the two `font-size` values are untouched — and `main.css:4677` still declares `font-weight: 900` for the Font Awesome `:before` glyph, which is the one nearby declaration that must **not** move. The `#copyright ul` rule declares `display: flex` with the two `calc(50% ∓ 1px)` bases and `min-width: 0`, and the `<=xsmall` block declares `display: block` on the `ul` with `text-align: inherit` on **both** the `li` rule and its `:first-child` — that second one is asserted literally because it is a specificity trap rather than a value question (§6.1), and a property quantified over viewports would report the resulting 320px failure without pointing at the cause. `static.yml`'s prune step names `docs` alongside `tools` and `.kiro`. And the duplicate `font-size: 0.9rem` at `_navPanel.scss:85–86` is asserted **still present** and mirrored at `main.css:4751–4752`, because it is the live example the last-declaration-wins caveat refers to and a well-meant cleanup would delete the illustration along with the duplicate.
+
 ### Where PBT is deliberately not used
 
 - **GitHub Pages behaviour** (Req 2 c10, c17, c18) — external service; behaviour does not vary with input; each check costs a network round trip. Integration, 1 run.
 - **Font Awesome icon rendering** (Req 7 c6) — third-party font behaviour, already tested by its authors. Integration, 1–2 examples. The one genuinely fragile part, that `@font-face` must not precede the `@import`, is a static assertion in Check B.
 - **Water canvas and card interactions** (Req 8 c6) — unrelated to typography; a regression guard, not a property. Integration, 1 run.
 - **Scroll latency of the two same-document controls** (Check J, Req 13 c2) — the oracle is a wall-clock bound on a fixed interaction, so 100 iterations would add jitter and runtime without widening the input space. Integration, 1 run per control. What makes it worth having is not quantification but the *timing clause* itself, which the final-position assertion it replaces lacked.
-- **Documentation obligations** (Req 7 c5, Req 9 c3, c5) — presence is checkable, adequacy is not. Smoke plus human review.
+- **Documentation obligations** (Req 7 c5, Req 9 c3, c5) — presence is checkable, adequacy is not. **Change Set 3 splits this line rather than reversing it.** The *presence* half is now large enough to be worth quantifying — Requirement 17 c3 enumerates four attributions, Req 7 c12 enumerates eight retained procedure items, and every Markdown link in the README is a target that has to resolve — so Property 18 owns it, with the link and item sets discovered by parsing rather than hardcoded. The *adequacy* half stays exactly where it was: whether the credits constitute sufficient attribution is a licence reading (§5.5, R8) and whether the procedure is followable is a judgement, and neither is a computable oracle. Human review at the pre-push gate keeps that half.
 - **Future-conditional obligations** (Req 9 c5, c7) — antecedents are false today. Recorded as standing conditions; Property 11's `converted` flag makes c7 detectable if the delivery path ever changes.
 
 ### Pre-push verification gate
@@ -1275,7 +1731,7 @@ The full sequence:
 1. **Check G** passes — fonts in hand, weights and styles known, branch selected.
 2. SASS edited, then mirrored into `assets/css/main.css` by the procedure in the Compiled Stylesheet Sync Procedure section.
 3. **Checks A–F, I and J** pass locally against the working tree via `file://`, or a local static server.
-4. Visual review of `index.html` and one project page at 320 and 1440, in both font states — the properties bound overflow and containment, but not whether the result looks right. **For Change Set 2 this step also carries Req 11 c7**, the only criterion in the amendment that no property covers: at 0.55rem and weight 800, no two adjacent glyph outlines may overlap or touch and every enclosed counter must stay open. That is a rendering judgement, not a bounding-box computation, so it is reviewed at all four viewports rather than asserted.
+4. Visual review of `index.html` and one project page at 320 and 1440, in both font states — the properties bound overflow and containment, but not whether the result looks right. **For Change Set 2 this step also carries Req 11 c7**, the only criterion in the amendment that no property covers: at 0.55rem and weight 800, no two adjacent glyph outlines may overlap or touch and every enclosed counter must stay open. That is a rendering judgement, not a bounding-box computation, so it is reviewed at all four viewports rather than asserted. **Change Set 3 adds Req 16 c18** on the same footing — the same glyph-collision judgement at 0.9rem and 0.8rem, reviewed with the nav panel open at 320px and 768px, which are the only widths where the two elements are not `display: none` — and it adds one reviewer instruction that is not a criterion: look at the footer divider at 481px, the narrowest width at which the Side_By_Side_Layout applies. Req 15 c2 names 768/1024/1440 and c7 names 320, so nothing asserts anything at the layout's own lower edge, where the two fixed halves are at their narrowest relative to the labels.
 5. Push to `main`; the workflow deploys.
 6. **Check H** against the live origin; record `Content-Encoding` and transfer bytes in the provenance record.
 
@@ -1287,6 +1743,10 @@ Change Set 1's expected first-run failure is **closed**: Property 5 previously f
 
 **Change Set 2 has one expected first-run failure, and it is Property 15.** The shipped pill geometry breaches three of Requirement 12's bounds before any edit is made (§5.4): the homepage width ratio at 0.891–0.893 against the 0.88 ceiling, the homepage vertical symmetry at ≈8.1px against the 1px tolerance, and the wider-context height ratio at 1.000 against the 0.85 ceiling with a padding-to-gap ratio that is undefined because the gap is zero. Those failures are the *evidence* for §5.4, so seeing them confirms the checker discriminates. A Property 15 that passed on the unmodified tree would mean the label box was being read from the element rect rather than from a text-node `Range` — that should be treated as a broken check, not as good news.
 
-**Property 4 is expected to pass only once both halves of Requirement 11 land.** Its weight clause is a partition, so an incomplete edit fails asymmetrically and diagnostically: bolding `_button.scss` but not `_nav.scss` fails the 800 clause on the nav links, while bolding anything outside Bold_Chrome_Text fails the 400 clause on that element. Either way the shrink output names the element.
+**Property 4 is expected to pass only once both halves of Requirement 11 land.** Its weight clause is a partition, so an incomplete edit fails asymmetrically and diagnostically: bolding `_button.scss` but not `_nav.scss` fails the 800 clause on the nav links, while bolding anything outside Bold_Chrome_Text fails the 400 clause on that element. Either way the shrink output names the element. **The same holds for Requirement 16**, with one extra shape worth expecting: because `main.js` reparents the same two anchors across the `<=medium` breakpoint, bolding `#nav ul.links` but not `#navPanel .links li a` fails the 800 clause at **320px and 768px only** and passes at 1024px and 1440px. A weight failure that appears at two viewports and not the other two is the signature of the Change Set 2 inconsistency this amendment closes, not of a flaky check.
+
+**Change Set 3 has one expected first-run failure, and it is Property 17.** On the shipped tree the divider is 20.1px left of centre at 1440px with the pair that is actually in the markup, so the property fails before any edit — and it fails on **four** of its five label cases, S3 excepted. That distribution is the evidence for §6.1: seeing S3 pass while the shipped pair, S1 and S2 all fail confirms the generator has discrimination, because S3's two labels are 0.17px apart in width and *should* pass under the broken mechanism. A Property 17 that failed on S3 too would mean the row and block centres were being computed from the wrong boxes. A Property 17 that **passed** on the unmodified tree would mean the divider box was being taken from the `li` rect rather than from `left` plus half the resolved `border-left-width` — that should be treated as a broken check, not as good news, exactly as with Property 15's label-box reading.
+
+**Property 18 is expected to fail on the shipped tree too, for one reason only:** `README.md` is 134 lines against a 40-line ceiling and `docs/stylesheet-sync.md` does not exist. Every attribution clause is expected to **pass** before the edit and to keep passing after it, which is the point of the change: the compaction reaches the prose around the credits and never the credits themselves, so an attribution clause that flips from pass to fail during implementation means content was lost rather than moved.
 
 By contrast, Property 1 is **expected to pass**. The footer `h3` (4.05:1) and `#copyright` (2.27:1, measured from the unrounded alpha composite) shortfalls are now settled by owner decision — leave both unchanged — so they are carried in that property's accepted-exceptions set and surface in the run output as *known-and-accepted*, with their conflict IDs, rather than as failures. A red Property 1 therefore means one of three real things: a new contrast regression somewhere outside the set, or one of the two accepted ratios having drifted from its recorded value, or an entry having been added to the set without an owner decision. None of those is a first-run expectation.

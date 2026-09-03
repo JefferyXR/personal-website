@@ -38,6 +38,32 @@ LABELS = [
     ("WATERJET FABRICATION", 0.55),
 ]
 
+# Change Set 3, design §6.2 (Req 16 c21, label-width half).
+#
+# The Nav_Panel_Toggle is 0.9rem by default and 0.8rem at `<=small` (<=736px), so MENU is
+# measured at 0.8rem at 320px and 0.9rem at 768px — the only two widths where either
+# element is not `display: none`. Both Nav_Panel_Links are 0.9rem throughout.
+#
+# These rows are kept SEPARATE from LABELS rather than folded into it, because LABELS
+# carries one declared size per label and MENU carries two. Collapsing them would force a
+# single size on MENU and quietly measure the wrong number at one of the two viewports.
+NAV_PANEL_LABELS = [
+    # (label, element, {viewport: declared rem})
+    ("MENU", "Nav_Panel_Toggle", {320: 0.8, 768: 0.9}),
+    ("PROJECTS", "Nav_Panel_Link", {320: 0.9, 768: 0.9}),
+    ("CAD GALLERY", "Nav_Panel_Link", {320: 0.9, 768: 0.9}),
+]
+
+# The §6.2 derived table, asserted by Check C in properties-changeset3.test.mjs.
+NAV_PANEL_EXPECTED_PX = {
+    ("MENU", 320): (32.29, 35.21),
+    ("MENU", 768): (39.97, 43.59),
+    ("PROJECTS", 320): (64.52, 67.89),
+    ("PROJECTS", 768): (70.99, 74.70),
+    ("CAD GALLERY", 320): (85.21, 91.01),
+    ("CAD GALLERY", 768): (93.76, 100.14),
+}
+
 # Declared root font-size steps (base/_typography.scss). 768 and 1024 share a step.
 ROOT_PX = {320: 13.333, 768: 14.667, 1024: 14.667, 1440: 16.0}
 
@@ -87,10 +113,37 @@ def main():
             }
         )
 
+    # Change Set 3 — §6.2 nav panel rows, at their own per-viewport declared sizes.
+    nav_rows = []
+    for label, element, sizes in NAV_PANEL_LABELS:
+        w400 = width_em(fonts["400"], label)
+        w800 = width_em(fonts["800"], label)
+        px = {}
+        for vw, size_rem in sizes.items():
+            root = ROOT_PX[vw]
+            px[str(vw)] = {
+                "fontSizeRem": size_rem,
+                "w400": round(w400 * size_rem * root, 2),
+                "w800": round(w800 * size_rem * root, 2),
+                "deltaPx": round((w800 - w400) * size_rem * root, 2),
+                "expected": list(NAV_PANEL_EXPECTED_PX[(label, vw)]),
+            }
+        nav_rows.append(
+            {
+                "label": label,
+                "element": element,
+                "em400": round(w400, 4),
+                "em800": round(w800, 4),
+                "increasePct": round((w800 / w400 - 1) * 100, 3),
+                "px": px,
+            }
+        )
+
     result = {
         "letterSpacingEm": LETTER_SPACING_EM,
         "rootPx": ROOT_PX,
         "rows": rows,
+        "navPanelRows": nav_rows,
         "increaseRangePct": [
             round(min(r["increasePct"] for r in rows), 3),
             round(max(r["increasePct"] for r in rows), 3),
@@ -123,6 +176,17 @@ def main():
             cell = r["px"][str(vw)]
             line += f"{cell['w400']:8.1f} ->{cell['w800']:7.1f}"
         print(line)
+    print()
+
+    print("Change Set 3, §6.2 — nav panel labels (Req 16 c21, label-width half)")
+    print("  MENU is 0.8rem at 320px (<=small) and 0.9rem at 768px; both links 0.9rem.\n")
+    print(f"  {'label':14s} {'element':18s} {'vw':>5s} {'rem':>5s} {'400':>8s} {'800':>8s} {'delta':>8s} {'%':>7s}")
+    for r in nav_rows:
+        for vw, cell in r["px"].items():
+            print(
+                f"  {r['label']:14s} {r['element']:18s} {vw:>5s} {cell['fontSizeRem']:>5} "
+                f"{cell['w400']:8.2f} {cell['w800']:8.2f} {cell['deltaPx']:+8.2f} {r['increasePct']:+6.2f}%"
+            )
     print()
 
 
