@@ -46,7 +46,7 @@ export const CLAUSE_GROUPS = {
   fonts: 'Req 9 c3 — the four facts per typeface',
   link: 'Req 17 c12 — Markdown links resolve against the repository',
   sync: 'Req 17 c7, c8 — the Sync_Document is linked and exists',
-  'sync-item': 'Req 7 c12, c13 — the eight retained procedure items',
+  'sync-item': 'Req 7 c12, c13 — the retained maintenance-note items',
   provenance: 'Req 17 c10 — the Provenance_Record reference',
   relocated: 'Req 17 c9 — relocation, not deletion',
   workflow: 'Req 17 c11 — the prune step',
@@ -130,7 +130,7 @@ export function buildDocumentationClauses() {
   });
   add('sync', 'exists', () => assert.ok(sync !== null, `${SYNC_DOCUMENT_PATH} does not exist — Req 17 c8`));
 
-  // Req 7 c12 / c13 — the eight retained items, each in its EXECUTION POSITION.
+  // Req 7 c12 / c13 — the retained items, each in its DOCUMENT POSITION.
   for (const item of SYNC_REQUIRED_ITEMS) {
     add('sync-item', item.id, () => {
       assert.ok(sync !== null, `${SYNC_DOCUMENT_PATH} does not exist, so item ${item.n} (${item.what}) is missing — Req 7 c13`);
@@ -144,13 +144,13 @@ export function buildDocumentationClauses() {
       );
     });
   }
-  add('sync-item', 'execution-order', () => {
-    assert.ok(sync !== null, `${SYNC_DOCUMENT_PATH} does not exist — Req 7 c12 requires the items in execution order`);
+  add('sync-item', 'document-order', () => {
+    assert.ok(sync !== null, `${SYNC_DOCUMENT_PATH} does not exist — Req 7 c12 requires the items in document order`);
     const positions = SYNC_REQUIRED_ITEMS.map((item) => ({ n: item.n, at: sync.search(item.anchor) }));
     for (let i = 1; i < positions.length; i++) {
       assert.ok(
         positions[i].at > positions[i - 1].at,
-        `Sync_Document item ${positions[i].n} appears before item ${positions[i - 1].n} — Req 7 c12 requires each item in its execution position`,
+        `Sync_Document item ${positions[i].n} appears before item ${positions[i - 1].n} — Req 7 c12 requires each item in its document position`,
       );
     }
   });

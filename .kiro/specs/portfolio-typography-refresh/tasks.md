@@ -2,7 +2,7 @@
 
 ## Overview
 
-This plan now covers three change sets.
+This plan now covers **four** change sets. **`assets/css/main.css` is the sole stylesheet artifact**: Change Set 4 deleted the `assets/sass/` tree, so no task below pairs a SASS edit with a mirrored CSS edit any more, and the sequencing rule that every earlier change set followed — SASS first, then its mirror, in the same task — no longer applies to anything.
 
 **Change Set 1 is implemented and merged to `main`** (commit `d49d8c5`, PR #1). Tasks 1–15 are its shipped history and are retained, marked complete, rather than deleted — the reasoning recorded in them (the intake gate, the branch selection, the `@font-face` insertion point, the seven Chrome_Text sites) is what Change Set 2 builds on.
 
@@ -25,7 +25,7 @@ Four things shape the ordering of tasks 16–25, and they are different from wha
 3. **The pill values must be measured in a browser before they are mirrored.** Design §5.4 labels its numbers *derived, not yet browser-measured*. Task 20.1 runs the Layer 2 measurement first; task 20.2 applies and re-measures, and adjusts per Req 12 c11 if any bound is missed. This is why the harness work (task 16) comes before any CSS edit.
 4. **Change Set 2 is the first change set to touch HTML.** All nine pages change inside `div#copyright`, which is why the design added **step 7** to the Compiled Stylesheet Sync Procedure. Task 25 is the pre-push gate for it.
 
-The SASS-plus-compiled-CSS pairing rule from Change Set 1 is unchanged and applies to every task below: **every SASS edit is mirrored by hand into `assets/css/main.css` in the same task.** No task leaves the two artifacts divergent.
+The SASS-plus-compiled-CSS pairing rule from Change Set 1 applied to every task through Change Set 3: **every SASS edit was mirrored by hand into `assets/css/main.css` in the same task**, so no task left the two artifacts divergent. *(Retired by task 32 — there is one artifact.)*
 
 Four things shape the ordering of tasks 26–31:
 
@@ -702,6 +702,38 @@ Four things shape the ordering of tasks 26–31:
   - **Visual review, and this step carries Req 16 c18 plus one instruction that is not a criterion.** c18: at 0.9rem and 0.8rem at weight 800, with the nav panel **open** at 320px and 768px — the only widths where the two elements are not `display: none` — no two adjacent glyph outlines may overlap or touch and every enclosed counter must stay open. That is a rendering judgement, not a bounding-box computation. **Then look at the footer divider at 481px**, the narrowest width at which the Side_By_Side_Layout applies: Req 15 c2 names 768/1024/1440 and c7 names 320, so nothing asserts anything at the layout's own lower edge, where the two fixed halves are narrowest relative to the labels.
   - Ensure all tests pass, ask the user if questions arise.
 
+**Change Set 4 — deleting the SASS tree and the dead weight around it (tasks 32–37). Shipped. Retained as history; do not re-run.**
+
+- [x] 32. Delete `assets/sass/**` and make `main.css` the stylesheet source (design §7.1, Req 7 rewritten)
+  - Removed all 31 files. Nothing referenced them: no `package.json`, no compiler, no source map, no `<link>` or `@import`. Compiling the tree would have emitted a `main.css` missing rules that only ever existed in the compiled file, so it could not have regenerated the site.
+  - Rejected alternative, recorded in Assumptions item 16: introduce a real build step. It would have required back-porting every compiled-only rule into the SASS first, each verified against the rendered page.
+  - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
+
+- [x] 33. Delete the dead skills-pill rule and its dependent artifacts (design §7.2)
+  - Removed the grouped `body.home #main .button.skills, body.home #main .actions .button` rule from `main.css`. Zero rendered instances: both halves overridden in full by later, equally specific rules, and only `index.html` carries a Skills_Pill at all.
+  - Three dependent artifacts went with it: `evaluateDeclaredGeometry` in `pill-geometry.mjs`, its call site in `properties-changeset2.test.mjs` (Property 15's declared-value arm), and the wider-context expectations the arm read. The arm existed **only** because the rule never rendered.
+  - Requirement 12 is unamended; criterion 10's wider-context arm has no declaration site left.
+  - _Requirements: 12.4, 12.5, 12.10_
+
+- [x] 34. Fix the `waterParticles.js` pointer tracking (design §7.3)
+  - Listener moved from the canvas to `window`: the canvas is `z-index: -1` behind `#intro`, so a canvas-bound listener received **0 of 96** sweep events. `mouse.active` now set inside the handler instead of once at load; release listeners added on `document` `mouseleave`, guarded `mouseout`, and `blur`; zero-sized rect returns early to avoid `NaN`.
+  - _Requirements: 8.6_
+
+- [x] 35. Remove the dangling background and import references (design §7.4)
+  - Dropped the `images/overlay.png` and `images/bg.jpg` layers, and their companion `background-size` / `-position` / `-repeat` / `-attachment` values, from **both** stylesheets — neither file exists. Removed `@import url(font-awesome.min.css)` from `noscript.css`; that file does not exist and `main.css` already imports the real `fontawesome-all.min.css`.
+  - Both edits were needed because the 404s materialised only on the noscript path: `#wrapper > .bg` is `display: none` once `main.js` runs, so with JavaScript enabled neither image was ever fetched.
+  - _Requirements: 7.2, 8.6_
+
+- [x] 36. Retarget the verification harness at one artifact (design §7.1, §7.4, Testing Strategy)
+  - Removed Property 2 (SASS/compiled parity) and every `readSassFile` fixture. Retargeted the zero-occurrence scans, Property 6's artifact set and Property 8's baseline set at `main.css` plus the newly in-scope `noscript.css`, and widened Property 6's `url()` clause to `background-image`.
+  - Deleted the map-lookup mechanism clause outright as unobservable. Halved the unit assertions to their `main.css` sides and added two absence assertions: `assets/sass/` does not exist, and no `url()` names a missing file.
+  - _Requirements: 7.1, 7.4, 7.5_
+
+- [x] 37. Rewrite the maintenance note and the README pointer (design §7.5)
+  - `docs/stylesheet-sync.md` rewritten as five items for `main.css` alone — `@import`/`@font-face` order, the zero-occurrence rules, the smooth-scroll guard, last-declaration-wins, and the per-page Copyright_Block step — plus both standing licence conditions, unchanged. The regeneration and parity steps are **retired, not relocated** (Req 17 c9).
+  - `README.md` changed by one line: the pointer now names the `main.css` maintenance notes. Every attribution untouched.
+  - _Requirements: 7.6, 7.7, 7.8, 7.9, 17.8, 17.9_
+
 ## Notes
 
 - Tasks marked with `*` are optional and can be skipped for faster MVP.
@@ -727,10 +759,14 @@ Four things shape the ordering of tasks 26–31:
 - **The README target text is the owner's, not design §6.3's draft.** The design's version editorialises about licence conditions; the shipped file keeps the owner's short structure and bullet style (26 lines, 3-line fonts bullet). Because it drops the inline `FONT-PROVENANCE.md` link, **Req 17 c10's provenance reference lives in `docs/stylesheet-sync.md`** — if 30.2 omits it, c10 fails silently, since nothing else points at the Provenance_Record.
 - **The move to the Sync_Document is a relocation with no editorial reduction.** Req 7 c12 enumerates eight items that must survive in their execution positions and c13 makes an omission a defect naming it. Risk R11 is that the line count is the visible goal and the procedure is what gets shortened to hit it — a dropped step produces no failing check, only a wrong edit months later.
 - **Req 16 c18 belongs to visual review, not to any property**, on the same footing as Req 11 c7: glyph collisions and closed counters at 0.9rem/0.8rem and weight 800 are a rendering judgement. Task 31 carries it, with the panel open at 320px and 768px, and adds one non-criterion instruction — inspect the footer divider at **481px**, the lower edge of the Side_By_Side_Layout, which no criterion names.
+- **Tasks 1–31 cite Requirement 7's pre-Change-Set-4 numbering.** Requirement 7 was rewritten and its criteria renumbered, so a `Req 7 c5 / c11 / c12 / c13` in the history above is now c6 / c7 / c8 / c9, and `Req 7 c6 / c7 / c9 / c10` is now c2 / c3 / c4 / c5. Old c1, c3, c4 and c8 were deleted outright. `requirements.md` carries the disposition table; the task text is left as it was written, because rewriting shipped history to match a later renumbering makes the record less trustworthy, not more.
+- **Tasks 32–37 are Change Set 4, shipped.** Four of its five changes are deletions, so there is no expected first-run failure: nothing observed the SASS tree, the dead pill rule, or the dangling `url()`s. Task 34's pointer fix repairs an interaction **no check was watching**, which is why Check F now exercises the sweep.
+- **The SASS-then-mirror rule is retired from task 32 onward.** Every earlier task paired a SASS edit with a hand-mirrored `main.css` edit in the same task so the two artifacts never diverged. There is one artifact now, and the replacement risk is fan-out rather than divergence (design R12): a family or weight change touches 11 sites in `main.css`, and it is Properties 3, 4 and 8 — reading rendered elements, not declarations — that catch a partial edit.
+- **A deleted check is not a dropped check, when its subject is gone.** Property 2 and Property 15's declared-value arm were both removed in tasks 33 and 36 because what they measured ceased to exist. The map-lookup clause was removed for a different reason and it is the one worth remembering: it asserted a *mechanism*, and there was no honest way to restate it against `main.css`.
 
 ## Task Dependency Graph
 
-Change Set 1's and Change Set 2's leaf tasks are complete and are omitted. The waves below cover the incomplete **Change Set 3** leaves only. `assets/css/main.css` is written by 27.2, 27.3 and 29.2, so those three are serialised one per wave; every baseline measurement runs in wave 1 against the unmodified tree, and no two tasks in a wave write the same harness file (`fixtures.mjs`, `advance-widths.py`, `properties-changeset3.test.mjs`, `readme-sync.test.mjs`, `divider-geometry.mjs`, `navpanel-geometry.mjs`, `properties-changeset2.test.mjs`, `smoke.test.mjs`).
+Change Set 1's, Change Set 2's and Change Set 4's leaf tasks are complete and are omitted — Change Set 4's tasks 32–37 have no sub-tasks and are recorded as shipped history. The waves below cover the incomplete **Change Set 3** leaves only. `assets/css/main.css` is written by 27.2, 27.3 and 29.2, so those three are serialised one per wave; every baseline measurement runs in wave 1 against the unmodified tree, and no two tasks in a wave write the same harness file (`fixtures.mjs`, `advance-widths.py`, `properties-changeset3.test.mjs`, `readme-sync.test.mjs`, `divider-geometry.mjs`, `navpanel-geometry.mjs`, `properties-changeset2.test.mjs`, `smoke.test.mjs`).
 
 ```json
 {

@@ -64,10 +64,10 @@ NAV_PANEL_EXPECTED_PX = {
     ("CAD GALLERY", 768): (93.76, 100.14),
 }
 
-# Declared root font-size steps (base/_typography.scss). 768 and 1024 share a step.
+# Declared root font-size steps (assets/css/main.css). 768 and 1024 share a step.
 ROOT_PX = {320: 13.333, 768: 14.667, 1024: 14.667, 1440: 16.0}
 
-# _font(letter-spacing-heading). Req 11 c8 makes this a FLOOR, not a free parameter: the
+# the heading letter-spacing. Req 11 c8 makes this a FLOOR, not a free parameter: the
 # tracking-reduction lever §3.5 used to buy width is gone, so any width shortfall must be
 # absorbed by the box (§5.4), never by tighter tracking.
 LETTER_SPACING_EM = 0.05
